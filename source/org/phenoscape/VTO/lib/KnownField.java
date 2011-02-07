@@ -22,7 +22,7 @@ public enum KnownField {
 	private final String cannonicalName;
 	private final boolean isTaxon;
 	
-	KnownField(String c, boolean t){
+	private KnownField(String c, boolean t){
 		cannonicalName = c;
 		isTaxon = t;
 	}

@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 /**
  * This merger handles files with names joined by underscore in one column (eg., Homo_sapiens or Homo_sapiens_sapiens).  It currently
  * looks for a single column tagged with the knownfield DELIMITEDNAME and treats it as columns of genus, species and optionally subspecies.  
@@ -23,6 +25,10 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	private final String nameSeparator = "_";
 	
 	private final ColumnReader reader;
+	
+	private int namesCounter = 0;
+
+	static Logger logger = Logger.getLogger(OBOStore.class.getName());
 
 	
 	public UnderscoreJoinedNamesMerger(String separator){
@@ -51,29 +57,61 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 			throw new RuntimeException("No delimitedname column specified for joined name formatted file");
 		}
 		for(Item item : items.getContents()){
+			String genusName = null;
 			String speciesName = null;
 			String subSpeciesName = null;
 			final String taxonName = item.getFieldValue(KnownField.DELIMITEDNAME);
 			String[] splitName = taxonName.split(nameSeparator);
-			if (splitName.length <2){
-				System.err.println("No delimiter found in split name");
+			if (splitName.length == 1 ){
+				genusName = splitName[0];
 			}
 			else if (splitName.length == 2){
-				speciesName = splitName[0] + splitName[1];
+				StringBuilder b = new StringBuilder();
+				b.append(splitName[0]);
+				b.append(" ");
+				b.append(splitName[1]);
+				speciesName =  b.toString();
 			}
 			else {
-				speciesName = splitName[0] + splitName[1];
-				subSpeciesName = splitName[0] + splitName[1] + splitName[2];
+				StringBuilder b = new StringBuilder();
+				b.append(splitName[0]);
+				b.append(" ");
+				b.append(splitName[1]);
+				speciesName = b.toString();
+				b.append(" ");
+				b.append(splitName[2]);
+				subSpeciesName = b.toString();
 			}
-			if (target.getTermbyName(speciesName) != null){
+			if (subSpeciesName != null && target.getTermbyName(subSpeciesName) != null){
+				Term t = target.getTermbyName(subSpeciesName);
+				SynonymI s = target.makeSynonym(subSpeciesName, "VSWG:", Integer.toString(namesCounter++));
+				t.addSynonym(s);
 				matchCount++;
-				System.out.println("Found matching species: " + speciesName + " total is " + matchCount);
-			}
-			else if (target.getTermbyName(subSpeciesName) != null){
+				logger.info("Found matching subspecies: " + subSpeciesName + " total is " + matchCount);
+			} 
+			else if (subSpeciesName != null && speciesName != null && target.getTermbyName(speciesName) != null){
+				Term t = target.getTermbyName(speciesName);
+				SynonymI s = target.makeSynonym(subSpeciesName, "VSWG:", Integer.toString(namesCounter++));
+				t.addSynonym(s);
 				matchCount++;
-				System.out.println("Found matching subspecies: " + subSpeciesName + " total is " + matchCount);
+				logger.info("Matched subspecies to parent species: " + subSpeciesName + " total is " + matchCount);
 			}
+			else if	(speciesName != null && target.getTermbyName(speciesName) != null){
+				Term t = target.getTermbyName(speciesName);
+				SynonymI s = target.makeSynonym(speciesName, "VSWG:", Integer.toString(namesCounter++));
+				t.addSynonym(s);
+				matchCount++;
+				//System.out.println("Found matching species: " + speciesName + " total is " + matchCount);
+			}
+			else if(genusName != null && target.getTermbyName(genusName) != null){
+				Term t = target.getTermbyName(genusName);
+				SynonymI s = target.makeSynonym(genusName, "VSWG:", Integer.toString(namesCounter++));
+				t.addSynonym(s);
+				matchCount++;
+				logger.info("Found matching genus: " + genusName + " total is " + matchCount);
+			}			
 		}
+		logger.info("Final match total = " + matchCount);
 	}
 
 	@Override

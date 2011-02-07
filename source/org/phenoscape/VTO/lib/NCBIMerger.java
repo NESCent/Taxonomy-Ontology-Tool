@@ -66,6 +66,11 @@ public class NCBIMerger implements Merger {
 
 	static Logger logger = Logger.getLogger(NCBIMerger.class.getName());
 
+	
+    int count = 0;
+
+	
+	
     /**
      * This collects NCBI IDs as synonyms
      * @param ncbiSource
@@ -76,8 +81,8 @@ public class NCBIMerger implements Merger {
 		final File nodesFile = new File(ncbiSource.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
 		final Map<Integer,String> nodeRanks = new HashMap<Integer,String>(10000);
-		final Map<Integer,Integer> nodeParents = new HashMap<Integer,Integer>(10000);
-		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeParents);
+		final Map<Integer,Set<Integer>> nodeChildren = new HashMap<Integer,Set<Integer>>(10000);
+		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeChildren);
 		Map <String,Integer> namesInScope = new HashMap<String,Integer>(nodesInScope.size());
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
 		Map <String,Integer> synonymsInScope = new HashMap<String,Integer>(nodesInScope.size());
@@ -105,7 +110,7 @@ public class NCBIMerger implements Merger {
 	}
 
 
-	private void buildScopedNodesList(File nf, Set<Integer> nodes, Map<Integer,String> ranks, Map<Integer,Integer> parents){
+	private void buildScopedNodesList(File nf, Set<Integer> nodes, Map<Integer,String> ranks, Map<Integer,Set<Integer>> children){
         try {
             final BufferedReader br = new BufferedReader(new FileReader(nf));
             String raw = br.readLine();
@@ -116,7 +121,14 @@ public class NCBIMerger implements Merger {
                     final Integer nodeVal = Integer.parseInt(digest[0]);
                 	nodes.add(nodeVal);                	
                     Integer parentVal = Integer.parseInt(digest[2]);
-                    parents.put(nodeVal, parentVal);
+                    if (children.containsKey(parentVal)){
+                    	children.get(parentVal).add(nodeVal);
+                    }
+                    else {
+                    	Set<Integer> childSet = new HashSet<Integer>();
+                    	childSet.add(nodeVal);
+                    	children.put(parentVal,childSet);
+                    }
                     String nodeRank = digest[4];
                     ranks.put(nodeVal, nodeRank);
                 }
@@ -171,8 +183,8 @@ public class NCBIMerger implements Merger {
 		final File nodesFile = new File(ncbiSource.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
 		final Map<Integer,String> nodeRanks = new HashMap<Integer,String>(10000);
-		final Map<Integer,Integer> nodeParents = new HashMap<Integer,Integer>(10000);
-		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeParents);
+		final Map<Integer,Set<Integer>> nodeChildren = new HashMap<Integer,Set<Integer>>(10000);
+		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeChildren);
 		Map <String,Integer> namesInScope = new HashMap<String,Integer>(nodesInScope.size());
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
 		Map <String,Integer> synonymsInScope = new HashMap<String,Integer>(nodesInScope.size());
@@ -197,29 +209,9 @@ public class NCBIMerger implements Merger {
 		}
         final Collection<Term> terms = target.getTerms();	
         final Integer parentNode = namesInScope.get(parentTerm.getLabel());
-        logger.info("parent Node is " + parentNode);
-        Deque<Integer> processList = new ArrayDeque<Integer>(100);
-        processList.add(parentNode);
-    	//target.addTerm(termToName.get(parentNode));
-        int count = 0;
-        while(!processList.isEmpty()){
-        	Integer current = processList.pop();
-        	//logger.info("Current = " + current.intValue());
-        	for(Integer node : nodeParents.keySet()){   //add the children
-        		if (nodeParents.get(node).equals(current)){
-        			Term child = target.getTermbyName(termToName.get(node));
-        			if (child == null){
-        				child = target.addTermbyID("NCBITaxon:" + node.toString(),  termToName.get(node));
-        			}
-        			target.attachParent(child, target.getTermbyName(termToName.get(current)));
-        			processList.add(node);
-        		}
-        	}
-        	
-        	count++;
-        	if (count % 100 == 0)
-        		logger.info("Count = " + count);
-        }
+        logger.info("Building tree");
+        addChildren(parentNode, target,nodeChildren, termToName);
+        logger.info("Finished building tree" + parentNode);
         logger.info("Done; count = " + count);
 //		for(Term term : terms){		
 //			if(namesInScope.containsKey(term.getLabel())){
@@ -238,6 +230,26 @@ public class NCBIMerger implements Merger {
 		
 	}
 
-	
+	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName) {
+		Set<Integer> children = nodeChildren.get(parent);
+		if (children != null){
+			for (Integer childID : children){
+				String childName = termToName.get(childID);
+				Term child = target.getTermbyName(childName);
+				if (child == null){
+					child = target.addTermbyID("NCBITaxon:" + childID.toString(), childName);
+				}
+				target.attachParent(child, target.getTermbyName(termToName.get(parent)));
+	        	count++;
+	        	if (count % 1000 == 0)
+	        		logger.info("Count = " + count + " term = " + childName);
+
+				addChildren(childID,target,nodeChildren,termToName);
+			}
+		}
+		
+	}
+
+
 	
 }

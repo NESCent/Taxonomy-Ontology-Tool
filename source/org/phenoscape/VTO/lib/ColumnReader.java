@@ -140,6 +140,11 @@ public class ColumnReader {
     					result.addSynonym(fields.get(i).toString(),syn,"", resultList);
     			}
     		}
+    		else if (fields.get(i).equals(KnownField.DELIMITEDNAME)){
+    			if (curColumn.length()>0){
+    				result.putName(fields.get(i), curColumn);
+    			}
+    		}
     	}
     	return result;
    	}

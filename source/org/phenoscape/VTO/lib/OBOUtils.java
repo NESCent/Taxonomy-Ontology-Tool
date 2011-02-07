@@ -289,6 +289,9 @@ class OBOUtils {
 	public OBOClass lookupTermByName(String termName) {
 		terms = TermUtil.getTerms(theSession);
 		for (OBOClass item : terms){
+			if (termName == null){
+				throw new RuntimeException("Item is null");
+			}
 			if (termName.equals(item.getName()))
 				return item;
 		}
