@@ -21,6 +21,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.phenoscape.VTO.lib.CoLMerger;
+import org.phenoscape.VTO.lib.IOCMerger;
 import org.phenoscape.VTO.lib.ITISMerger;
 import org.phenoscape.VTO.lib.Merger;
 import org.phenoscape.VTO.lib.NCBIMerger;
@@ -44,13 +46,24 @@ public class Builder {
 	final static String CSVFORMATSTR = "CSV";
 	final static String TSVFORMATSTR = "TSV";
 	final static String OWLFORMATSTR = "OWL";
+	final static String IOCFORMATSTR = "IOC";
+	final static String COLFORMATSTR = "COL";
 	final static String JOINEDNAMETABBEDCOLUMNS = "JOINEDNAMETAB";
+	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
+	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
+	final static String SYNONYMFORMATSTR = "SYNONYM"; //This a variant of the column format
+	
+	final static String ATTACHACTIONSTR = "attach";
+	final static String MERGEACTIONSTR = "merge";
+	final static String TRIMACTIONSTR = "trim";
+	
+	final static String COLUMNSYNTAXSTR = "column";
+	
 	
 	final static String PREFIXITEMSTR = "prefix";
+	final static String FILTERPREFIXITEMSTR = "filterprefix";
 	
-
 	final private File optionsFile;
-	private TaxonStore target;
 	
 	
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
@@ -61,7 +74,7 @@ public class Builder {
 		optionsFile = options;
 	}
 
-	public void build() {
+	public void build() throws IOException {
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);
 		NodeList nl = null;
@@ -71,25 +84,25 @@ public class Builder {
 			Document d = db.parse(optionsFile);
 			nl = d.getElementsByTagNameNS("","taxonomy");
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
+			logger.fatal("Error in initializing parser");
 			e.printStackTrace();
+			return;
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			logger.fatal("Error in parsing " + optionsFile.getCanonicalPath());
+			logger.fatal("Exception message is: " + e.getLocalizedMessage());
+			return;
+		} 
 		if (nl.getLength() != 1){
-			System.err.println("Error - More than one taxonomy element");
+			logger.fatal("Error - More than one taxonomy element in " + optionsFile.getCanonicalPath());
 			return;
 		}
 		Node taxonomyRoot = nl.item(0);
-		String targetURLStr = taxonomyRoot.getAttributes().getNamedItem("target").getNodeValue();
-		String targetFormatStr = taxonomyRoot.getAttributes().getNamedItem("format").getNodeValue();
-		String targetRootStr = taxonomyRoot.getAttributes().getNamedItem("root").getNodeValue();
-		String targetPrefixStr = taxonomyRoot.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
-		TaxonStore target = getStore(targetURLStr, targetFormatStr);
+		String targetURLStr = getAttribute(taxonomyRoot,"target");
+		String targetFormatStr = getAttribute(taxonomyRoot,"format");
+		String targetRootStr = getAttribute(taxonomyRoot,"root");
+		String targetPrefixStr = getAttribute(taxonomyRoot,PREFIXITEMSTR);
+		String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
+		TaxonStore target = getStore(targetURLStr, targetPrefixStr, targetFormatStr);
 		logger.info("Building taxonomy to save at " + targetURLStr + " in the " + targetFormatStr + " format\n");
 		NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
@@ -98,39 +111,28 @@ public class Builder {
 			@SuppressWarnings("unchecked")
 			List<String> columns = (List<String>)Collections.EMPTY_LIST;
 			Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
-			if ("attach".equalsIgnoreCase(actionName)){
-				String formatStr = action.getAttributes().getNamedItem("format").getNodeValue();
-				NodeList childNodes = action.getChildNodes();
-				if (childNodes.getLength()>0){
-					columns = processChildNodesOfAttach(childNodes,synPrefixes);
-				}
-				Merger m = getMerger(formatStr,columns,synPrefixes);
-				if (!m.canAttach()){
-					logger.error("Error - Merger for format " + formatStr + " can't attach branches to the tree");
-				}
-				String sourceURLStr = action.getAttributes().getNamedItem("source").getNodeValue();
-				File sourceFile = getSourceFile(sourceURLStr);
-				Node sourceParentNode = action.getAttributes().getNamedItem("parent");
-				if (targetPrefixStr == null)
-					targetPrefixStr = "XXX";
-				if (sourceParentNode != null){
-					m.attach(sourceFile,target,sourceParentNode.getNodeValue(),targetPrefixStr);
-				}
-				else {
-					m.attach(sourceFile,target,targetRootStr,targetPrefixStr);
-				}
+			if (ATTACHACTIONSTR.equalsIgnoreCase(actionName)){
+				processAttachAction(action,target, targetRootStr, targetPrefixStr);
 			}
-			else if ("merge".equalsIgnoreCase(actionName)){
+			else if (MERGEACTIONSTR.equalsIgnoreCase(actionName)){
 				NodeList childNodes = action.getChildNodes();
 				if (childNodes.getLength()>0){
 					columns = processChildNodesOfAttach(childNodes,synPrefixes);
 				}
-				String formatStr = action.getAttributes().getNamedItem("format").getNodeValue();
+				String formatStr = getAttribute(action,"format");
 				Merger m = getMerger(formatStr,columns,synPrefixes);
-				String sourceURLStr = action.getAttributes().getNamedItem("source").getNodeValue();
+				String sourceURLStr = getAttribute(action,"source");
 				File sourceFile = getSourceFile(sourceURLStr);
 				logger.info("Merging names from " + sourceURLStr);
-				m.merge(sourceFile, target, "XXX");
+				if (targetPrefixStr == null){
+					logger.warn("No prefix for newly generated ids specified - will default to filename component");
+					targetPrefixStr = sourceFile.getName();
+				}
+				m.merge(sourceFile, target, targetPrefixStr);
+			}
+			else if (TRIMACTIONSTR.equalsIgnoreCase(actionName)){
+				String nodeStr = getAttribute(action,"node");
+				target.trim(nodeStr);
 			}
 			else if (action.getNodeType() == Node.TEXT_NODE){
 				//ignore
@@ -142,9 +144,60 @@ public class Builder {
 				logger.warn("Unknown action: " + action);
 			}
 		}
-		target.saveStore();
+		if ("XREF".equals(targetFormatStr)){
+			target.saveXref(targetFilterPrefixStr);
+		}
+		else if ("COLUMN".equals(targetFormatStr)){
+			target.saveColumnsFormat(targetFilterPrefixStr);
+		}
+		else if ("SYNONYM".equals(targetFormatStr)){
+			target.saveSynonymFormat(targetFilterPrefixStr);
+		}
+		else{
+			target.saveStore();
+		}
 	}
 
+	private void processAttachAction(Node action, TaxonStore target, String targetRootStr, String targetPrefixStr){
+		@SuppressWarnings("unchecked")
+		List<String> columns = (List<String>)Collections.EMPTY_LIST;
+		Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
+		String formatStr = getAttribute(action,"format");
+		String cladeRootStr = getAttribute(action,"root");
+		String sourceParentStr = getAttribute(action,"parent");
+		NodeList childNodes = action.getChildNodes();
+		if (childNodes.getLength()>0){
+			columns = processChildNodesOfAttach(childNodes,synPrefixes);
+		}
+		Merger m = getMerger(formatStr,columns,synPrefixes);
+		if (!m.canAttach()){
+			logger.error("Error - Merger for format " + formatStr + " can't attach branches to the tree");
+		}
+		String sourceURLStr = action.getAttributes().getNamedItem("source").getNodeValue();
+		File sourceFile = getSourceFile(sourceURLStr);
+		logger.info("Attaching taxonomy from " + sourceURLStr);
+		if (targetPrefixStr == null){
+			logger.warn("No prefix for newly generated ids specified - will default to filename component");
+			targetPrefixStr = sourceFile.getName();
+		}
+		if (sourceParentStr != null){   //need to specify the clade within the sourceFile (or null?)
+			if (cladeRootStr != null)
+				m.attach(sourceFile,target,sourceParentStr,cladeRootStr,targetPrefixStr);
+			else
+				m.attach(sourceFile,target,sourceParentStr,sourceParentStr,targetPrefixStr);
+		}
+		else {
+			if (cladeRootStr != null)
+				m.attach(sourceFile,target,targetRootStr,cladeRootStr,targetPrefixStr);
+			else
+				m.attach(sourceFile,target,targetRootStr,targetRootStr,targetPrefixStr);
+		}
+
+	}
+	
+	
+	
+	
 	private List<String> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
 		List<String> result = new ArrayList<String>();
 		for(int i = 0; i<childNodes.getLength();i++){
@@ -174,7 +227,7 @@ public class Builder {
 		return result;
 	}
 
-	private TaxonStore getStore(String targetURLStr, String formatStr) {
+	private TaxonStore getStore(String targetURLStr, String prefixStr, String formatStr) {
 		if (OBOFORMATSTR.equals(formatStr)){
 			try {
 				URL u = new URL(targetURLStr);
@@ -185,7 +238,61 @@ public class Builder {
 				File oldFile = new File(u.getFile());
 				if (oldFile.exists())
 					oldFile.delete();
-				return new OBOStore(u.getFile(),"TEST","test-namespace");
+				return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		}
+		if (XREFFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is implementation dependent (currently OBO)
+			try {
+				URL u = new URL(targetURLStr);
+				if (!"file".equals(u.getProtocol())){
+					System.err.println("XREF format must save to a local file");
+					return null;
+				}
+				File oldFile = new File(u.getFile());
+				if (oldFile.exists())
+					oldFile.delete();
+				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+				return result;
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		}
+		if (COLUMNFORMATSTR.equals(formatStr)){      //COLUMN isn't a storage format, so the store is implementation dependent (currently OBO)
+			try {
+				URL u = new URL(targetURLStr);
+				if (!"file".equals(u.getProtocol())){
+					System.err.println("Column format must save to a local file");
+					return null;
+				}
+				File oldFile = new File(u.getFile());
+				if (oldFile.exists())
+					oldFile.delete();
+				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+				return result;
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		}
+		if (SYNONYMFORMATSTR.equals(formatStr)){      //COLUMN isn't a storage format, so the store is implementation dependent (currently OBO)
+			try {
+				URL u = new URL(targetURLStr);
+				if (!"file".equals(u.getProtocol())){
+					System.err.println("Column format must save to a local file");
+					return null;
+				}
+				File oldFile = new File(u.getFile());
+				if (oldFile.exists())
+					oldFile.delete();
+				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+				return result;
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -219,8 +326,15 @@ public class Builder {
 			result.setColumns(columns, synPrefixes);
 			return (Merger)result;
 		}
-		if (OWLFORMATSTR.equals(formatStr))
+		if (OWLFORMATSTR.equals(formatStr)){
 			return new OWLMerger();
+		}
+		if (IOCFORMATSTR.equals(formatStr)){
+			return new IOCMerger();
+		}
+		if (COLFORMATSTR.equals(formatStr)){
+			return new CoLMerger();
+		}
 		System.err.println("Format " + formatStr + " not supported for merging");
 		return null;
 	}
@@ -240,7 +354,16 @@ public class Builder {
 		}
 	}
 
-
+// Utilities
+	String getAttribute(Node n,String attribute_id){
+		final Node attNode = n.getAttributes().getNamedItem(attribute_id);
+		if (attNode != null)
+			return attNode.getNodeValue();
+		else
+			return null;
+	}
+	
+	
 
 
 }

@@ -13,6 +13,8 @@ public class ItemList {
 	private final List<Item> contents;
 	private final Set<KnownField> columnNames;
     private Map<String,String> synonymSources;  //maps a synonym column to an attributed source URL (these ought to be in the source sheet)
+
+    //TODO these don't belong here - these aren't general or reusable
     private final static String ITISCOLUMNTAG = "itis_names";
     private final static String ITISURL = "http://www.itis.gov/";
     private final static String GAACOLUMNTAG = "gaa_name";
@@ -28,6 +30,10 @@ public class ItemList {
 	
 	public void addItem (Item i){
 		contents.add(i);
+	}
+	
+	public void addList (List<Item> items){
+		contents.addAll(items);
 	}
 	
 	public List<Item> getContents(){

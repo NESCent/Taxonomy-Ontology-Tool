@@ -1,36 +1,38 @@
 package org.phenoscape.VTO.lib;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 /**
- * This merger handles files with names joined by underscore in one column (eg., Homo_sapiens or Homo_sapiens_sapiens).  It currently
- * looks for a single column tagged with the knownfield DELIMITEDNAME and treats it as columns of genus, species and optionally subspecies.  
+ * This merger handles files with names joined by underscore in one column (e.g., Homo_sapiens or Homo_sapiens_sapiens).  It currently
+ * looks for a single column tagged with the KnownField DELIMITEDNAME and treats it as columns of genus, species and optionally subspecies.  
  * Apart from the absent higher levels, it should work as a merger.
  * 
- * @author peter
+ * @author pmidford
  *
  */
-
-
 
 
 public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 
 	private final String columnSeparator; 
-	
+
 	private final String nameSeparator = "_";
-	
+
 	private final ColumnReader reader;
-	
+
 	private int namesCounter = 0;
+
+	Set<Item> resolvedItems = new HashSet<Item>();
 
 	static Logger logger = Logger.getLogger(OBOStore.class.getName());
 
-	
+
 	public UnderscoreJoinedNamesMerger(String separator){
 		columnSeparator = separator;
 		reader = new ColumnReader(columnSeparator);
@@ -44,8 +46,10 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 
 	@Override
+	/**
+	 * In theory this could contain the set of taxa within a family, but that's a stretch at this point.
+	 */
 	public boolean canAttach() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -84,41 +88,130 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 			}
 			if (subSpeciesName != null && target.getTermbyName(subSpeciesName) != null){
 				Term t = target.getTermbyName(subSpeciesName);
-				SynonymI s = target.makeSynonym(subSpeciesName, "VSWG:", Integer.toString(namesCounter++));
+				SynonymI s = target.makeSynonymWithXref(subSpeciesName, prefix, Integer.toString(namesCounter++));
 				t.addSynonym(s);
 				matchCount++;
+				resolvedItems.add(item);
 				logger.info("Found matching subspecies: " + subSpeciesName + " total is " + matchCount);
 			} 
 			else if (subSpeciesName != null && speciesName != null && target.getTermbyName(speciesName) != null){
 				Term t = target.getTermbyName(speciesName);
-				SynonymI s = target.makeSynonym(subSpeciesName, "VSWG:", Integer.toString(namesCounter++));
+				SynonymI s = target.makeSynonymWithXref(subSpeciesName, prefix, Integer.toString(namesCounter++));
 				t.addSynonym(s);
 				matchCount++;
+				resolvedItems.add(item);
 				logger.info("Matched subspecies to parent species: " + subSpeciesName + " total is " + matchCount);
 			}
 			else if	(speciesName != null && target.getTermbyName(speciesName) != null){
 				Term t = target.getTermbyName(speciesName);
-				SynonymI s = target.makeSynonym(speciesName, "VSWG:", Integer.toString(namesCounter++));
+				SynonymI s = target.makeSynonymWithXref(speciesName, prefix, Integer.toString(namesCounter++));
 				t.addSynonym(s);
 				matchCount++;
+				resolvedItems.add(item);
 				//System.out.println("Found matching species: " + speciesName + " total is " + matchCount);
 			}
 			else if(genusName != null && target.getTermbyName(genusName) != null){
 				Term t = target.getTermbyName(genusName);
-				SynonymI s = target.makeSynonym(genusName, "VSWG:", Integer.toString(namesCounter++));
+				SynonymI s = target.makeSynonymWithXref(genusName, prefix, Integer.toString(namesCounter++));
 				t.addSynonym(s);
 				matchCount++;
+				resolvedItems.add(item);
 				logger.info("Found matching genus: " + genusName + " total is " + matchCount);
-			}			
+			}
+		}
+		//Second pass looking for matches to synonyms
+		logger.info("Starting synonym search pass");
+		int unresolvedCount = 0;
+		for(Item item : items.getContents()){ 
+			if (!resolvedItems.contains(item)) {
+				String genusName = null;
+				String speciesName = null;
+				String subSpeciesName = null;
+				final String taxonName = item.getFieldValue(KnownField.DELIMITEDNAME);
+				String[] splitName = taxonName.split(nameSeparator);
+				if (splitName.length == 1 ){
+					genusName = splitName[0];
+				}
+				else if (splitName.length == 2){
+					StringBuilder b = new StringBuilder();
+					b.append(splitName[0]);
+					b.append(" ");
+					b.append(splitName[1]);
+					speciesName =  b.toString();
+				}
+				else {
+					StringBuilder b = new StringBuilder();
+					b.append(splitName[0]);
+					b.append(" ");
+					b.append(splitName[1]);
+					speciesName = b.toString();
+					b.append(" ");
+					b.append(splitName[2]);
+					subSpeciesName = b.toString();
+				}
+				if (subSpeciesName != null){
+					for (Term t : target.getTerms()){
+						for(SynonymI s : t.getSynonyms()){
+							String synText = s.getText();
+							if (subSpeciesName.equals(synText)){
+								SynonymI sn = target.makeSynonymWithXref(subSpeciesName, prefix, Integer.toString(namesCounter++));
+								t.addSynonym(sn);
+								matchCount++;
+								resolvedItems.add(item);
+								logger.info("Found matching subspecies synonym: " + t.getLabel() + " total is " + matchCount);
+								break;
+							}
+							else if (speciesName != null && speciesName.equals(synText)){
+								SynonymI sn = target.makeSynonymWithXref(subSpeciesName, prefix, Integer.toString(namesCounter++));
+								t.addSynonym(sn);
+								matchCount++;
+								resolvedItems.add(item);
+								logger.info("Matched subspecies to parent species synonym: " + t.getLabel() + " total is " + matchCount);
+								break;
+							}
+						}
+					}
+				}
+				else if	(speciesName != null){
+					for (Term t : target.getTerms()){
+						for(SynonymI s : t.getSynonyms()){
+							String synText = s.getText();
+							if (speciesName.equals(synText)){
+								SynonymI sn = target.makeSynonymWithXref(speciesName, prefix, Integer.toString(namesCounter++));
+								t.addSynonym(sn);
+								matchCount++;
+								resolvedItems.add(item);
+								logger.info("Found matching species synonym: " + t.getLabel() + " total is " + matchCount);
+								break;
+							}
+						}
+					}
+				}
+				else if(genusName != null){
+					for (Term t : target.getTerms()){
+						for(SynonymI s : t.getSynonyms()){
+							String synText = s.getText();
+							if (genusName.equals(synText)){
+								SynonymI sn = target.makeSynonymWithXref(genusName, prefix, Integer.toString(namesCounter++));
+								t.addSynonym(sn);
+								matchCount++;
+								resolvedItems.add(item);
+								logger.info("Found matching genus synonym: " + t.getLabel() + " total is " + matchCount);
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 		logger.info("Final match total = " + matchCount);
+		logger.info("Unresolved count = " + (items.getContents().size()-matchCount));
 	}
 
 	@Override
-	public void attach(File source, TaxonStore target, String parent,
-			String prefix) {
+	public void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix) {
+		throw new RuntimeException("UnderscoreJoinedName does not support attach");
 		// TODO Auto-generated method stub
-
 	}
 
 }

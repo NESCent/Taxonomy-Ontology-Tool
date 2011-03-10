@@ -12,21 +12,52 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.obo.datamodel.OBOClass;
+import org.phenoscape.VTO.Builder;
 
 public class ITISMerger implements Merger{
 
     static final Pattern pipePattern = Pattern.compile("\\|");   //try this pattern as it matches the documentation
 
+    
+	static final Logger logger = Logger.getLogger(ITISMerger.class.getName());
+
     @Override
-    public void merge(File itisSource, TaxonStore theStore, String prefix) {
+    public void merge(File itisSource, TaxonStore target, String prefix) {
+    	logger.info("Loading ITIS export " + itisSource.getAbsolutePath());
     	final Map<Integer,ITISElement> taxonTable = new HashMap<Integer,ITISElement>();
     	final List <ITISElement> itisList = buildITISList(itisSource);
     	fillTaxonTable(itisList,taxonTable);
     	gatherSynonyms(itisList,taxonTable);
-
-        final Collection<Term> terms = theStore.getTerms();	
-
+    	logger.info("Finished loading");
+		int termCount = 0;
+		int synCount = 0;
+        final Collection<Term> terms = target.getTerms();
+        for (Integer itisID : taxonTable.keySet()){
+        	ITISElement curElement = taxonTable.get(itisID);
+        	String primaryName = curElement.getName();
+        	Term matchingTerm = target.getTermbyName(primaryName);
+        	if (matchingTerm != null){
+        		termCount++;
+            	List<ITISElement> synList = curElement.getSynonyms();
+            	for (ITISElement syn : synList){
+            		String synName = syn.getName();
+            		if (synName != null){
+            			SynonymI newSyn = target.makeSynonymWithXref(synName, prefix, itisID.toString());
+            			matchingTerm.addSynonym(newSyn);
+            			synCount++;
+            		}
+            		else {
+            			throw new RuntimeException("ITIS synonym without name");
+            		}
+            		
+            	}        		
+        	}
+			if (termCount % 1000 == 0){
+				logger.info("Processed " + termCount + " terms; added " + synCount + " synonyms");
+			}
+        }
     }
     
 	private List<ITISElement> buildITISList(File nf){
@@ -91,6 +122,7 @@ public class ITISMerger implements Merger{
             		result.setID(idNum);
             	}
             	catch (NumberFormatException e){
+            		logger.error("Failed to parse first field in Synonym record; id1 = " + idStr);
             	}
             }
             String idStr2 = digest[3];
@@ -100,6 +132,7 @@ public class ITISMerger implements Merger{
             		result.setID2(idNum);
             	}
             	catch (NumberFormatException e){
+            		logger.error("Failed to parse second field in Synonym record; id1 = " + idStr + "; id2 = " + idStr2);
             	}
             }
         	break;
@@ -112,6 +145,7 @@ public class ITISMerger implements Merger{
             		result.setID(idNum);
             	}
             	catch (NumberFormatException e){
+            		logger.error("Failed to parse first field in author record; id1 = " + idStr);
             	}
             }
             result.setAuthorString(digest[2]);
@@ -153,11 +187,12 @@ public class ITISMerger implements Merger{
 
 
 	@Override
-	public void attach(File itisSource, TaxonStore target, String parent, String prefix) {
+	public void attach(File itisSource, TaxonStore target, String parent, String cladeRoot, String prefix) {
     	final Map<Integer,ITISElement> taxonTable = new HashMap<Integer,ITISElement>();
     	final List <ITISElement> itisList = buildITISList(itisSource);
     	fillTaxonTable(itisList,taxonTable);
     	gatherSynonyms(itisList,taxonTable);
+    	throw new RuntimeException("ITIS Merger does not implement attach yet!");
 		// TODO finish
 		
 	}

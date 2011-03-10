@@ -22,4 +22,10 @@ public class OBOSynonym implements SynonymI {
 	public String getID() {
 		return syn.getID();
 	}
+	
+	public String getText(){
+		return syn.getText();
+	}
+	
+	
 }

@@ -7,6 +7,7 @@
 package org.phenoscape.VTO;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -34,7 +35,12 @@ public class VTOTool {
 		File processFile = processArgs(args);
 		if (processFile != null){
 			Builder b = new Builder(processFile);
-			b.build();
+			try {
+				b.build();
+			} catch (Exception e) {
+				logger.fatal("Error in processing; message is " + e.getLocalizedMessage());
+				e.printStackTrace();
+			}
 		}
 	}
 

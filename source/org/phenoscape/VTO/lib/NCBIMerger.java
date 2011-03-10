@@ -56,6 +56,7 @@ public class NCBIMerger implements Merger {
 	static final private String NAMESFILENAME = "names.dmp";
 	static final private String NODESFILENAME = "nodes.dmp";
 	static final private String NCBIVERTEBRATE = "10";
+	static final private String NCBIMAMMAL = "2";
 	static final private String NCBIPRIMATE = "5";
 	static final private String NCBIRODENT = "6";
 	
@@ -85,28 +86,22 @@ public class NCBIMerger implements Merger {
 		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeChildren);
 		Map <String,Integer> namesInScope = new HashMap<String,Integer>(nodesInScope.size());
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
-		Map <String,Integer> synonymsInScope = new HashMap<String,Integer>(nodesInScope.size());
+		Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(nodesInScope.size());
 		buildScopedNamesList(namesFile,nodesInScope,namesInScope, termToName, synonymsInScope);
 		System.out.println("Node count = " + nodesInScope.size());
 		System.out.println("Name count = " + namesInScope.size());
 		System.out.println("Synonym count = " + synonymsInScope.size());
 		int nameHits = 0;
         final Collection<Term> terms = target.getTerms();	
-		for(Term term : terms){		
-			if(namesInScope.containsKey(term.getLabel())){
-				SynonymI oldSyn = term.getOldSynonym("NCBITaxon");
-				if (synonymsInScope.get(term.getLabel()) == null)
-					logger.warn("Null scope for synonym " + term.getLabel() + "; old syn = " + oldSyn);
-				String newID = synonymsInScope.get(term.getLabel()).toString();
-				if (oldSyn != null && !(newID.equals(oldSyn.getID()))){
-					System.err.println("An NCBI name (" + term.getLabel() + ") has a changed ID (" + newID + "); was " + oldSyn.getID());  // what to do
-				}
-				SynonymI newSyn = target.makeSynonym(namesInScope.get(term.getLabel()).toString(), synonymsInScope.get(term.getLabel()).toString(), "NCBITaxon");
-				term.addSynonym(newSyn);
-				nameHits++;
-			}
-		}
-		System.out.println("Names matching NCBI names = " + nameHits);
+        for(Integer termid : synonymsInScope.keySet()){
+        	String primaryName = termToName.get(termid);
+        	Term primaryTerm = target.getTermbyName(primaryName);
+        	for (String syn : synonymsInScope.get(termid)){
+        		SynonymI newSyn = target.makeSynonymWithXref(syn, "NCBITaxon", Integer.toString(termid));
+        		primaryTerm.addSynonym(newSyn);
+        	}
+        }
+ 		System.out.println("Names matching NCBI names = " + nameHits);
 	}
 
 
@@ -117,7 +112,7 @@ public class NCBIMerger implements Merger {
             while (raw != null){
                 final String[] digest = tabPattern.split(raw);
                 final String scope = digest[8];
-                if (NCBIVERTEBRATE.equals(scope) || NCBIRODENT.equals(scope) || NCBIPRIMATE.equals(scope)){
+                if (NCBIVERTEBRATE.equals(scope) || NCBIMAMMAL.equals(scope) || NCBIRODENT.equals(scope) || NCBIPRIMATE.equals(scope)){
                     final Integer nodeVal = Integer.parseInt(digest[0]);
                 	nodes.add(nodeVal);                	
                     Integer parentVal = Integer.parseInt(digest[2]);
@@ -142,21 +137,28 @@ public class NCBIMerger implements Merger {
         return;
 	}
 	
-	private void buildScopedNamesList(File nf, Set<Integer> nodes, Map<String,Integer> names, Map<Integer,String> termToName, Map<String,Integer> synonyms) {
+	private void buildScopedNamesList(File nf, Set<Integer> nodes, Map<String,Integer> names, Map<Integer,String> termToName, Map<Integer,Set<String>> synonyms) {
 		try{
             final BufferedReader br = new BufferedReader(new FileReader(nf));
             String raw = br.readLine();
             while (raw != null){
                 final String[] digest = tabPattern.split(raw);
                 Integer nodeNum = Integer.parseInt(digest[0]);
-                String name = digest[2];
+                String name = digest[2].trim();  //Unfortunately, there are some names with leading spaces in NCBI...
                 String nameType = digest[6];
                 if (nodes.contains(nodeNum) && SCIENTIFICNAMETYPE.equalsIgnoreCase(nameType)){
                 	names.put(name,nodeNum);
                 	termToName.put(nodeNum,name);
                 }
                 if (nodes.contains(nodeNum) && SYNONYMNAMETYPE.equalsIgnoreCase(nameType)){
-                	synonyms.put(name,nodeNum);   //should we be trying to capture more than one here?
+                	if (synonyms.containsKey(nodeNum)){
+                		synonyms.get(nodeNum).add(name);
+                	}
+                	else{
+                		Set<String> synSet = new HashSet<String>();
+                		synSet.add(name);
+                		synonyms.put(nodeNum,synSet);
+                	}
                 }
                 raw = br.readLine();
             }			
@@ -178,7 +180,7 @@ public class NCBIMerger implements Merger {
 
 
 	@Override
-	public void attach(File ncbiSource, TaxonStore target, String attachment, String prefix) {
+	public void attach(File ncbiSource, TaxonStore target, String attachment, String cladeRoot, String prefix) {
 		final File namesFile = new File(ncbiSource.getAbsolutePath()+'/'+NAMESFILENAME);
 		final File nodesFile = new File(ncbiSource.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
@@ -187,18 +189,17 @@ public class NCBIMerger implements Merger {
 		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeChildren);
 		Map <String,Integer> namesInScope = new HashMap<String,Integer>(nodesInScope.size());
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
-		Map <String,Integer> synonymsInScope = new HashMap<String,Integer>(nodesInScope.size());
+		Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(nodesInScope.size());
 		buildScopedNamesList(namesFile,nodesInScope,namesInScope, termToName,synonymsInScope);
 		System.out.println("Node count = " + nodesInScope.size());
 		System.out.println("Name count = " + namesInScope.size());
 		System.out.println("Synonym count = " + synonymsInScope.size());
-		int nameHits = 0;
 		Term parentTerm = null;
 		if (!"".equals(attachment)){
 			parentTerm = target.getTermbyName(attachment);
 			if (parentTerm == null){   //parent is unknown
 				if (!target.isEmpty()){
-					System.err.println("Can not attach " + namesFile.getAbsolutePath() + " specified parent: " + attachment + " is unknown to " + target);
+					logger.error("Can not attach " + namesFile.getAbsolutePath() + " specified parent: " + attachment + " is unknown to " + target);
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
@@ -210,44 +211,89 @@ public class NCBIMerger implements Merger {
         final Collection<Term> terms = target.getTerms();	
         final Integer parentNode = namesInScope.get(parentTerm.getLabel());
         logger.info("Building tree");
-        addChildren(parentNode, target,nodeChildren, termToName);
+        addChildren(parentNode, target,nodeChildren, termToName, nodeRanks);
         logger.info("Finished building tree" + parentNode);
-        logger.info("Done; count = " + count);
-//		for(Term term : terms){		
-//			if(namesInScope.containsKey(term.getLabel())){
-//				SynonymI oldSyn = term.getOldSynonym("NCBITaxon");
-//				String newID = synonymsInScope.get(term.getLabel()).toString();
-//				if (oldSyn != null && !(newID.equals(oldSyn.getID()))){
-//					System.err.println("An NCBI name (" + term.getLabel() + ") has a changed ID (" + newID + "); was " + oldSyn.getID());  // what to do
-//				}
-//				SynonymI newSyn = target.makeSynonym(namesInScope.get(term.getLabel()).toString(), synonymsInScope.get(term.getLabel()).toString(), "NCBITaxon");
-//				term.addSynonym(newSyn);
-//				nameHits++;
-//			}
-//		}
-//		System.out.println("Names matching NCBI names = " + nameHits);
-		// TODO Auto-generated method stub
-		
+        for(Integer termid : synonymsInScope.keySet()){
+        	String primaryName = termToName.get(termid);
+        	if (primaryName == null){
+        		//logger.warn("No termname for id " + termid);
+        		continue;
+        	}
+        	Term primaryTerm = target.getTermbyName(primaryName);
+        	if (primaryTerm == null){
+        	//	logger.warn("No term for name " + primaryName);
+        		continue;
+        	}
+        	for (String syn : synonymsInScope.get(termid)){
+        		SynonymI newSyn = target.makeSynonymWithXref(syn, "NCBITaxon", Integer.toString(termid));
+        		primaryTerm.addSynonym(newSyn);
+        	}
+        }
+        logger.info("Done; count = " + count);		
 	}
 
-	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName) {
+	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks) {
 		Set<Integer> children = nodeChildren.get(parent);
 		if (children != null){
+			String parentName = termToName.get(parent);
+			if (parentName == null)
+				throw new RuntimeException("parent name is null");
+			Term parentTerm = target.getTermByXRef("NCBITaxon",parent.toString());
+			if (parentTerm == null)
+				parentTerm = target.getTermbyName(parentName);
+			if (parentTerm == null)
+				throw new RuntimeException("parent term is null, name is " + termToName.get(parent));
 			for (Integer childID : children){
 				String childName = termToName.get(childID);
-				Term child = target.getTermbyName(childName);
-				if (child == null){
-					child = target.addTermbyID("NCBITaxon:" + childID.toString(), childName);
+				Term childTerm = target.getTermbyName(childName);
+				
+				if (childTerm == null){
+					// for now, if the term has no rank, we may not want to add it.
+					String rankStr = nodeRanks.get(childID);
+					if (rankStr != null && !"no rank".equals(rankStr)){
+						if ("subspecies".equals(rankStr)){
+							SynonymI subSyn = target.makeSynonymWithXref(childName, "NCBITaxon", childID.toString());
+							parentTerm.addSynonym(subSyn);
+						}
+						else {
+							childTerm = target.addTerm(childName);
+							target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+							target.setRankFromName(childTerm,rankStr);
+							target.attachParent(childTerm, parentTerm);
+							count++;
+						}
+					}
+					else {
+						childTerm = target.addTerm(childName);
+						target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+						target.attachParent(childTerm, parentTerm);
+			        	count++;						
+					}
 				}
-				target.attachParent(child, target.getTermbyName(termToName.get(parent)));
-	        	count++;
+				else {  //node with child's name already exists.  For now, we'll add the parent's name as a suffix
+					String newChildName = childName + " (" + parentName + ")";
+					if (target.getTermbyName(newChildName) != null){
+						throw new RuntimeException("Unresolvable duplication " + childName + " " + newChildName);
+					}
+					childTerm = target.addTerm(newChildName);
+					target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+					String rankStr = nodeRanks.get(childID);
+					if (rankStr != null && !"no rank".equals(rankStr)){
+						target.setRankFromName(childTerm,rankStr);
+						target.attachParent(childTerm, parentTerm);
+			        	count++;
+					}
+					else {
+						target.attachParent(childTerm, parentTerm);
+			        	count++;						
+					}
+				}
+
 	        	if (count % 1000 == 0)
 	        		logger.info("Count = " + count + " term = " + childName);
-
-				addChildren(childID,target,nodeChildren,termToName);
+				addChildren(childID,target,nodeChildren,termToName, nodeRanks);
 			}
 		}
-		
 	}
 
 
