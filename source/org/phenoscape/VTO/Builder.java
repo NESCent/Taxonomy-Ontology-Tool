@@ -122,13 +122,17 @@ public class Builder {
 				String formatStr = getAttribute(action,"format");
 				Merger m = getMerger(formatStr,columns,synPrefixes);
 				String sourceURLStr = getAttribute(action,"source");
-				File sourceFile = getSourceFile(sourceURLStr);
+				String mergePrefix = getAttribute(action,PREFIXITEMSTR);
+				File sourceFile = null;  //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
+				if (!"".equals(sourceURLStr))
+					sourceFile = getSourceFile(sourceURLStr);
 				logger.info("Merging names from " + sourceURLStr);
-				if (targetPrefixStr == null){
-					logger.warn("No prefix for newly generated ids specified - will default to filename component");
-					targetPrefixStr = sourceFile.getName();
+				if (mergePrefix == null){
+					m.merge(sourceFile, target, targetPrefixStr);
 				}
-				m.merge(sourceFile, target, targetPrefixStr);
+				else {
+					m.merge(sourceFile, target, mergePrefix);
+				}
 			}
 			else if (TRIMACTIONSTR.equalsIgnoreCase(actionName)){
 				String nodeStr = getAttribute(action,"node");
@@ -232,7 +236,7 @@ public class Builder {
 			try {
 				URL u = new URL(targetURLStr);
 				if (!"file".equals(u.getProtocol())){
-					System.err.println("OBO format must save to a local file");
+					logger.error("OBO format must save to a local file");
 					return null;
 				}
 				File oldFile = new File(u.getFile());
@@ -249,7 +253,7 @@ public class Builder {
 			try {
 				URL u = new URL(targetURLStr);
 				if (!"file".equals(u.getProtocol())){
-					System.err.println("XREF format must save to a local file");
+					logger.error("XREF format must save to a local file");
 					return null;
 				}
 				File oldFile = new File(u.getFile());
@@ -267,7 +271,7 @@ public class Builder {
 			try {
 				URL u = new URL(targetURLStr);
 				if (!"file".equals(u.getProtocol())){
-					System.err.println("Column format must save to a local file");
+					logger.error("Column format must save to a local file");
 					return null;
 				}
 				File oldFile = new File(u.getFile());
@@ -285,7 +289,7 @@ public class Builder {
 			try {
 				URL u = new URL(targetURLStr);
 				if (!"file".equals(u.getProtocol())){
-					System.err.println("Column format must save to a local file");
+					logger.error("Column format must save to a local file");
 					return null;
 				}
 				File oldFile = new File(u.getFile());
@@ -299,7 +303,7 @@ public class Builder {
 				return null;
 			}
 		}
-		System.err.println("Format " + formatStr + " not supported for merging");
+		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
 	}
 	
@@ -335,7 +339,7 @@ public class Builder {
 		if (COLFORMATSTR.equals(formatStr)){
 			return new CoLMerger();
 		}
-		System.err.println("Format " + formatStr + " not supported for merging");
+		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
 	}
 	

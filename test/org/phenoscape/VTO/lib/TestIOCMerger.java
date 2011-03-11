@@ -10,11 +10,11 @@ import org.junit.Test;
 
 public class TestIOCMerger {
 
-	IOCMerger testMerger;
+	CoLMerger testMerger;
 	File testFile;
 	@Before
 	public void setUp() throws Exception {
-		testMerger = new IOCMerger();
+		testMerger = new CoLMerger();
 		testFile = new File("/Users/peter/Projects/VTO/Data/ioc-names-2.4.xml");
 	}
 
@@ -23,8 +23,8 @@ public class TestIOCMerger {
 	}
 
 	@Test
-	public void testAttach() {
-		testMerger.attach(testFile, null, null, null, "IOC");
+	public void testMerge() {
+		testMerger.merge(testFile, null, "CoL");
 	}
 
 }
