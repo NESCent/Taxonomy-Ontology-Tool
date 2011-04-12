@@ -21,12 +21,12 @@ import org.obo.datamodel.impl.DefaultObjectFactory;
 import org.obo.util.TermUtil;
 
 public class OBOMerger implements Merger {
-	
+
 	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
 
 	private OBOUtils u = null;
-	
-	String defaultPrefix;
+
+	//String defaultPrefix;
 	private String idSuffix = ":%07d";
 	private String defaultFormat;
 
@@ -90,22 +90,51 @@ public class OBOMerger implements Merger {
 			return;
 		}
 		// first copy all the descendents of cladeClass into the target
-		Term cladeTerm = target.addTerm(cladeClass.getName());
+		Term cladeTerm = null;
 		String[] idFields = cladeClass.getID().split(":");
 		if (idFields.length == 2){
-			target.addXRefToTerm(cladeTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+			if (idFields[0].equals(prefix)){
+				cladeTerm = target.addTermbyID(cladeClass.getID(),cladeClass.getName());
+				if (cladeClass.getDbxrefs() != null){
+					for (Dbxref d : cladeClass.getDbxrefs()){
+						target.addXRefToTerm(cladeTerm, d.getDatabase(), d.getDatabaseID());
+					}
+				}
+				if (cladeClass.getSynonyms() != null){
+					for (Synonym s : cladeClass.getSynonyms()){
+						SynonymI newSyn = null; 
+						if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
+							Iterator<Dbxref> xIter = s.getXrefs().iterator();
+							if (xIter.hasNext()){
+								Dbxref d = xIter.next();
+								newSyn = target.makeSynonymWithXref(s.getText(), d.getDatabase(), d.getDatabaseID());
+							}
+						}
+						else {
+							newSyn = target.makeSynonym(s.getText());
+						}
+						if (newSyn != null)
+							cladeTerm.addSynonym(newSyn);
+					}
+				}
+			}
+			else{
+				cladeTerm = target.addTerm(cladeClass.getName());
+				target.addXRefToTerm(cladeTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+			}
 		}
 		else{
 			logger.warn("Could not split OBOID " + cladeClass.getID() + " to generate xref in target term");
 		}
-		if (u.getRankString(cladeClass) != null)
-			target.setRankFromName(cladeTerm, u.getRankString(cladeClass));
-		target.attachParent(cladeTerm, parentTerm);
-		addChildren(cladeClass,cladeTerm,target);
+		if (cladeTerm != null){
+			if (u.getRankString(cladeClass) != null)
+				target.setRankFromName(cladeTerm, u.getRankString(cladeClass));
+			target.attachParent(cladeTerm, parentTerm);
+			addChildren(cladeClass,cladeTerm,target,prefix);
+		}
 		//u.setNameSpace(oboNameSpace, fileSpec);
-		defaultPrefix = prefix;
-		defaultFormat = defaultPrefix + idSuffix;
-		
+		defaultFormat = prefix + idSuffix;
+
 		//targetFile = fileSpec;
 		//fillRankNames();
 
@@ -113,16 +142,45 @@ public class OBOMerger implements Merger {
 
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree
 	// so parentTerm.asOBOClass != parentClass
-	private void addChildren(OBOClass parentClass, Term parentTerm, TaxonStore target){
+	private void addChildren(OBOClass parentClass, Term parentTerm, TaxonStore target, String prefix){
 		final Collection<Link> childLinks = parentClass.getChildren();
 		for(Link l : childLinks){
 			OBOProperty lType = l.getType();
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
-				Term childTerm = target.addTerm(childClass.getName());
+				Term childTerm = null;
 				String[] idFields = childClass.getID().split(":");
 				if (idFields.length == 2){
-					target.addXRefToTerm(childTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+					if (idFields[0].equals(prefix)){
+						childTerm = target.addTermbyID(childClass.getID(), childClass.getName());
+						if (childClass.getDbxrefs() != null){
+							for (Dbxref d : childClass.getDbxrefs()){
+								target.addXRefToTerm(childTerm, d.getDatabase(), d.getDatabaseID());
+							}
+						}
+						if (childClass.getSynonyms() != null){
+							for (Synonym s : childClass.getSynonyms()){
+								SynonymI newSyn = null; 
+								if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
+									Iterator<Dbxref> xIter = s.getXrefs().iterator();
+									if (xIter.hasNext()){
+										Dbxref d = xIter.next();
+										newSyn = target.makeSynonymWithXref(s.getText(), d.getDatabase(), d.getDatabaseID());
+									}
+								}
+								else {
+									newSyn = target.makeSynonym(s.getText());
+								}
+								if (newSyn != null)
+									childTerm.addSynonym(newSyn);
+							}
+						}
+
+					}
+					else {
+						childTerm = target.addTerm(childClass.getName());
+						target.addXRefToTerm(childTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+					}
 				}
 				else{
 					logger.warn("Could not split OBOID " + childClass.getID() + " to generate xref in target term");
@@ -144,13 +202,13 @@ public class OBOMerger implements Merger {
 					}
 				}
 				target.attachParent(childTerm, parentTerm);
-				addChildren(childClass,childTerm,target);
+				addChildren(childClass,childTerm,target,prefix);
 			}
 		}
 	}
 
-	
-	  
+
+
 
 
 

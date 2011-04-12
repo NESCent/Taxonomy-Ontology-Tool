@@ -15,6 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.obo.datamodel.Dbxref;
 import org.phenoscape.VTO.Builder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -47,24 +48,29 @@ public class CoLMerger implements Merger {
 		f.setNamespaceAware(true);
 		final Collection<Term> terms = target.getTerms();
 		for (Term term : terms){
-			logger.info("Processing: " + term.getLabel());
-			Collection<NamePair> synList = queryOneName(term.getLabel(),f);
-			if (synList != null){
-				for (NamePair syn : synList){
-					SynonymI newSyn = target.makeSynonymWithXref(syn.getName(), prefix, syn.getID());
-					term.addSynonym(newSyn);
+			if (true){
+				String[] nameSplit = term.getLabel().split(" ");
+				if (nameSplit.length == 2 || nameSplit.length == 3){
+					logger.info("Processing: " + term.getLabel());
+					Collection<NamePair> synList = queryOneName(term.getLabel(),f);
+					if (synList != null){
+						for (NamePair syn : synList){
+							SynonymI newSyn = target.makeSynonymWithXref(syn.getName(), prefix, syn.getID());
+							term.addSynonym(newSyn);
+						}
+						logger.info("Waiting 0.8 seconds");
+						try {
+							Thread.sleep(800);
+						} catch (InterruptedException e) {
+							logger.info("Got an interrupted exception");
+						}
+						logger.info("Done");
+					}
 				}
-				logger.info("Waiting 1.6 seconds");
-				try {
-					Thread.sleep(1600);
-				} catch (InterruptedException e) {
-					logger.info("Got an interrupted exception");
-				}
-				logger.info("Done");
 			}
 		}
 	}
-	
+
 	
 	public Collection<NamePair> queryOneName(String name,DocumentBuilderFactory f){
 		String[] components = name.split(SPACEEXP);
@@ -105,7 +111,7 @@ public class CoLMerger implements Merger {
 			logger.fatal("Exception message is: " + e.getLocalizedMessage());
 		} 
 		System.out.println("Query is " + CoLQuery);
-		if (nl.getLength() > 0){
+		if (nl != null && nl.getLength() > 0){
 			System.out.println("nl length = " + nl.getLength());
 			for(int j=0;j<nl.getLength();j++){
 				Node synNode = nl.item(j);

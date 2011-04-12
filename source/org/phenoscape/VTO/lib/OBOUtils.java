@@ -353,7 +353,14 @@ class OBOUtils {
 				result.put(s.getText(),ref.getDatabase()+":"+ref.getDatabaseID());
 			}
 		}
-		result.put(term.getName(), term.getID());
+		if (term.getDbxrefs() != null && !term.getDbxrefs().isEmpty()){
+			for (Dbxref d : term.getDbxrefs()){
+				result.put(term.getName(),d.getDatabase()+ ":" + d.getDatabaseID());
+			}
+		}
+		else{
+			result.put(term.getName(), term.getID());
+		}
 		return result;
 	}
 

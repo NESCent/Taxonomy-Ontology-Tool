@@ -59,6 +59,7 @@ public class NCBIMerger implements Merger {
 	static final private String NCBIMAMMAL = "2";
 	static final private String NCBIPRIMATE = "5";
 	static final private String NCBIRODENT = "6";
+	static final private String NCBIINVERTEBRATE = "1";
 	
 	static final private String SCIENTIFICNAMETYPE = "scientific name";
 	static final private String SYNONYMNAMETYPE = "synonym";

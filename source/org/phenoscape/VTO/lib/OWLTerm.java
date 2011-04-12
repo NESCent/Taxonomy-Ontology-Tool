@@ -3,8 +3,15 @@ package org.phenoscape.VTO.lib;
 import java.util.Set;
 
 import org.obo.datamodel.OBOClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 public class OWLTerm implements Term {
+
+	private OWLIndividual clade;
+
+	public OWLTerm(OWLIndividual ind) {
+		clade = ind;
+	}
 
 	@Override
 	public OBOClass asOBOClass() {
@@ -59,6 +66,12 @@ public class OWLTerm implements Term {
 	public Set<String> getCrossReferences() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean hasAncestor(String string) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

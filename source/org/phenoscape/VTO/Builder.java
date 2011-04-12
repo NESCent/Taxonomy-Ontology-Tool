@@ -30,8 +30,10 @@ import org.phenoscape.VTO.lib.OBOMerger;
 import org.phenoscape.VTO.lib.OBOStore;
 import org.phenoscape.VTO.lib.OWLMerger;
 import org.phenoscape.VTO.lib.ColumnMerger;
+import org.phenoscape.VTO.lib.OWLStore;
 import org.phenoscape.VTO.lib.TaxonStore;
 import org.phenoscape.VTO.lib.UnderscoreJoinedNamesMerger;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -247,6 +249,26 @@ public class Builder {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return null;
+			}
+		}
+		if (OWLFORMATSTR.equals(formatStr)){
+			try {
+				URL u = new URL(targetURLStr);
+				if (!"file".equals(u.getProtocol())){
+					logger.error("OWL format must save to a local file");
+					return null;
+				}
+				File oldFile = new File(u.getFile());
+				if (oldFile.exists())
+					oldFile.delete();
+				return new OWLStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			} catch (OWLOntologyCreationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		if (XREFFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is implementation dependent (currently OBO)

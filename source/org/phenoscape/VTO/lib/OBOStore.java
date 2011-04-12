@@ -41,6 +41,7 @@ public class OBOStore implements TaxonStore {
 	static final public String GENUSSTRING = "genus";
 	static final public String SPECIESSTRING = "species";
 	static final public String SUBSPECIESSTRING = "subspecies";
+	static final public String SYNONYMSOURCESTRING = "source";
 	static final public String IDSTRING = "id";
 	static final public String SYNONYMSTRING = "synonym";    //publication_name?
 	static final public String BINOMIALSTRING = "species name";  //genus_species ??
@@ -186,13 +187,23 @@ public class OBOStore implements TaxonStore {
 
 	@Override
 	public void saveXref(String targetFilterPrefixStr) {
-		File targetXrefFile = new File(targetFile); 
+		File originalTargetFile = new File(targetFile);
+		String targetName = originalTargetFile.getName();
+		File targetXrefFile;
+		if (targetName.contains(".")){
+			int dotpos = targetName.indexOf('.');
+			String dstName = originalTargetFile.getParent() + fileSep + targetName.substring(0,dotpos) + ".txt";
+			targetXrefFile = new File(dstName);
+		}
+		else {
+			targetXrefFile = new File(targetName + ".txt");
+		}
 		List<OBOClass> tipList = getTips();
 		PrintWriter targetWriter = null;
 		try {
 			targetWriter = new PrintWriter(new BufferedWriter(new FileWriter(targetXrefFile)));
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "An error occurred when opening " + targetXrefFile.getName() + " for output");
+			logger.error("An error occurred when opening " + targetXrefFile.getName() + " for output");
 			throw new RuntimeException("");
 		}
 		logger.info("Writing to " + targetXrefFile.getAbsolutePath());
@@ -200,18 +211,35 @@ public class OBOStore implements TaxonStore {
 		targetWriter.write(lineSeparator);
 
 		for(OBOClass term : tipList){
-			Map<String,OBOClass> parentTable = getParents(term); 
-			for(String parentRank : COLUMNRANKS){
-				OBOClass parentTerm = parentTable.get(parentRank);
-				targetWriter.write(parentTerm.getName());
-				targetWriter.write("\t");
+			if (filterFromSynonymPrefix(term,targetFilterPrefixStr)){
+				Map<String,OBOClass> parentTable = getParents(term); 
+				for(String parentRank : COLUMNRANKS){
+					OBOClass parentTerm = parentTable.get(parentRank);
+					if (parentTerm != null)
+						targetWriter.write(parentTerm.getName());
+					targetWriter.write("\t");
+				}
+				targetWriter.write(term.getName());
+				targetWriter.write(lineSeparator);
 			}
-			targetWriter.write(term.getName());
-			targetWriter.write(lineSeparator);
 		}
 		targetWriter.close();
 		logger.info("Done");
 	}
+	
+	boolean filterFromSynonymPrefix(OBOClass term, String filterStr){
+		for(Synonym s : term.getSynonyms()){
+			for (Dbxref d : s.getXrefs()){
+				if (d.getDatabase() != null && d.getDatabase().equalsIgnoreCase(filterStr)){
+					return true;			
+				}
+			}
+		}
+		return false;
+	}
+	
+	
+	
 
 	@Override
 	public void saveColumnsFormat(String targetFilterPrefixStr){
@@ -231,7 +259,7 @@ public class OBOStore implements TaxonStore {
 		try {
 			targetWriter = new PrintWriter(new BufferedWriter(new FileWriter(targetColumnsFile)));
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "An error occurred when opening " + targetColumnsFile.getName() + " for output");
+			logger.error("An error occurred when opening " + targetColumnsFile.getName() + " for output");
 			throw new RuntimeException("");
 		}
 		logger.info("Writing to " + targetColumnsFile.getAbsolutePath());
@@ -347,7 +375,7 @@ public class OBOStore implements TaxonStore {
 		try {
 			targetWriter = new PrintWriter(new BufferedWriter(new FileWriter(targetSynonymsFile)));
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "An error occurred when opening " + targetSynonymsFile.getName() + " for output");
+			logger.error("An error occurred when opening " + targetSynonymsFile.getName() + " for output");
 			throw new RuntimeException("");
 		}
 		logger.info("Writing to " + targetSynonymsFile.getAbsolutePath());		
@@ -473,8 +501,10 @@ public class OBOStore implements TaxonStore {
 	private OBOClass crocodiliaFiller = null; 
 	private OBOClass artiodactylaFiller = null;
 	private OBOClass afrosoricidaFiller = null;
-
-
+	private OBOClass chondrichthyesFiller = null;
+	private OBOClass sarcopterygiiFiller = null;
+	private OBOClass cephalaspidomorphiFiller = null;
+	
 	private void addIntermediateRanks(OBOClass term, Map<String,OBOClass> parentTable){
 		if (reptiliaFiller == null){
 			reptiliaFiller = u.makeTerm("TEMP:0000001","Reptilia");
@@ -488,6 +518,16 @@ public class OBOStore implements TaxonStore {
 		if (afrosoricidaFiller == null){
 			afrosoricidaFiller = u.makeTerm("TEMP:0000004", "Afrosoricida");
 		}
+		if (chondrichthyesFiller == null){
+			chondrichthyesFiller = u.lookupTermByName("Chondrichthyes");
+		}
+		if (sarcopterygiiFiller == null){
+			sarcopterygiiFiller = u.lookupTermByName("Sarcopterygii");
+		}
+		if (cephalaspidomorphiFiller == null){
+			cephalaspidomorphiFiller = u.makeTerm("TEMP:0000005", "Cephalaspidomorphi");
+		}
+		
 		final OBOClass orderClass = parentTable.get("order");
 		final OBOClass familyClass = parentTable.get("family");
 		if (orderClass != null && "Sphenodontia".equals(orderClass.getName())){
@@ -539,6 +579,57 @@ public class OBOStore implements TaxonStore {
 		if (familyClass != null && "Chrysochloridae".equals(familyClass.getName())){
 			parentTable.put("order", afrosoricidaFiller);
 		}
+		if (orderClass != null && "Carcharhiniformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Chimaeriformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Heterodontiformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Hexanchiformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Lamniformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Pristiformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Pristiophoriformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Rajiformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Orectolobiformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Squaliformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Squatiniformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+		if (orderClass != null && "Torpediniformes".equals(orderClass.getName())){
+			parentTable.put("class", chondrichthyesFiller);
+		}
+
+		if (orderClass != null && "Ceratodontiformes".equals(orderClass.getName())){
+			parentTable.put("class", sarcopterygiiFiller);
+		}
+		if (orderClass != null && "Coelacanthiformes".equals(orderClass.getName())){
+			parentTable.put("class", sarcopterygiiFiller);
+		}
+		if (orderClass != null && "Lepidosireniformes".equals(orderClass.getName())){
+			parentTable.put("class", sarcopterygiiFiller);
+		}
+		if (orderClass != null && "Petromyzontiformes".equals(orderClass.getName())){
+			parentTable.put("class", cephalaspidomorphiFiller);
+		}
+
+
 	}
 
 

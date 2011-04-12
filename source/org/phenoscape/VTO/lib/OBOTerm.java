@@ -88,6 +88,13 @@ public class OBOTerm implements Term {
 		return null;
 	}
 
+	@Override
+	public boolean hasAncestor(String string) {
+		
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	
 	
 }

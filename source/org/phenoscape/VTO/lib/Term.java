@@ -27,4 +27,6 @@ public interface Term {
 	
 	public Set<String> getCrossReferences();
 
+	public boolean hasAncestor(String string);
+
 }

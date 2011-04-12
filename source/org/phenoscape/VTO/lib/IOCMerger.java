@@ -91,6 +91,7 @@ public class IOCMerger implements Merger {
 				Term orderTerm = target.getTermbyName(orderName);
 				if (orderTerm == null){
 					orderTerm = target.addTerm(orderName);
+					target.addXRefToTerm(orderTerm,"IOC",orderName);  // could be an alternate ID?					
 					target.setRankFromName(orderTerm,KnownField.ORDER.getCannonicalName());
 					target.attachParent(orderTerm,parentTerm);
 				}
@@ -104,6 +105,7 @@ public class IOCMerger implements Merger {
 				Term familyTerm = target.getTermbyName(familyName);
 				if (familyTerm == null){
 					familyTerm = target.addTerm(familyName);
+					target.addXRefToTerm(familyTerm,"IOC",familyName);  // could be an alternate ID?					
 					target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
 					if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(it.getName(KnownField.ORDER)) != null){
 						final String parentName = it.getName(KnownField.ORDER);
@@ -136,6 +138,7 @@ public class IOCMerger implements Merger {
 				Term genusTerm = target.getTermbyName(genusName);
 				if (genusTerm == null){
 					genusTerm = target.addTerm(genusName);
+					target.addXRefToTerm(genusTerm,"IOC",genusName);  // could be an alternate ID?
 					target.setRankFromName(genusTerm, KnownField.GENUS.getCannonicalName());
 					if (it.hasColumn(KnownField.SUBFAMILY) && target.getTermbyName(it.getName(KnownField.SUBFAMILY)) != null){
 						final String parentName = it.getName(KnownField.SUBFAMILY);
@@ -150,37 +153,19 @@ public class IOCMerger implements Merger {
 				}
 			}
 		}	
-		if (items.hasColumn(KnownField.CLADE)){   // This was used in amphibianet
-			for (Item it : items.getContents()){
-				String cladeLevelName = it.getName(KnownField.CLADE);  //call it a cladeLevel to reduce ambiguity
-				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-					final String parentName = it.getName(KnownField.GENUS);   //if it has a known parent (it ought to) render the parent genus parenthetically
-					cladeLevelName = cladeLevelName + " (" + parentName + ")";
-				}
-				Term cladeLevelTerm = target.getTermbyName(cladeLevelName);
-				if (cladeLevelTerm == null){
-					cladeLevelTerm = target.addTerm(cladeLevelName);
-					target.setRankFromName(cladeLevelTerm, KnownField.CLADE.getCannonicalName());
-					if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-						final String parentName = it.getName(KnownField.GENUS);
-						target.attachParent(cladeLevelTerm,target.getTermbyName(parentName));
-					}
-					else if (parentTerm != null)
-						target.attachParent(cladeLevelTerm, parentTerm);
-				}
-			}
-		}	
 		if (items.hasColumn(KnownField.SPECIES)){
 			for (Item it : items.getContents()){
-				final String speciesName = it.getName(KnownField.GENUS) + " " + it.getName(KnownField.SPECIES);
+				final String genusName = it.getName(KnownField.GENUS);
+				String capGenusName = genusName.substring(0,1).toUpperCase() + genusName.substring(1);
+				final String speciesName = capGenusName + " " + it.getName(KnownField.SPECIES);
 				Term speciesTerm = target.getTermbyName(speciesName); 
 				if (speciesTerm == null){
 					speciesTerm = target.addTerm(speciesName);
+					target.addXRefToTerm(speciesTerm,"IOC",speciesName);  // could be an alternate ID?
 					target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
 				}
 				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-					final String parentName = it.getName(KnownField.GENUS);
-					target.attachParent(speciesTerm,target.getTermbyName(parentName));
+					target.attachParent(speciesTerm,target.getTermbyName(genusName));
 				}
 				else if (it.hasColumn(KnownField.CLADE) && target.getTermbyName(it.getName(KnownField.CLADE)) != null){
 					final String parentName = it.getName(KnownField.CLADE);
@@ -188,8 +173,8 @@ public class IOCMerger implements Merger {
 				}
 				else if (parentTerm != null)
 					target.attachParent(speciesTerm, parentTerm);
-				if (items.hasColumn(KnownField.XREF)){
-					
+				else {
+					throw new RuntimeException(speciesName + " has no parent");
 				}
 				Collection<String> synSources = it.getSynonymSources();
 				for (String synSource : synSources){

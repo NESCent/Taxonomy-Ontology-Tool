@@ -2,7 +2,26 @@ package org.phenoscape.VTO.lib;
 
 import java.util.Collection;
 
+import org.obo.datamodel.Dbxref;
+import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+
 public class OWLStore implements TaxonStore {
+	
+	
+	private final OWLUtils u;
+	
+	
+	/**
+	 * 
+	 * @param fileSpec
+	 * @param prefix
+	 * @param nameSpace
+	 * @throws OWLOntologyCreationException 
+	 */
+	public OWLStore(String fileSpec, String prefix, String nameSpace) throws OWLOntologyCreationException{
+		u = new OWLUtils();
+	}
 
 	@Override
 	public void saveStore() {
@@ -13,8 +32,7 @@ public class OWLStore implements TaxonStore {
 
 	@Override
 	public Term getTerm(String termID) {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
+		throw new RuntimeException("Not Implemented");		
 	}
 
 	@Override
@@ -58,8 +76,7 @@ public class OWLStore implements TaxonStore {
 
 	@Override
 	public Term getTermbyName(String taxonName) {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
+		return new OWLTerm(u.lookupTermByName(taxonName));
 	}
 
 	@Override
@@ -81,9 +98,10 @@ public class OWLStore implements TaxonStore {
 	}
 
 	@Override
-	public Term addTermbyID(String ID, String name) {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
+	public Term addTermbyID(String id, String name) {
+		OWLIndividual owlTaxon;
+		owlTaxon = u.makeTerm(id, name);
+		return new OWLTerm(owlTaxon);
 	}
 
 	@Override
@@ -118,6 +136,10 @@ public class OWLStore implements TaxonStore {
 	//likely needs a factory to implement this, so not an OWLTerm method
 	@Override
 	public void addXRefToTerm(Term t, String dbName, String dbID) {
+		
+		//Dbxref newRef = u.createDbxref(dbName, dbID, null, Dbxref.ANALOG);   //not sure this is exactly right, but the short-form constructors in DbxrefImpl suggest it works 
+		//t.asOBOClass().addDbxref(newRef);
+
 		throw new RuntimeException("Not Implemented");
 		
 	}
