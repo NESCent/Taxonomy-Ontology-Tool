@@ -18,6 +18,11 @@ public class OWLTerm implements Term {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public OWLIndividual asOWLIndividualTerm(){
+		return clade;
+	}
 
 	@Override
 	public SynonymI getOldSynonym(String dbID) {

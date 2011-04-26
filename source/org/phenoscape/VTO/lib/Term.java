@@ -3,10 +3,14 @@ package org.phenoscape.VTO.lib;
 import java.util.Set;
 
 import org.obo.datamodel.OBOClass;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 public interface Term {
 	
 	public OBOClass asOBOClass();
+	
+	public OWLIndividual asOWLIndividualTerm();
 
 	public SynonymI getOldSynonym(String dbID);
 	

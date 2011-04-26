@@ -81,7 +81,13 @@ public class OBOMerger implements Merger {
 				return;
 			}
 			else { // attachment will be added first to provide a root for an otherwise empty target
-				parentTerm = target.addTerm(attachment);
+				OBOClass attachmentClass = u.lookupTermByName(attachment);
+				if (attachmentClass != null){
+					parentTerm = target.addTermbyID(attachmentClass.getID(),attachment);
+				}
+				else {
+					parentTerm = target.addTerm(attachment);
+				}
 				logger.info("Assigning " + attachment + " as root");
 			}
 		}

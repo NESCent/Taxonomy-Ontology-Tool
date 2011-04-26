@@ -11,6 +11,8 @@ import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
 import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 public class OBOTerm implements Term {
 	
@@ -19,6 +21,7 @@ public class OBOTerm implements Term {
 	public OBOTerm(OBOClass cl) {
 		term = cl;
 	}
+	
 
 	public SynonymI getOldSynonym(String dbID){
 		Synonym old = null; 
@@ -51,6 +54,11 @@ public class OBOTerm implements Term {
 		return term;
 	}
 
+	public OWLIndividual asOWLIndividualTerm(){
+		return null;
+	}
+
+	
 	@Override
 	public String getLabel() {
 		return term.getName();

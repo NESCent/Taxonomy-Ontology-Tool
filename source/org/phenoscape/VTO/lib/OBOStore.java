@@ -198,7 +198,7 @@ public class OBOStore implements TaxonStore {
 		else {
 			targetXrefFile = new File(targetName + ".txt");
 		}
-		List<OBOClass> tipList = getTips();
+		List<OBOClass> speciesList = getSpecies();
 		PrintWriter targetWriter = null;
 		try {
 			targetWriter = new PrintWriter(new BufferedWriter(new FileWriter(targetXrefFile)));
@@ -207,24 +207,46 @@ public class OBOStore implements TaxonStore {
 			throw new RuntimeException("");
 		}
 		logger.info("Writing to " + targetXrefFile.getAbsolutePath());
-		targetWriter.write("Species\t");
+		targetWriter.write("ID\tSpecies\tSynonym");
 		targetWriter.write(lineSeparator);
-
-		for(OBOClass term : tipList){
-			if (filterFromSynonymPrefix(term,targetFilterPrefixStr)){
-				Map<String,OBOClass> parentTable = getParents(term); 
-				for(String parentRank : COLUMNRANKS){
-					OBOClass parentTerm = parentTable.get(parentRank);
-					if (parentTerm != null)
-						targetWriter.write(parentTerm.getName());
-					targetWriter.write("\t");
+		for(OBOClass term : speciesList){
+			//System.out.println("Term is " + term.getName());
+			for(Synonym s : term.getSynonyms()){
+				boolean saveSynonym = false;
+				String dbID = null;
+				for (Dbxref d : s.getXrefs()){
+					if (d.getDatabase() != null && d.getDatabase().equalsIgnoreCase(targetFilterPrefixStr)){
+						saveSynonym = true;
+						dbID = d.getDatabaseID();
+					}
 				}
-				targetWriter.write(term.getName());
-				targetWriter.write(lineSeparator);
+				if (saveSynonym){
+					String targetXRef = getNamedXref(term);
+					if (targetXRef != null){
+						targetWriter.write(targetXRef);
+						targetWriter.write("\t");
+						targetWriter.write(term.getName());
+						targetWriter.write("\t");
+						targetWriter.write(s.getText());
+						targetWriter.write(lineSeparator);
+					}
+					else{
+						throw new RuntimeException("ID with no source XRref " + term.getID());
+					}
+				}
 			}
 		}
 		targetWriter.close();
 		logger.info("Done");
+	}
+
+	// Assumes singleton list of xrefs - safer assumption than hardcoding a prefix; needs more thought
+	// Perhaps this should be altID?
+	String getNamedXref(OBOClass term){
+		for (Dbxref d: term.getDbxrefs()){
+				return d.getDatabaseID();
+		}
+		return null;
 	}
 	
 	boolean filterFromSynonymPrefix(OBOClass term, String filterStr){
@@ -287,6 +309,21 @@ public class OBOStore implements TaxonStore {
 		logger.info("Done");
 	}
 
+	private List<OBOClass> getSpecies(){
+		final List<OBOClass> result = new ArrayList<OBOClass>();
+		Collection<OBOClass> source = u.getTerms();
+		logger.info("Terms count is " + source.size());
+		for (OBOClass term : source){
+			if (!term.getPropertyValues().isEmpty()){
+				if ("species".equals(u.getRankString(term))){				
+						result.add(term);
+				}
+			}
+		}
+		return result;
+	}
+
+	
 	private List<OBOClass> getTips(){
 		final List<OBOClass> result = new ArrayList<OBOClass>();
 		Collection<OBOClass> source = u.getTerms();

@@ -92,7 +92,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				t.addSynonym(s);
 				matchCount++;
 				resolvedItems.add(item);
-				logger.info("Found matching subspecies: " + subSpeciesName + " total is " + matchCount);
+				//System.out.println("Found matching subspecies: \t" + subSpeciesName + " total is " + matchCount);
 			} 
 			else if (subSpeciesName != null && speciesName != null && target.getTermbyName(speciesName) != null){
 				Term t = target.getTermbyName(speciesName);
@@ -100,7 +100,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				t.addSynonym(s);
 				matchCount++;
 				resolvedItems.add(item);
-				logger.info("Matched subspecies to parent species: " + subSpeciesName + " total is " + matchCount);
+				//System.out.println("Matched subspecies to parent species: \t" + subSpeciesName + " total is " + matchCount);
 			}
 			else if	(speciesName != null && target.getTermbyName(speciesName) != null){
 				Term t = target.getTermbyName(speciesName);
@@ -108,7 +108,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				t.addSynonym(s);
 				matchCount++;
 				resolvedItems.add(item);
-				//System.out.println("Found matching species: " + speciesName + " total is " + matchCount);
+				//System.out.println("Found matching species: \t" + speciesName + " total is " + matchCount);
 			}
 			else if(genusName != null && target.getTermbyName(genusName) != null){
 				Term t = target.getTermbyName(genusName);
@@ -116,7 +116,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				t.addSynonym(s);
 				matchCount++;
 				resolvedItems.add(item);
-				logger.info("Found matching genus: " + genusName + " total is " + matchCount);
+				//System.out.println("Found matching genus: \t" + genusName + " total is " + matchCount);
 			}
 		}
 		//Second pass looking for matches to synonyms
@@ -158,7 +158,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 								t.addSynonym(sn);
 								matchCount++;
 								resolvedItems.add(item);
-								logger.info("Found matching subspecies synonym: " + t.getLabel() + " total is " + matchCount);
+								//System.out.println("Found matching subspecies synonym: \t" + t.getLabel() + " total is " + matchCount);
 								break;
 							}
 							else if (speciesName != null && speciesName.equals(synText)){
@@ -166,7 +166,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 								t.addSynonym(sn);
 								matchCount++;
 								resolvedItems.add(item);
-								logger.info("Matched subspecies to parent species synonym: " + t.getLabel() + " total is " + matchCount);
+								//System.out.println("Matched subspecies to parent species synonym: \t" + t.getLabel() + " total is " + matchCount);
 								break;
 							}
 						}
@@ -181,7 +181,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 								t.addSynonym(sn);
 								matchCount++;
 								resolvedItems.add(item);
-								logger.info("Found matching species synonym: " + t.getLabel() + " total is " + matchCount);
+								//System.out.println("Found matching species synonym: \t" + t.getLabel() + " total is " + matchCount);
 								break;
 							}
 						}
@@ -196,7 +196,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 								t.addSynonym(sn);
 								matchCount++;
 								resolvedItems.add(item);
-								logger.info("Found matching genus synonym: " + t.getLabel() + " total is " + matchCount);
+								//System.out.println("Found matching genus synonym: \t" + t.getLabel() + " total is " + matchCount);
 								break;
 							}
 						}

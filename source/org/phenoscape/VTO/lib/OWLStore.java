@@ -2,16 +2,26 @@ package org.phenoscape.VTO.lib;
 
 import java.util.Collection;
 
+import org.apache.log4j.Logger;
 import org.obo.datamodel.Dbxref;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 public class OWLStore implements TaxonStore {
 	
 	
 	private final OWLUtils u;
+	private final String prefixStr;
+	private int idCounter = 0;
+	private String idSuffix = "_%07d";
+	private String defaultFormat;
 	
-	
+	static final Logger logger = Logger.getLogger(OWLUtils.class.getName());
+
+
+
 	/**
 	 * 
 	 * @param fileSpec
@@ -20,14 +30,20 @@ public class OWLStore implements TaxonStore {
 	 * @throws OWLOntologyCreationException 
 	 */
 	public OWLStore(String fileSpec, String prefix, String nameSpace) throws OWLOntologyCreationException{
-		u = new OWLUtils();
+		u = new OWLUtils("",fileSpec);
+		prefixStr = prefix;
+		defaultFormat = prefixStr + idSuffix;
 	}
 
 	@Override
 	public void saveStore() {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
-		
+		try {
+			u.saveOntology();
+			logger.info("Done");
+		} catch (OWLOntologyStorageException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -43,20 +59,23 @@ public class OWLStore implements TaxonStore {
 
 	@Override
 	public Term addTerm(String name) {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
+		String newID = String.format(defaultFormat,idCounter++);
+		OWLIndividual owlTaxon = u.makeTerm(newID, name);
+		return new OWLTerm(owlTaxon);
 	}
 
 	@Override
 	public void attachParent(Term child, Term parent) {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
-		
+		OWLIndividual parentTerm = parent.asOWLIndividualTerm();
+		OWLIndividual childTerm = child.asOWLIndividualTerm();
+		u.attachParent(childTerm,parentTerm);
+		return;
 	}
 
 	@Override
 	public void setRankFromName(Term term, String rank) {
-		throw new RuntimeException("Not Implemented");
+		return;
+		//throw new RuntimeException("Not Implemented");
 		// TODO Auto-generated method stub
 		
 	}
@@ -76,25 +95,29 @@ public class OWLStore implements TaxonStore {
 
 	@Override
 	public Term getTermbyName(String taxonName) {
-		return new OWLTerm(u.lookupTermByName(taxonName));
+		OWLIndividual oi = u.lookupTermByName(taxonName);
+		if (oi != null)
+			return new OWLTerm(oi);
+		return null;
 	}
 
 	@Override
 	public SynonymI makeSynonym(String syn) {
-		throw new RuntimeException("Not Implemented");
+		//throw new RuntimeException("Not Implemented");
+		return null;
 		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public SynonymI makeSynonymWithXref(String syn, String prefix, String xref) {
-		throw new RuntimeException("Not Implemented");
+		//throw new RuntimeException("Not Implemented");
+		return null;
 		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public boolean isEmpty() {
-		throw new RuntimeException("Not Implemented");
-		// TODO Auto-generated method stub
+		return u.isEmpty();
 	}
 
 	@Override
@@ -140,8 +163,8 @@ public class OWLStore implements TaxonStore {
 		//Dbxref newRef = u.createDbxref(dbName, dbID, null, Dbxref.ANALOG);   //not sure this is exactly right, but the short-form constructors in DbxrefImpl suggest it works 
 		//t.asOBOClass().addDbxref(newRef);
 
-		throw new RuntimeException("Not Implemented");
-		
+		//throw new RuntimeException("Not Implemented");
+		return;
 	}
 
 	@Override
