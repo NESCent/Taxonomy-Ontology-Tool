@@ -1,4 +1,4 @@
-package org.phenoscape.VTO.lib;
+package org.nescent.VTO.lib;
 
 import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.OBOClass;

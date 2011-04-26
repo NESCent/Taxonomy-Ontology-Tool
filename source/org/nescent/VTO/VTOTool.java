@@ -4,7 +4,7 @@
  * Peter Midford
  * 
  */
-package org.phenoscape.VTO;
+package org.nescent.VTO;
 
 import java.io.File;
 import java.io.IOException;

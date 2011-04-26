@@ -1,4 +1,4 @@
-package org.phenoscape.VTO.lib;
+package org.nescent.VTO.lib;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.obo.datamodel.Dbxref;
-import org.phenoscape.VTO.Builder;
+import org.nescent.VTO.Builder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

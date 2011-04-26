@@ -4,7 +4,7 @@
  * Peter Midford
  * 
  */
-package org.phenoscape.VTO;
+package org.nescent.VTO;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,18 +21,18 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
-import org.phenoscape.VTO.lib.CoLMerger;
-import org.phenoscape.VTO.lib.IOCMerger;
-import org.phenoscape.VTO.lib.ITISMerger;
-import org.phenoscape.VTO.lib.Merger;
-import org.phenoscape.VTO.lib.NCBIMerger;
-import org.phenoscape.VTO.lib.OBOMerger;
-import org.phenoscape.VTO.lib.OBOStore;
-import org.phenoscape.VTO.lib.OWLMerger;
-import org.phenoscape.VTO.lib.ColumnMerger;
-import org.phenoscape.VTO.lib.OWLStore;
-import org.phenoscape.VTO.lib.TaxonStore;
-import org.phenoscape.VTO.lib.UnderscoreJoinedNamesMerger;
+import org.nescent.VTO.lib.CoLMerger;
+import org.nescent.VTO.lib.IOCMerger;
+import org.nescent.VTO.lib.ITISMerger;
+import org.nescent.VTO.lib.Merger;
+import org.nescent.VTO.lib.NCBIMerger;
+import org.nescent.VTO.lib.OBOMerger;
+import org.nescent.VTO.lib.OBOStore;
+import org.nescent.VTO.lib.OWLMerger;
+import org.nescent.VTO.lib.ColumnMerger;
+import org.nescent.VTO.lib.OWLStore;
+import org.nescent.VTO.lib.TaxonStore;
+import org.nescent.VTO.lib.UnderscoreJoinedNamesMerger;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;

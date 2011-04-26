@@ -5,7 +5,7 @@
  * Last updated on July 24,2008
  *
  */
-package org.phenoscape.VTO.lib;
+package org.nescent.VTO.lib;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -1,4 +1,4 @@
-package org.phenoscape.VTO.lib;
+package org.nescent.VTO.lib;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.obo.datamodel.OBOClass;
-import org.phenoscape.VTO.Builder;
+import org.nescent.VTO.Builder;
 
 public class ITISMerger implements Merger{
 

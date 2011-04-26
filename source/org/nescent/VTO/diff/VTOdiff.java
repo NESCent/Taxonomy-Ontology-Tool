@@ -1,4 +1,4 @@
-package org.phenoscape.VTO.diff;
+package org.nescent.VTO.diff;
 
 public class VTOdiff {
 
