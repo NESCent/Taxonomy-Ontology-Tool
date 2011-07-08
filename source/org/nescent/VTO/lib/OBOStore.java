@@ -510,8 +510,18 @@ public class OBOStore implements TaxonStore {
 	@Override
 	public void setRankFromID(Term term, String rankID) {
 		u.setRankFromID(term.asOBOClass(), rankID);
-		
 	}
+	
+	@Override
+	public String getRankString(Term term){
+		u.getRankString(term.asOBOClass());
+	}
+	
+	
+	public String getTermRank(Term term){
+		u.getTermRank(term.asOBOClass());
+	}
+
 
 
 	@Override

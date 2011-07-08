@@ -92,6 +92,12 @@ public class OWLStore implements TaxonStore {
 		throw new RuntimeException("Not Implemented");
 		// TODO Auto-generated method stub
 	}
+	
+	@Override
+	public String getRankString(Term term) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public Term getTermbyName(String taxonName) {
@@ -171,6 +177,7 @@ public class OWLStore implements TaxonStore {
 	public Term getTermByXRef(String dbName, String dbID) {
 		throw new RuntimeException("Not Implemented");
 	}
+
 
 	
 }

@@ -189,7 +189,7 @@ public class IOCMerger implements Merger {
 		}
 	}
 
-	private ItemList processXML(File source)  throws IOException {
+	private ItemList processXML(File source) throws IOException {
 		ItemList result = new ItemList();
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);
@@ -212,29 +212,6 @@ public class IOCMerger implements Merger {
 			logger.fatal("Error - More than one ioclist element in " + source.getCanonicalPath());
 			return result;
 		}
-		Node ioclistRoot = nl.item(0);
-		NodeList children = ioclistRoot.getChildNodes();
-		int listChild = -1;
-		Map<String,String> parentTable = new HashMap<String,String>();        //Level(element name) -> taxon name
-		for(int childCount = 0;childCount<children.getLength();childCount++){
-			if ("list".equals(children.item(childCount).getNodeName())){
-				listChild = childCount;
-				break;
-			}
-		}
-		Node taxonList = children.item(listChild);
-		children = taxonList.getChildNodes();
-		for(int childCount = 0;childCount<children.getLength();childCount++){
-			if ("order".equals(children.item(childCount).getNodeName())){
-				result.addList(processOrderElement(children.item(childCount), parentTable));
-			}
-		}
-		List<KnownField> columns = new ArrayList<KnownField>();
-		columns.add(KnownField.ORDER);
-		columns.add(KnownField.FAMILY);
-		columns.add(KnownField.GENUS);
-		columns.add(KnownField.SPECIES);
-		result.addColumns(columns);
 		
 		return result;
 	}
@@ -242,10 +219,10 @@ public class IOCMerger implements Merger {
 	private List<Item>processOrderElement(Node orderElement, Map<String,String> parents){
 		List<Item> result = new ArrayList<Item>();
 		String orderName = getLatinName(orderElement);
-		orderName = orderName.substring(0,1) + orderName.substring(1).toLowerCase();
-		parents.put("order", orderName);
 		if (orderName == null)
 			logger.warn("No latin name for order");
+		orderName = orderName.substring(0,1) + orderName.substring(1).toLowerCase();
+		parents.put("order", orderName);
 		NodeList children = orderElement.getChildNodes();
 		for(int childCount = 0;childCount<children.getLength();childCount++){
 			if ("family".equals(children.item(childCount).getNodeName())){
@@ -261,9 +238,9 @@ public class IOCMerger implements Merger {
 	private List<Item>processFamilyElement(Node familyElement, Map<String,String> parents){
 		List<Item> result = new ArrayList<Item>();
 		String familyName = getLatinName(familyElement);
-		parents.put("family", familyName);
 		if (familyName == null)
 			logger.warn("No latin name for family");
+		parents.put("family", familyName);
 		NodeList children = familyElement.getChildNodes();
 		for(int childCount = 0;childCount<children.getLength();childCount++){
 			if ("genus".equals(children.item(childCount).getNodeName())){
@@ -310,15 +287,12 @@ public class IOCMerger implements Merger {
 			Node childNode = children.item(i);
 			if (childNode.getNodeName().equals("latin_name")){
 				NodeList nameChildren = childNode.getChildNodes();
-				for(int j=0;j<nameChildren.getLength();j++){
-					return nameChildren.item(j).getNodeValue();
-				}
+				return nameChildren.item(0).getNodeValue();     // assume only one child here
 			}
 		}
 		return null;
 	}
-	
-	
+
 	
 	
 	

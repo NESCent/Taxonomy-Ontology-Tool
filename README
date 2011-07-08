@@ -1,1 +1,1 @@
-This project is a tool for constructing taxonomic ontologies (OBO format and OWL format using tax as individuals in progress).  In addition to the source and unit test code, the project contains an output ontology and several sample xml configuration files.
+This project is a tool for constructing taxonomic ontologies in OBO format (OWL format using taxa as individuals is in development).  In addition to the source and unit test code, the project contains an output ontology and several sample xml configuration files.

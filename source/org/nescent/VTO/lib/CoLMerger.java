@@ -3,11 +3,8 @@ package org.nescent.VTO.lib;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -15,8 +12,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.Dbxref;
-import org.nescent.VTO.Builder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -26,7 +21,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class CoLMerger implements Merger {
 
 	
-	final private static String COLURLPREFIX = "http://www.catalogueoflife.org/annual-checklist/2010/webservice?name=";
+	final private static String COLURLPREFIX = "http://www.catalogueoflife.org/annual-checklist/2011/webservice?name=";
 	final private static String COLFULLSUFFIX = "&response=full";
 	final private static String SPACEEXP = " ";
 
@@ -109,10 +104,11 @@ public class CoLMerger implements Merger {
 		} catch (IOException e) {
 			logger.fatal("Error in reading from " + CoLQuery);
 			logger.fatal("Exception message is: " + e.getLocalizedMessage());
+			return result;
 		} 
 		System.out.println("Query is " + CoLQuery);
 		if (nl != null && nl.getLength() > 0){
-			System.out.println("nl length = " + nl.getLength());
+			logger.debug("nl length = " + nl.getLength());
 			for(int j=0;j<nl.getLength();j++){
 				Node synNode = nl.item(j);
 				NodeList synonymChildren = synNode.getChildNodes();
@@ -129,7 +125,7 @@ public class CoLMerger implements Merger {
 				}
 			}
 		}
-		System.out.println("Taxon has " + result.size() + " synonyms");
+		logger.info("Taxon has " + result.size() + " synonyms");
 		return result;
 	}
 	

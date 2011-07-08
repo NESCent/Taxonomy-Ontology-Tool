@@ -7,8 +7,17 @@ public interface TaxonStore {
 	
 	public void saveStore();
 	
+	/**
+	 * 
+	 * @param termID name of requested term
+	 * @return wrapped term named by termID
+	 */
 	public Term getTerm(String termID);
 
+	/**
+	 * 
+	 * @return all terms in the store
+	 */
 	public Collection<Term> getTerms();
 	
 	/**
@@ -18,8 +27,18 @@ public interface TaxonStore {
 	 */
 	public Term addTerm(String name);
 	
+	/**
+	 * Attaches subsumption relation (is_a) between a child term and a parent term
+	 * @param child term subsumed by parent
+	 * @param parent term subsuming child
+	 */
 	public void attachParent(Term child, Term parent);
 	
+	/**
+	 * 
+	 * @param term
+	 * @param rank
+	 */
 	public void setRankFromName(Term term, String rank);
 	
 	public void setRankFromID(Term term, String rankID);
@@ -49,6 +68,8 @@ public interface TaxonStore {
 	public void trim(String nodeStr);
 
 	public Term getTermByXRef(String dbName, String dbID);
+
+	public String getRankString(Term term);
 	
 	// these should be accept from Merger
 }

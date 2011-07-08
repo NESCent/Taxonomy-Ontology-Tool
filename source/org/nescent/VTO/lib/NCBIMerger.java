@@ -51,6 +51,11 @@ import org.apache.log4j.Logger;
 import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.OBOClass;
 
+/**
+ * 
+ * @author pmidford
+ *
+ */
 public class NCBIMerger implements Merger {
 
 	static final private String NAMESFILENAME = "names.dmp";
@@ -63,6 +68,8 @@ public class NCBIMerger implements Merger {
 	
 	static final private String SCIENTIFICNAMETYPE = "scientific name";
 	static final private String SYNONYMNAMETYPE = "synonym";
+	
+	static final private String NCBIDBNAME = "NCBITaxon";
 	
     static final Pattern tabPattern = Pattern.compile("\t|\t");   //try this pattern as it matches the documentation
 
@@ -98,7 +105,7 @@ public class NCBIMerger implements Merger {
         	String primaryName = termToName.get(termid);
         	Term primaryTerm = target.getTermbyName(primaryName);
         	for (String syn : synonymsInScope.get(termid)){
-        		SynonymI newSyn = target.makeSynonymWithXref(syn, "NCBITaxon", Integer.toString(termid));
+        		SynonymI newSyn = target.makeSynonymWithXref(syn, NCBIDBNAME, Integer.toString(termid));
         		primaryTerm.addSynonym(newSyn);
         	}
         }
@@ -226,7 +233,7 @@ public class NCBIMerger implements Merger {
         		continue;
         	}
         	for (String syn : synonymsInScope.get(termid)){
-        		SynonymI newSyn = target.makeSynonymWithXref(syn, "NCBITaxon", Integer.toString(termid));
+        		SynonymI newSyn = target.makeSynonymWithXref(syn, NCBIDBNAME, Integer.toString(termid));
         		primaryTerm.addSynonym(newSyn);
         	}
         }
@@ -239,7 +246,7 @@ public class NCBIMerger implements Merger {
 			String parentName = termToName.get(parent);
 			if (parentName == null)
 				throw new RuntimeException("parent name is null");
-			Term parentTerm = target.getTermByXRef("NCBITaxon",parent.toString());
+			Term parentTerm = target.getTermByXRef(NCBIDBNAME,parent.toString());
 			if (parentTerm == null)
 				parentTerm = target.getTermbyName(parentName);
 			if (parentTerm == null)
@@ -249,26 +256,34 @@ public class NCBIMerger implements Merger {
 				Term childTerm = target.getTermbyName(childName);
 				
 				if (childTerm == null){
-					// for now, if the term has no rank, we may not want to add it.
 					String rankStr = nodeRanks.get(childID);
 					if (rankStr != null && !"no rank".equals(rankStr)){
 						if ("subspecies".equals(rankStr)){
-							SynonymI subSyn = target.makeSynonymWithXref(childName, "NCBITaxon", childID.toString());
+							//merge subspecies as synonyms of their parent species (following CoF/TTO practice)
+							SynonymI subSyn = target.makeSynonymWithXref(childName, NCBIDBNAME, childID.toString());
 							parentTerm.addSynonym(subSyn);
 						}
 						else {
+							//standard case - make a child term and attach
 							childTerm = target.addTerm(childName);
-							target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+							target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 							target.setRankFromName(childTerm,rankStr);
 							target.attachParent(childTerm, parentTerm);
 							count++;
 						}
 					}
-					else {
+					else if ("species".equals(target.getRankString(parentTerm))) {  
+						//a rankless term with a species as a parent is treated as a subspecies
+						SynonymI subSyn = target.makeSynonymWithXref(childName, NCBIDBNAME, childID.toString());
+						parentTerm.addSynonym(subSyn);
+					}
+					else {  
+						// for now, we'll go ahead and add other rankless terms
 						childTerm = target.addTerm(childName);
-						target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+						target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
+						target.setRankFromName(childTerm,rankStr);
 						target.attachParent(childTerm, parentTerm);
-			        	count++;						
+						count++;
 					}
 				}
 				else {  //node with child's name already exists.  For now, we'll add the parent's name as a suffix
@@ -277,7 +292,7 @@ public class NCBIMerger implements Merger {
 						throw new RuntimeException("Unresolvable duplication " + childName + " " + newChildName);
 					}
 					childTerm = target.addTerm(newChildName);
-					target.addXRefToTerm(childTerm,"NCBITaxon",childID.toString());  // could be an alternate ID?
+					target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 					String rankStr = nodeRanks.get(childID);
 					if (rankStr != null && !"no rank".equals(rankStr)){
 						target.setRankFromName(childTerm,rankStr);

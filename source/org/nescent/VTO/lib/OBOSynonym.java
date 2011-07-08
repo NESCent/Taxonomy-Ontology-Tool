@@ -1,8 +1,5 @@
 package org.nescent.VTO.lib;
 
-import org.obo.datamodel.Dbxref;
-import org.obo.datamodel.OBOClass;
-import org.obo.datamodel.ObjectFactory;
 import org.obo.datamodel.Synonym;
 
 public class OBOSynonym implements SynonymI {

@@ -150,13 +150,13 @@ public class Builder {
 				logger.warn("Unknown action: " + action);
 			}
 		}
-		if ("XREF".equals(targetFormatStr)){
+		if (XREFFORMATSTR.equals(targetFormatStr)){
 			target.saveXref(targetFilterPrefixStr);
 		}
-		else if ("COLUMN".equals(targetFormatStr)){
+		else if (COLUMNFORMATSTR.equals(targetFormatStr)){
 			target.saveColumnsFormat(targetFilterPrefixStr);
 		}
-		else if ("SYNONYM".equals(targetFormatStr)){
+		else if (SYNONYMFORMATSTR.equals(targetFormatStr)){
 			target.saveSynonymFormat(targetFilterPrefixStr);
 		}
 		else{
@@ -221,7 +221,6 @@ public class Builder {
 						}
 					}
 				}
-				
 			}
 			else if (child.getNodeType() == Node.TEXT_NODE){
 				//ignore
@@ -381,7 +380,7 @@ public class Builder {
 	}
 
 // Utilities
-	String getAttribute(Node n,String attribute_id){
+	private String getAttribute(Node n,String attribute_id){
 		final Node attNode = n.getAttributes().getNamedItem(attribute_id);
 		if (attNode != null)
 			return attNode.getNodeValue();
