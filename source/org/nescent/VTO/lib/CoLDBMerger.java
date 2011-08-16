@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,26 +34,18 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author peter
  *
  */
-public class CoLMerger implements Merger {
+public class CoLDBMerger implements Merger {
 
-	final private static String YEARSTR = "2011";
-	
-	final private static String COLURL = "http://www.catalogueoflife.org";
-	final private static String CHECKLISTPAGE = "/annual-checklist/";
-	
-	final private static String COLURLPREFIX = COLURL + CHECKLISTPAGE + YEARSTR + "/webservice?name=";
-	final private static String COLFULLSUFFIX = "&response=full";
-	final private static String SPACEEXP = " ";
 
-	static final Logger logger = Logger.getLogger(CoLMerger.class.getName());
+	static final Logger logger = Logger.getLogger(CoLDBMerger.class.getName());
 
 	
 	/**
-	 * @return false because this merger does not support attaching
+	 * @return false because this merger supports attaching
 	 */
 	@Override
 	public boolean canAttach() {
-		return false;
+		return true;
 	}
 
 	/**
@@ -114,7 +110,7 @@ public class CoLMerger implements Merger {
 	 */
 	@Override
 	public void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix) {
-		throw new RuntimeException("CoLMerger doesn't support attach");
+		
 	}
 
 	private Collection<NamePair> processXML(String CoLQuery, DocumentBuilderFactory f){
@@ -208,4 +204,27 @@ public class CoLMerger implements Merger {
 			return id;
 		}
 	}
+	
+	
+	public Connection openKBFromConnections(String connectionsSpec) throws SQLException {
+		final Properties properties = new Properties();
+		try {
+			properties.load(this.getClass().getResourceAsStream(connectionsSpec));
+		} catch (Exception e1) {
+			throw new RuntimeException("Failed to open connection properties file; path = " + connectionsSpec);
+		} 
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch(ClassNotFoundException e){
+			System.err.println("Couldn't load MySQL Driver");
+			e.printStackTrace();
+		}
+		final String host = properties.getProperty("host");
+		final String db = properties.getProperty("db");
+		final String user = properties.getProperty("user");
+		final String password = properties.getProperty("pw");
+		return DriverManager.getConnection(String.format("jdbc:mysql://%s/%s",host,db),user,password);
+
+	}
+
 }

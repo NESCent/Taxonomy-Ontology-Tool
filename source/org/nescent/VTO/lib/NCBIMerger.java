@@ -96,9 +96,9 @@ public class NCBIMerger implements Merger {
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
 		Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(nodesInScope.size());
 		buildScopedNamesList(namesFile,nodesInScope,namesInScope, termToName, synonymsInScope);
-		System.out.println("Node count = " + nodesInScope.size());
-		System.out.println("Name count = " + namesInScope.size());
-		System.out.println("Synonym count = " + synonymsInScope.size());
+		logger.info("Node count = " + nodesInScope.size());
+		logger.info("Name count = " + namesInScope.size());
+		logger.info("Synonym count = " + synonymsInScope.size());
 		int nameHits = 0;
         final Collection<Term> terms = target.getTerms();	
         for(Integer termid : synonymsInScope.keySet()){
@@ -109,7 +109,7 @@ public class NCBIMerger implements Merger {
         		primaryTerm.addSynonym(newSyn);
         	}
         }
- 		System.out.println("Names matching NCBI names = " + nameHits);
+ 		logger.info("Count of names matching NCBI names = " + nameHits);
 	}
 
 
@@ -139,7 +139,7 @@ public class NCBIMerger implements Merger {
             }
         }
         catch (Exception e) {
-            System.out.print(e);
+            logger.error(e);
             return;
         }
         return;
@@ -172,7 +172,7 @@ public class NCBIMerger implements Merger {
             }			
 		}
 		catch (Exception e){
-			System.out.print(e);
+			logger.error(e);
 			return;
 		}
 		// TODO Auto-generated method stub
@@ -180,13 +180,16 @@ public class NCBIMerger implements Merger {
 	}
 
 	
-	/**/
-	/* Attachment code here */
+	/**
+	 * @return this merger supports attachment (splicing in tree structure) as well as merging
+	 */
 	public boolean canAttach(){
 		return true;
 	}
 
-
+	/**
+	 * 
+	 */
 	@Override
 	public void attach(File ncbiSource, TaxonStore target, String attachment, String cladeRoot, String prefix) {
 		final File namesFile = new File(ncbiSource.getAbsolutePath()+'/'+NAMESFILENAME);
@@ -199,9 +202,9 @@ public class NCBIMerger implements Merger {
 		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
 		Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(nodesInScope.size());
 		buildScopedNamesList(namesFile,nodesInScope,namesInScope, termToName,synonymsInScope);
-		System.out.println("Node count = " + nodesInScope.size());
-		System.out.println("Name count = " + namesInScope.size());
-		System.out.println("Synonym count = " + synonymsInScope.size());
+		logger.info("Node count = " + nodesInScope.size());
+		logger.info("Name count = " + namesInScope.size());
+		logger.info("Synonym count = " + synonymsInScope.size());
 		Term parentTerm = null;
 		if (!"".equals(attachment)){
 			parentTerm = target.getTermbyName(attachment);

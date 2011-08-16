@@ -42,14 +42,16 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class Builder {
 	
-	final static String OBOFORMATSTR = "OBO";
-	final static String ITISFORMATSTR = "ITIS";
-	final static String NCBIFORMATSTR = "NCBI";
-	final static String CSVFORMATSTR = "CSV";
-	final static String TSVFORMATSTR = "TSV";
-	final static String OWLFORMATSTR = "OWL";
-	final static String IOCFORMATSTR = "IOC";
-	final static String COLFORMATSTR = "COL";
+	/* formats, supported for input, output (store) or both */
+	final static String OBOFORMATSTR = "OBO"; 	//OBO format (as supported by OBO-Edit); supports merge, attach, output
+	final static String ITISFORMATSTR = "ITIS";		//ITIS dump format (merge, attach)
+	final static String NCBIFORMATSTR = "NCBI";		//NCBI dump format (merge, attach)	
+	final static String CSVFORMATSTR = "CSV";	  //Comma separated text	
+	final static String TSVFORMATSTR = "TSV";	  //Tab separated text
+	final static String OWLFORMATSTR = "OWL";     //W3C OWL via OWLAPI
+	final static String IOCFORMATSTR = "IOC";     //XML format used by IOC checklist (birds)
+	final static String COLFORMATSTR = "COL";     //Catalogue of Life website
+	final static String COLDBFORMATSTR = "COLDB";  //Catalogue of Life via MySQL
 	final static String JOINEDNAMETABBEDCOLUMNS = "JOINEDNAMETAB";
 	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
