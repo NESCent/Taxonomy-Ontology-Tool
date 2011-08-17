@@ -81,7 +81,7 @@ public class ColumnReader {
      * 
      * @param f
      * @param headersFirst
-     * @return
+     * @return list of items parsed from the spreadsheet file
      */
     public ItemList processCatalog(File f,boolean headersFirst) {
         final ItemList result = new ItemList();

@@ -92,7 +92,7 @@ public class CoLMerger implements Merger {
 	 * 
 	 * @param name
 	 * @param f
-	 * @return
+	 * @return id,name pairs returned by xml processing
 	 */
 	public Collection<NamePair> queryOneName(String name,DocumentBuilderFactory f){
 		String[] components = name.split(SPACEEXP);
@@ -118,7 +118,7 @@ public class CoLMerger implements Merger {
 	}
 
 	private Collection<NamePair> processXML(String CoLQuery, DocumentBuilderFactory f){
-		Collection<NamePair> result = new HashSet<NamePair>();
+		Collection<NamePair> result = new HashSet<NamePair>();  //TODO why is this not a map?
 		NodeList nl = null;
 		try {
 			URL gnirequest = new URL(CoLQuery);

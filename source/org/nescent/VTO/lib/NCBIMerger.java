@@ -82,8 +82,9 @@ public class NCBIMerger implements Merger {
 	
     /**
      * This collects NCBI IDs as synonyms
-     * @param ncbiSource
-     * @param theStore
+     * @param ncbiSource specifies the directory containing the ncbi dump (.dmp) files
+     * @param target contains a taxonomy to add synonyms to
+     * @param prefix
      */
     public void merge(File ncbiSource, TaxonStore target, String prefix) {
 		final File namesFile = new File(ncbiSource.getAbsolutePath()+'/'+NAMESFILENAME);
