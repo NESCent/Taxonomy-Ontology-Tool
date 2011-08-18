@@ -73,99 +73,74 @@ public class Builder {
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
 
 
-
+	/**
+	 * Constructor just sets up the optionsFile field
+	 * @param options
+	 */
 	Builder(File options){
+		super();
 		optionsFile = options;
 	}
 
-	public void build() throws IOException {
-		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
-		f.setNamespaceAware(true);
-		NodeList nl = null;
-		try {
-			DocumentBuilder db = f.newDocumentBuilder();
-			db.setErrorHandler(new DefaultHandler());
-			Document d = db.parse(optionsFile);
-			nl = d.getElementsByTagNameNS("","taxonomy");
-		} catch (ParserConfigurationException e) {
-			logger.fatal("Error in initializing parser");
-			e.printStackTrace();
-			return;
-		} catch (SAXException e) {
-			logger.fatal("Error in parsing " + optionsFile.getCanonicalPath());
-			logger.fatal("Exception message is: " + e.getLocalizedMessage());
-			return;
-		} 
-		if (nl.getLength() != 1){
+	/**
+	 * This processes the options file, builds the target and loops through the actions (attach, trim, merge)
+	 * which are child elements of the root taxonomy element
+	 * @throws IOException
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 */
+	public void build() throws IOException, ParserConfigurationException, SAXException {
+		NodeList parseList = parseXMLOptionsFile();
+		if (parseList.getLength() != 1){
 			logger.fatal("Error - More than one taxonomy element in " + optionsFile.getCanonicalPath());
 			return;
 		}
-		Node taxonomyRoot = nl.item(0);
-		String targetURLStr = getAttribute(taxonomyRoot,"target");
-		String targetFormatStr = getAttribute(taxonomyRoot,"format");
-		String targetRootStr = getAttribute(taxonomyRoot,"root");
-		String targetPrefixStr = getAttribute(taxonomyRoot,PREFIXITEMSTR);
-		String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
-		TaxonStore target = getStore(targetURLStr, targetPrefixStr, targetFormatStr);
+		final Node taxonomyRoot = parseList.item(0);
+		final String targetURLStr = getAttribute(taxonomyRoot,"target");
+		final String targetFormatStr = getAttribute(taxonomyRoot,"format");
+		final String targetRootStr = getAttribute(taxonomyRoot,"root");
+		final String targetPrefixStr = getAttribute(taxonomyRoot,PREFIXITEMSTR);
+		final String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
+		final TaxonStore target = getStore(targetURLStr, targetPrefixStr, targetFormatStr);
 		logger.info("Building taxonomy to save at " + targetURLStr + " in the " + targetFormatStr + " format\n");
 		NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
-			Node action = actions.item(i);
-			String actionName = action.getNodeName();
-			@SuppressWarnings("unchecked")
-			List<String> columns = (List<String>)Collections.EMPTY_LIST;
-			Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
-			if (ATTACHACTIONSTR.equalsIgnoreCase(actionName)){
-				processAttachAction(action,target, targetRootStr, targetPrefixStr);
-			}
-			else if (MERGEACTIONSTR.equalsIgnoreCase(actionName)){
-				NodeList childNodes = action.getChildNodes();
-				if (childNodes.getLength()>0){
-					columns = processChildNodesOfAttach(childNodes,synPrefixes);
-				}
-				String formatStr = getAttribute(action,"format");
-				Merger m = getMerger(formatStr,columns,synPrefixes);
-				String sourceURLStr = getAttribute(action,"source");
-				String mergePrefix = getAttribute(action,PREFIXITEMSTR);
-				File sourceFile = null;  //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
-				if (!"".equals(sourceURLStr))
-					sourceFile = getSourceFile(sourceURLStr);
-				logger.info("Merging names from " + sourceURLStr);
-				if (mergePrefix == null){
-					m.merge(sourceFile, target, targetPrefixStr);
-				}
-				else {
-					m.merge(sourceFile, target, mergePrefix);
-				}
-			}
-			else if (TRIMACTIONSTR.equalsIgnoreCase(actionName)){
-				String nodeStr = getAttribute(action,"node");
-				target.trim(nodeStr);
-			}
-			else if (action.getNodeType() == Node.TEXT_NODE){
-				//ignore
-			}
-			else if (action.getNodeType() == Node.COMMENT_NODE){
-				//ignore
-			}
-			else{
-				logger.warn("Unknown action: " + action);
-			}
+			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
 		}
-		if (XREFFORMATSTR.equals(targetFormatStr)){
-			target.saveXref(targetFilterPrefixStr);
+		saveTarget(targetFormatStr, targetFilterPrefixStr, target);
+	}
+	
+	private NodeList parseXMLOptionsFile() throws ParserConfigurationException, SAXException, IOException{
+		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+		f.setNamespaceAware(true);
+		DocumentBuilder db = f.newDocumentBuilder();
+		db.setErrorHandler(new DefaultHandler());
+		Document d = db.parse(optionsFile);
+		return d.getElementsByTagNameNS("","taxonomy");
+	}
+	
+	private void processChildNode(Node action, TaxonStore target,String targetRootStr, String targetFormatStr, String targetPrefixStr){
+		final String actionName = action.getNodeName();
+		if (ATTACHACTIONSTR.equalsIgnoreCase(actionName)){
+			processAttachAction(action,target, targetRootStr, targetPrefixStr);
 		}
-		else if (COLUMNFORMATSTR.equals(targetFormatStr)){
-			target.saveColumnsFormat(targetFilterPrefixStr);
+		else if (MERGEACTIONSTR.equalsIgnoreCase(actionName)){
+			processMergeAction(action, target, targetPrefixStr);
 		}
-		else if (SYNONYMFORMATSTR.equals(targetFormatStr)){
-			target.saveSynonymFormat(targetFilterPrefixStr);
+		else if (TRIMACTIONSTR.equalsIgnoreCase(actionName)){
+			target.trim(getAttribute(action,"node"));
+		}
+		else if (action.getNodeType() == Node.TEXT_NODE){
+			//ignore
+		}
+		else if (action.getNodeType() == Node.COMMENT_NODE){
+			//ignore
 		}
 		else{
-			target.saveStore();
+			logger.warn("Unknown action: " + action);
 		}
 	}
-
+	
 	private void processAttachAction(Node action, TaxonStore target, String targetRootStr, String targetPrefixStr){
 		@SuppressWarnings("unchecked")
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
@@ -203,7 +178,30 @@ public class Builder {
 
 	}
 	
-	
+	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){
+		@SuppressWarnings("unchecked")
+		List<String> columns = (List<String>)Collections.EMPTY_LIST;
+		final Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
+		NodeList childNodes = action.getChildNodes();
+		if (childNodes.getLength()>0){
+			columns = processChildNodesOfAttach(childNodes,synPrefixes);
+		}
+		String formatStr = getAttribute(action,"format");
+		Merger m = getMerger(formatStr,columns,synPrefixes);
+		String sourceURLStr = getAttribute(action,"source");
+		String mergePrefix = getAttribute(action,PREFIXITEMSTR);
+		File sourceFile = null;  //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
+		if (!"".equals(sourceURLStr))
+			sourceFile = getSourceFile(sourceURLStr);
+		logger.info("Merging names from " + sourceURLStr);
+		if (mergePrefix == null){
+			m.merge(sourceFile, target, targetPrefixStr);
+		}
+		else {
+			m.merge(sourceFile, target, mergePrefix);
+		}
+
+	}
 	
 	
 	private List<String> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
@@ -378,6 +376,21 @@ public class Builder {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
+		}
+	}
+
+	private void saveTarget(String targetFormatStr, String targetFilterPrefixStr, TaxonStore target){
+		if (XREFFORMATSTR.equals(targetFormatStr)){
+			target.saveXref(targetFilterPrefixStr);
+		}
+		else if (COLUMNFORMATSTR.equals(targetFormatStr)){
+			target.saveColumnsFormat(targetFilterPrefixStr);
+		}
+		else if (SYNONYMFORMATSTR.equals(targetFormatStr)){
+			target.saveSynonymFormat(targetFilterPrefixStr);
+		}
+		else{
+			target.saveStore();
 		}
 	}
 

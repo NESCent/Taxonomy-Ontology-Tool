@@ -2,6 +2,7 @@ package org.nescent.VTO.lib;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.Collection;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,7 +35,6 @@ public class TestCoLMerger {
 	@Test
 	public void testCanAttach() {
 		assertFalse(testMerger.canAttach());
-		fail("Not yet implemented");
 	}
 
 	@Test
