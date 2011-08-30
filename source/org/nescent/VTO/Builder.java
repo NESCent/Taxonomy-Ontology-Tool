@@ -57,12 +57,20 @@ public class Builder {
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
 	final static String SYNONYMFORMATSTR = "SYNONYM"; //This a variant of the column format
 	
+	final static String TARGETTAXONOMYSTR = "target";
+	final static String TARGETFORMATSTR = "format";
+	final static String TARGETROOTSTR = "root";
+	
 	final static String ATTACHACTIONSTR = "attach";
 	final static String MERGEACTIONSTR = "merge";
 	final static String TRIMACTIONSTR = "trim";
 	
 	final static String COLUMNSYNTAXSTR = "column";
 	
+	final static String ATTACHFORMATSTR = "format";
+	final static String ATTACHROOTSTR = "root";   //the root of the attached tree - a new child of node named by ATTACHPARENTSTR
+	final static String ATTACHPARENTSTR = "parent";
+	final static String ATTACHPRESERVEIDSSTR = "preserveIDs";
 	
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
@@ -96,9 +104,9 @@ public class Builder {
 			return;
 		}
 		final Node taxonomyRoot = parseList.item(0);
-		final String targetURLStr = getAttribute(taxonomyRoot,"target");
-		final String targetFormatStr = getAttribute(taxonomyRoot,"format");
-		final String targetRootStr = getAttribute(taxonomyRoot,"root");
+		final String targetURLStr = getAttribute(taxonomyRoot,TARGETTAXONOMYSTR);
+		final String targetFormatStr = getAttribute(taxonomyRoot,TARGETFORMATSTR);
+		final String targetRootStr = getAttribute(taxonomyRoot,TARGETROOTSTR);
 		final String targetPrefixStr = getAttribute(taxonomyRoot,PREFIXITEMSTR);
 		final String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
 		final TaxonStore target = getStore(targetURLStr, targetPrefixStr, targetFormatStr);
@@ -145,9 +153,11 @@ public class Builder {
 		@SuppressWarnings("unchecked")
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
 		Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
-		String formatStr = getAttribute(action,"format");
-		String cladeRootStr = getAttribute(action,"root");
-		String sourceParentStr = getAttribute(action,"parent");
+		final String formatStr = getAttribute(action,ATTACHFORMATSTR);
+		final String cladeRootStr = getAttribute(action,ATTACHROOTSTR);
+		final String sourceParentStr = getAttribute(action,ATTACHPARENTSTR);
+		final String preserveIdsStr = getAttribute(action,ATTACHPRESERVEIDSSTR);
+		boolean preserveIDs = preserveIdsStr != null && !"no".equalsIgnoreCase(preserveIdsStr);
 		NodeList childNodes = action.getChildNodes();
 		if (childNodes.getLength()>0){
 			columns = processChildNodesOfAttach(childNodes,synPrefixes);
@@ -163,17 +173,19 @@ public class Builder {
 			logger.warn("No prefix for newly generated ids specified - will default to filename component");
 			targetPrefixStr = sourceFile.getName();
 		}
+		m.setSource(sourceFile);
+		m.setTarget(target);
 		if (sourceParentStr != null){   //need to specify the clade within the sourceFile (or null?)
 			if (cladeRootStr != null)
-				m.attach(sourceFile,target,sourceParentStr,cladeRootStr,targetPrefixStr);
+				m.attach(sourceParentStr,cladeRootStr,targetPrefixStr,preserveIDs);
 			else
-				m.attach(sourceFile,target,sourceParentStr,sourceParentStr,targetPrefixStr);
+				m.attach(sourceParentStr,sourceParentStr,targetPrefixStr,preserveIDs);
 		}
 		else {
 			if (cladeRootStr != null)
-				m.attach(sourceFile,target,targetRootStr,cladeRootStr,targetPrefixStr);
+				m.attach(targetRootStr,cladeRootStr,targetPrefixStr,preserveIDs);
 			else
-				m.attach(sourceFile,target,targetRootStr,targetRootStr,targetPrefixStr);
+				m.attach(targetRootStr,targetRootStr,targetPrefixStr,preserveIDs);
 		}
 
 	}
@@ -194,11 +206,13 @@ public class Builder {
 		if (!"".equals(sourceURLStr))
 			sourceFile = getSourceFile(sourceURLStr);
 		logger.info("Merging names from " + sourceURLStr);
+		m.setSource(sourceFile);
+		m.setTarget(target);
 		if (mergePrefix == null){
-			m.merge(sourceFile, target, targetPrefixStr);
+			m.merge(targetPrefixStr);
 		}
 		else {
-			m.merge(sourceFile, target, mergePrefix);
+			m.merge(mergePrefix);
 		}
 
 	}

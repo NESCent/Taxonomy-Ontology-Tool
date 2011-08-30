@@ -3,8 +3,6 @@ package org.nescent.VTO.lib;
 import java.util.Collection;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.Dbxref;
-import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;

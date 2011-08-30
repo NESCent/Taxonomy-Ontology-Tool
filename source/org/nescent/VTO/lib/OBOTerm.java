@@ -1,6 +1,5 @@
 package org.nescent.VTO.lib;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,9 +8,7 @@ import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
-import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 public class OBOTerm implements Term {

@@ -4,10 +4,17 @@ import java.io.File;
 
 public interface Merger {
 	
+	/* Metadata methods report what the Merger can and cannot do */
 	boolean canAttach();
 	
-	void merge(File source, TaxonStore target, String prefix);
+	boolean canPreserveID();
+
+	void setSource(File source);
 	
-	void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix);
+	void setTarget(TaxonStore target);
+	
+	void merge(String prefix);
+	
+	void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs);
 
 }

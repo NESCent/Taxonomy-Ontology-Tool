@@ -5,18 +5,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.IdentifiedObject;
 import org.nescent.VTO.Builder;
+import org.obo.datamodel.IdentifiedObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -25,7 +23,10 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class IOCMerger implements Merger {
 
-		
+	private File source;
+	private TaxonStore target;
+
+
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
 
 
@@ -35,7 +36,23 @@ public class IOCMerger implements Merger {
 	}
 
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public boolean canPreserveID(){
+		return false;   //No ids apart from names in this format
+	}
+
+	@Override
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+	
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
+
+
+	@Override
+	public void merge(String prefix) {
 		ItemList items;
 		try {
 			items = processXML(source);
@@ -50,7 +67,7 @@ public class IOCMerger implements Merger {
 	}
 
 	@Override
-	public void attach(File source, TaxonStore target, String attachment, String cladeRoot, String prefix) {
+	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
 		ItemList items;
 		try {
 			items = processXML(source);

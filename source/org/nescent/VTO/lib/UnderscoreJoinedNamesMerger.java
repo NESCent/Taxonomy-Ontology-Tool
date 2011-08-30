@@ -28,7 +28,10 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 
 	private int namesCounter = 0;
 
-	Set<Item> resolvedItems = new HashSet<Item>();
+	private Set<Item> resolvedItems = new HashSet<Item>();
+	
+	private File source;
+	private TaxonStore target;
 
 	static Logger logger = Logger.getLogger(OBOStore.class.getName());
 
@@ -38,13 +41,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 		reader = new ColumnReader(columnSeparator);
 	}
 
-
-	@Override
-	public void setColumns(List<String> columns,Map<Integer, String> synPrefixes) {
-		reader.setColumns(columns,synPrefixes);  // and what else?
-		// at the moment, this reader can ignore synonym columns
-	}
-
+	/* Metadata methods */
 	@Override
 	/**
 	 * In theory this could contain the set of taxa within a family, but that's a stretch at this point.
@@ -54,7 +51,29 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public boolean canPreserveID(){
+		return false;
+	}
+	
+	
+	@Override
+	public void setSource(File fileSource){
+		source = fileSource;
+	}
+	
+	@Override
+	public void setTarget(TaxonStore taxonTarget){
+		target = taxonTarget;
+	}
+	
+	@Override
+	public void setColumns(List<String> columns,Map<Integer, String> synPrefixes) {
+		reader.setColumns(columns,synPrefixes);  // and what else?
+		// at the moment, this reader can ignore synonym columns
+	}
+
+	@Override
+	public void merge(String prefix) {
 		int matchCount = 0;
 		ItemList items = reader.processCatalog(source, true);
 		if (!items.hasColumn(KnownField.DELIMITEDNAME)){
@@ -209,7 +228,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 
 	@Override
-	public void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix) {
+	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
 		throw new RuntimeException("UnderscoreJoinedName does not support attach");
 		// TODO Auto-generated method stub
 	}

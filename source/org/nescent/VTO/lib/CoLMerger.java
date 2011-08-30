@@ -41,6 +41,10 @@ public class CoLMerger implements Merger {
 	final private static String COLFULLSUFFIX = "&response=full";
 	final private static String SPACEEXP = " ";
 
+	private File source;       //TODO support overriding default base URL?
+	private TaxonStore target;
+
+	
 	static final Logger logger = Logger.getLogger(CoLMerger.class.getName());
 
 	
@@ -51,6 +55,25 @@ public class CoLMerger implements Merger {
 	public boolean canAttach() {
 		return false;
 	}
+	
+	/**
+	 * @return false because CoL id's aren't permanent
+	 */
+	@Override
+	public boolean canPreserveID(){
+		return false;
+	}
+
+	@Override 
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+
+	@Override
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
 
 	/**
 	 * 
@@ -59,7 +82,7 @@ public class CoLMerger implements Merger {
 	 * @param prefix
 	 */
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public void merge(String prefix) {
 		//TODO - filter out non-child taxa
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);
@@ -113,7 +136,7 @@ public class CoLMerger implements Merger {
 	 * @param prefix
 	 */
 	@Override
-	public void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix) {
+	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
 		throw new RuntimeException("CoLMerger doesn't support attach");
 	}
 

@@ -1,13 +1,10 @@
 package org.nescent.VTO.lib;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.bbop.dataadapter.DataAdapterException;
@@ -18,8 +15,6 @@ import org.obo.dataadapter.OBOSerializationEngine;
 import org.obo.dataadapter.OBO_1_2_Serializer;
 import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.IdentifiedObject;
-import org.obo.datamodel.Link;
-import org.obo.datamodel.LinkDatabase;
 import org.obo.datamodel.Namespace;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;

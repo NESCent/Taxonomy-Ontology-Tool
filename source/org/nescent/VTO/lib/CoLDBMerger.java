@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -26,8 +27,12 @@ public class CoLDBMerger implements Merger {
 
 	static final String DEFAULTPROPERTIESFILESTR = "Connection.properties";
 
+	private File source;
+	private TaxonStore target;
+
 	static final Logger logger = Logger.getLogger(CoLDBMerger.class.getName());
 
+	/* Metadata about this merger */
 	
 	/**
 	 * @return true because this merger supports attaching
@@ -37,6 +42,21 @@ public class CoLDBMerger implements Merger {
 		return true;
 	}
 
+	@Override
+	public boolean canPreserveID(){
+		return false;
+	}
+
+	@Override 
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+
+	@Override
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
 	/**
 	 * 
 	 * @param source specifies a properties file that specifies the host,db,user,password (will default if not specified)
@@ -45,19 +65,44 @@ public class CoLDBMerger implements Merger {
 	 * @throws SQLException 
 	 */
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public void merge(String prefix) {
 		String connectionSpec;
-		Connection connection;
+		Connection connection = null;
 		if (source != null)
 			connectionSpec = source.getAbsolutePath();
 		else
 			connectionSpec = DEFAULTPROPERTIESFILESTR;
 		try {
 			connection = openKBFromConnections(connectionSpec);
+			final Collection<Term> terms = target.getTerms();
+			for (Term term : terms){
+				String[] nameSplit = term.getLabel().split(" ");
+				if (nameSplit.length == 2) {   //any need to lookup synonyms for trinomials?
+					logger.info("Processing: " + term.getLabel());
+					Set<Integer> colTaxonSet = lookupBinomial(connection,nameSplit[0],nameSplit[1]);
+					for(Integer colTaxon : colTaxonSet){
+						Set<String> synSet = lookupSynonyms(connection,colTaxon);
+						for(String syn : synSet){
+							SynonymI newSyn = target.makeSynonym(syn);
+							term.addSynonym(newSyn);
+						}
+					}
+				}
+			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}	
+		finally {
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException e) {
+				logger.error("SQL error while trying to close the connection to CoL database");
+				e.printStackTrace();
+			}
+		}
+		
 	}
 
 	final String MONOMIALQUERY = "SELECT t.id FROM taxon AS t " +
@@ -94,12 +139,43 @@ public class CoLDBMerger implements Merger {
 		return result;
 	}
 	
-	final String SYNONYMQUERY = "SELECT ";
-	public Set<String> lookupSynonyms(Connection c, Integer taxon){
+	static final String SYNONYMIDQUERYSTRING = "select s.id from synonym as s where s.taxon_id = ?";
+
+	static final private String SYNONYMBINOMIALQUERY = "SELECT gne.name_element,sne.name_element,status.name_status FROM synonym AS syn " +
+	"JOIN synonym_name_element AS genus_name_element ON (genus_name_element.synonym_id = syn.id AND genus_name_element.taxonomic_rank_id=20) " +
+	"JOIN scientific_name_element AS gne ON (genus_name_element.scientific_name_element_id = gne.id) " +
+	"join synonym_name_element as species_name_element on (species_name_element.synonym_id = syn.id AND species_name_element.taxonomic_rank_id=83) " +
+	"join scientific_name_element as sne on (species_name_element.scientific_name_element_id = sne.id) " +
+	"join scientific_name_status as status on (status.id = syn.scientific_name_status_id) " +
+	"WHERE syn.id=?" ;
+	
+
+	public Set<String> lookupSynonyms(Connection c, Integer taxon) throws SQLException{
 		Set <String> result = new HashSet<String>();
+		PreparedStatement synonymIDStatement = c.prepareStatement(SYNONYMIDQUERYSTRING);
+		PreparedStatement binomialStatement = c.prepareStatement(SYNONYMBINOMIALQUERY);
+		synonymIDStatement.setInt(1, taxon);
+		ResultSet synonymSet = synonymIDStatement.executeQuery();
+		while(synonymSet.next()){
+			int synonymID = synonymSet.getInt(1);
+			binomialStatement.setInt(1,synonymID);
+			ResultSet binomialSet = binomialStatement.executeQuery();
+			String genusString = "";
+			String speciesString = "";
+			String synStatus = "";  //TODO use this for filtering
+			if (binomialSet.next()){
+				genusString = binomialSet.getString(1);
+				speciesString = binomialSet.getString(2);
+				synStatus = binomialSet.getString(3);
+			}
+			StringBuilder synBuilder = new StringBuilder(30);
+			synBuilder.append(genusString);
+			synBuilder.append(" ");
+			synBuilder.append(speciesString);
+			result.add(synBuilder.toString());
+		}
 		return result;
 	}
-	
 	
 	/**
 	 * 
@@ -110,8 +186,43 @@ public class CoLDBMerger implements Merger {
 	 * @param prefix
 	 */
 	@Override
-	public void attach(File source, TaxonStore target, String parent, String cladeRoot, String prefix) {
-		
+	public void attach(String parent, String cladeRoot, String prefix, boolean preserveID) {
+		String connectionSpec;
+		if (source != null)
+			connectionSpec = source.getAbsolutePath();
+		else
+			connectionSpec = DEFAULTPROPERTIESFILESTR;
+		Term parentTerm = null;
+		if (!"".equals(parent)){
+			parentTerm = target.getTermbyName(parent);
+			if (parentTerm == null){   //parent is unknown
+				if (!target.isEmpty()){
+					logger.error("Can not attach CoL Database specified by " + connectionSpec + " specified parent: " + parent + " is unknown to " + target);
+					return;
+				}
+				else { // attachment will be added first to provide a root for an otherwise empty target
+					parentTerm = target.addTerm(parent);
+					logger.info("Assigning " + parent + " as root");
+				}
+			}
+		}
+		Connection connection = null;
+		try {
+			connection = openKBFromConnections(connectionSpec);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+		finally {
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException e) {
+				logger.error("SQL error while trying to close the connection to CoL database");
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	/**

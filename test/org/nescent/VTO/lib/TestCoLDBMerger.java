@@ -34,6 +34,12 @@ public class TestCoLDBMerger {
 	}
 
 	@Test
+	public void testOpenKBFromConnections() throws SQLException {
+		Connection c = testMerger.openKBFromConnections("Connection.properties");
+		assertNotNull(c);
+	}
+
+	@Test
 	public void testCanAttach() {
 		assertTrue(testMerger.canAttach());
 	}
@@ -41,7 +47,8 @@ public class TestCoLDBMerger {
 	@Test
 	public void testMerge() {
 		File propFile = new File("Connection.properties");
-		testMerger.merge(null, null, "");
+		testMerger.setSource(propFile);
+		testMerger.merge("");
 	}
 	
 	@Test
@@ -86,8 +93,26 @@ public class TestCoLDBMerger {
 	@Test
 	public void testLookupSynonyms() throws SQLException{
 		Connection c = testMerger.openKBFromConnections("Connection.properties");
-
-		fail("Not yet implemented");		
+		String[] components = TESTTAXON2.split(" ");
+		Set<Integer> testTaxa2 = testMerger.lookupBinomial(c, components[0],components[1]);
+		for(Integer targetTaxon : testTaxa2){
+			Set<String> synSet = testMerger.lookupSynonyms(c, targetTaxon);
+			assertFalse(synSet.isEmpty());
+			System.out.println("Synonyms of " + TESTTAXON2 + " are: ");
+			for(String syn : synSet){
+				System.out.println("   " + syn);
+			}
+		}
+		components = TESTTAXON3.split(" ");
+		Set<Integer> testTaxa3 = testMerger.lookupBinomial(c, components[0],components[1]);
+		for(Integer targetTaxon : testTaxa3){
+			Set<String> synSet = testMerger.lookupSynonyms(c, targetTaxon);
+			assertFalse(synSet.isEmpty());
+			System.out.println("Synonyms of " + TESTTAXON3 + " are: ");
+			for(String syn : synSet){
+				System.out.println("   " + syn);
+			}
+		}
 	}
 	
 	@Test
@@ -95,9 +120,5 @@ public class TestCoLDBMerger {
 		fail("Not yet implemented");
 	}
 
-	@Test
-	public void testOpenKBFromConnections() {
-		fail("Not yet implemented");
-	}
 
 }

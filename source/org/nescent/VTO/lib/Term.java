@@ -3,7 +3,6 @@ package org.nescent.VTO.lib;
 import java.util.Set;
 
 import org.obo.datamodel.OBOClass;
-import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 public interface Term {

@@ -7,11 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.IdentifiedObject;
-import org.obo.datamodel.OBOClass;
-import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.Synonym;
 
 public class ColumnMerger implements Merger,ColumnFormat {
 	
@@ -22,7 +18,37 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	
 	private Map<KnownField,Integer> columnNums = new HashMap<KnownField,Integer>();
 	
+	private File source;
+	private TaxonStore target;
+
 	static Logger logger = Logger.getLogger(ColumnMerger.class.getName());
+
+	/* Metadata methods */
+	@Override
+	public boolean canAttach() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	// returning false, though some cases might work
+	@Override
+	public boolean canPreserveID() {
+		return false;
+	}
+
+	@Override
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+	
+	@Override
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
+
+	
+	
 
 	public ColumnMerger(String separator){
 		columnSeparator = separator;
@@ -37,7 +63,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public void merge(String prefix) {
 		ItemList items = reader.processCatalog(source, true);
 		for(Item item : items.getContents()){
 			
@@ -47,13 +73,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 	@Override
-	public boolean canAttach() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
-	public void attach(File source, TaxonStore target, String attachment, String cladeRoot, String prefix) {
+	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
 		ItemList items = reader.processCatalog(source, true);
 		final Map<String,IdentifiedObject> classIDs = new HashMap<String,IdentifiedObject>();
 		IdentifiedObject rootClass = null;

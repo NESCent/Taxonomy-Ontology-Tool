@@ -6,34 +6,54 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.OBOClass;
-import org.nescent.VTO.Builder;
 
 public class ITISMerger implements Merger{
 
     static final Pattern pipePattern = Pattern.compile("\\|");   //try this pattern as it matches the documentation
 
+	private File source;
+	private TaxonStore target;
     
 	static final Logger logger = Logger.getLogger(ITISMerger.class.getName());
+	
+	/* metadata methods */
+	@Override
+	public boolean canAttach() {
+		return true;
+	}
+
+	//TODO: look into this
+	@Override
+	public boolean canPreserveID(){
+		return false;
+	}
+
+	@Override 
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+
+	@Override
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
 
     @Override
-    public void merge(File itisSource, TaxonStore target, String prefix) {
-    	logger.info("Loading ITIS export " + itisSource.getAbsolutePath());
+    public void merge(String prefix) {
+    	logger.info("Loading ITIS export " + source.getAbsolutePath());
     	final Map<Integer,ITISElement> taxonTable = new HashMap<Integer,ITISElement>();
-    	final List <ITISElement> itisList = buildITISList(itisSource);
+    	final List <ITISElement> itisList = buildITISList(source);
     	fillTaxonTable(itisList,taxonTable);
     	gatherSynonyms(itisList,taxonTable);
     	logger.info("Finished loading");
 		int termCount = 0;
 		int synCount = 0;
-        final Collection<Term> terms = target.getTerms();
         for (Integer itisID : taxonTable.keySet()){
         	ITISElement curElement = taxonTable.get(itisID);
         	String primaryName = curElement.getName();
@@ -105,7 +125,7 @@ public class ITISMerger implements Merger{
             }
         	String name1 = digest[3];
         	String name2 = digest[4];
-        	String taxonomicStatus = digest[11];
+        	String taxonomicStatus = digest[11];  //TODO filter based on these?
         	String itisStatus = digest[13];
         	if (name2 != null){
         		name1 = name1 + name2;
@@ -180,16 +200,11 @@ public class ITISMerger implements Merger{
     	}    	
     }
     
-	@Override
-	public boolean canAttach() {
-		return true;
-	}
-
 
 	@Override
-	public void attach(File itisSource, TaxonStore target, String parent, String cladeRoot, String prefix) {
+	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
     	final Map<Integer,ITISElement> taxonTable = new HashMap<Integer,ITISElement>();
-    	final List <ITISElement> itisList = buildITISList(itisSource);
+    	final List <ITISElement> itisList = buildITISList(source);
     	fillTaxonTable(itisList,taxonTable);
     	gatherSynonyms(itisList,taxonTable);
     	throw new RuntimeException("ITIS Merger does not implement attach yet!");

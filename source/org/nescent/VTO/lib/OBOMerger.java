@@ -1,44 +1,52 @@
 package org.nescent.VTO.lib;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.obo.dataadapter.DefaultOBOParser;
-import org.obo.dataadapter.OBOParseEngine;
-import org.obo.dataadapter.OBOParseException;
 import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.OBOSession;
 import org.obo.datamodel.Synonym;
-import org.obo.datamodel.impl.DefaultObjectFactory;
-import org.obo.util.TermUtil;
 
 public class OBOMerger implements Merger {
 
-	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
 
 	private OBOUtils u = null;
 
 	//String defaultPrefix;
-	private String idSuffix = ":%07d";
-	private String defaultFormat;
+	private final String idSuffix = ":%07d";
+	
+	private File source;
+	private TaxonStore target;
 
+	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
 
 	@Override
 	public boolean canAttach() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
 	@Override
-	public void merge(File source, TaxonStore target, String prefix) {
+	public boolean canPreserveID(){
+		return true;
+	}
+
+	@Override
+	public void setSource(File sourceFile){
+		source = sourceFile;
+	}
+	
+	@Override
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
+	
+
+	@Override
+	public void merge(String prefix) {
 		logger.info("Loading OBO file " + source);
 		u = new OBOUtils(source.getAbsolutePath());
 		logger.info("Finished loading");
@@ -68,7 +76,7 @@ public class OBOMerger implements Merger {
 	}
 
 	@Override
-	public void attach(File source, TaxonStore target, String attachment, String cladeRoot, String prefix) {
+	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
 		logger.info("Loading OBO file " + source);
 		u = new OBOUtils(source.getAbsolutePath());
 		logger.info("Finished loading");

@@ -213,7 +213,7 @@ public class OBOStore implements TaxonStore {
 			//System.out.println("Term is " + term.getName());
 			for(Synonym s : term.getSynonyms()){
 				boolean saveSynonym = false;
-				String dbID = null;
+				String dbID = null;  //TODO why aren't we using this?
 				for (Dbxref d : s.getXrefs()){
 					if (d.getDatabase() != null && d.getDatabase().equalsIgnoreCase(targetFilterPrefixStr)){
 						saveSynonym = true;

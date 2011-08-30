@@ -36,20 +36,14 @@ package org.nescent.VTO.lib;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.obo.datamodel.Dbxref;
-import org.obo.datamodel.OBOClass;
 
 /**
  * 
@@ -73,22 +67,44 @@ public class NCBIMerger implements Merger {
 	
     static final Pattern tabPattern = Pattern.compile("\t|\t");   //try this pattern as it matches the documentation
 
+    private int count = 0;
+    private File source;
+    private TaxonStore target;
+    
 	static Logger logger = Logger.getLogger(NCBIMerger.class.getName());
 
+    /* Metadata methods */
+    
+	/**
+	 * @return this merger supports attachment (splicing in tree structure) as well as merging
+	 */
+	public boolean canAttach(){
+		return true;
+	}
 	
-    int count = 0;
+	public boolean canPreserveID(){
+		return true;
+	}
 
+	/**
+	 * @arg sourceDirectory until most mergers, the NCBI dump is a set of files in a common directory
+	 */
+	public void setSource(File sourceDirectory){
+		source = sourceDirectory;
+	}
 	
+	public void setTarget(TaxonStore targetStore){
+		target = targetStore;
+	}
 	
+
     /**
      * This collects NCBI IDs as synonyms
-     * @param ncbiSource specifies the directory containing the ncbi dump (.dmp) files
-     * @param target contains a taxonomy to add synonyms to
      * @param prefix
      */
-    public void merge(File ncbiSource, TaxonStore target, String prefix) {
-		final File namesFile = new File(ncbiSource.getAbsolutePath()+'/'+NAMESFILENAME);
-		final File nodesFile = new File(ncbiSource.getAbsolutePath()+'/'+NODESFILENAME);
+    public void merge(String prefix) {
+		final File namesFile = new File(source.getAbsolutePath()+'/'+NAMESFILENAME);
+		final File nodesFile = new File(source.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
 		final Map<Integer,String> nodeRanks = new HashMap<Integer,String>(10000);
 		final Map<Integer,Set<Integer>> nodeChildren = new HashMap<Integer,Set<Integer>>(10000);
@@ -101,7 +117,6 @@ public class NCBIMerger implements Merger {
 		logger.info("Name count = " + namesInScope.size());
 		logger.info("Synonym count = " + synonymsInScope.size());
 		int nameHits = 0;
-        final Collection<Term> terms = target.getTerms();	
         for(Integer termid : synonymsInScope.keySet()){
         	String primaryName = termToName.get(termid);
         	Term primaryTerm = target.getTermbyName(primaryName);
@@ -181,20 +196,14 @@ public class NCBIMerger implements Merger {
 	}
 
 	
-	/**
-	 * @return this merger supports attachment (splicing in tree structure) as well as merging
-	 */
-	public boolean canAttach(){
-		return true;
-	}
 
 	/**
 	 * 
 	 */
 	@Override
-	public void attach(File ncbiSource, TaxonStore target, String attachment, String cladeRoot, String prefix) {
-		final File namesFile = new File(ncbiSource.getAbsolutePath()+'/'+NAMESFILENAME);
-		final File nodesFile = new File(ncbiSource.getAbsolutePath()+'/'+NODESFILENAME);
+	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
+		final File namesFile = new File(source.getAbsolutePath()+'/'+NAMESFILENAME);
+		final File nodesFile = new File(source.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
 		final Map<Integer,String> nodeRanks = new HashMap<Integer,String>(10000);
 		final Map<Integer,Set<Integer>> nodeChildren = new HashMap<Integer,Set<Integer>>(10000);
@@ -220,7 +229,6 @@ public class NCBIMerger implements Merger {
 				}
 			}
 		}
-        final Collection<Term> terms = target.getTerms();	
         final Integer parentNode = namesInScope.get(parentTerm.getLabel());
         logger.info("Building tree");
         addChildren(parentNode, target,nodeChildren, termToName, nodeRanks);
