@@ -73,7 +73,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String attachment, String cladeRoot, String prefix) {
 		ItemList items = reader.processCatalog(source, true);
 		final Map<String,IdentifiedObject> classIDs = new HashMap<String,IdentifiedObject>();
 		IdentifiedObject rootClass = null;

@@ -67,7 +67,7 @@ public class IOCMerger implements Merger {
 	}
 
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String attachment, String cladeRoot, String prefix) {
 		ItemList items;
 		try {
 			items = processXML(source);

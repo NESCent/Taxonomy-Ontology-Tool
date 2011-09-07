@@ -129,14 +129,12 @@ public class CoLMerger implements Merger {
 	
 	/**
 	 * 
-	 * @param source
-	 * @param target
 	 * @param parent
 	 * @param cladeRoot
 	 * @param prefix
 	 */
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String parent, String cladeRoot, String prefix) {
 		throw new RuntimeException("CoLMerger doesn't support attach");
 	}
 

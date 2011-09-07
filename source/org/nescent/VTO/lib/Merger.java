@@ -8,13 +8,14 @@ public interface Merger {
 	boolean canAttach();
 	
 	boolean canPreserveID();
-
+	
 	void setSource(File source);
 	
 	void setTarget(TaxonStore target);
 	
 	void merge(String prefix);
 	
-	void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs);
+	// If the prefix of a term's ID equals the passed prefix, don't generate a new id for the term
+	void attach(String parent, String cladeRoot, String prefix);
 
 }

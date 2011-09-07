@@ -202,7 +202,7 @@ public class ITISMerger implements Merger{
     
 
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String parent, String cladeRoot, String prefix) {
     	final Map<Integer,ITISElement> taxonTable = new HashMap<Integer,ITISElement>();
     	final List <ITISElement> itisList = buildITISList(source);
     	fillTaxonTable(itisList,taxonTable);

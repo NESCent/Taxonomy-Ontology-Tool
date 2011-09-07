@@ -45,7 +45,7 @@ public class OWLMerger implements Merger {
 	}
 
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String parent, String cladeRoot, String prefix) {
 		throw new RuntimeException("OWLMerger does not currently implement attach");
 		// TODO Auto-generated method stub
 

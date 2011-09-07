@@ -41,11 +41,15 @@ public class CoLDBMerger implements Merger {
 	public boolean canAttach() {
 		return true;
 	}
-
+	
+	/**
+	 * @return false because CoL id's aren't permanent
+	 */
 	@Override
 	public boolean canPreserveID(){
 		return false;
 	}
+
 
 	@Override 
 	public void setSource(File sourceFile){
@@ -186,7 +190,7 @@ public class CoLDBMerger implements Merger {
 	 * @param prefix
 	 */
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix, boolean preserveID) {
+	public void attach(String parent, String cladeRoot, String prefix) {
 		String connectionSpec;
 		if (source != null)
 			connectionSpec = source.getAbsolutePath();

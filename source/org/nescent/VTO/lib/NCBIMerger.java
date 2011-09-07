@@ -201,7 +201,7 @@ public class NCBIMerger implements Merger {
 	 * 
 	 */
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String attachment, String cladeRoot, String prefix) {
 		final File namesFile = new File(source.getAbsolutePath()+'/'+NAMESFILENAME);
 		final File nodesFile = new File(source.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);

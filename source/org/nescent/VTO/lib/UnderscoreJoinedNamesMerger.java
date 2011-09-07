@@ -228,7 +228,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String parent, String cladeRoot, String prefix) {
 		throw new RuntimeException("UnderscoreJoinedName does not support attach");
 		// TODO Auto-generated method stub
 	}

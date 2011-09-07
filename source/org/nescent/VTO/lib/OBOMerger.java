@@ -75,8 +75,13 @@ public class OBOMerger implements Merger {
 		}
 	}
 
+	/**
+	 * @param attachment name of parent node for attached clade
+	 * @param cladeRoot name of root node (child of parent) for attached clade
+	 * @param prefix default prefix for target ontology
+	 */
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix, boolean preserveIDs) {
+	public void attach(String attachment, String cladeRoot, String prefix) {
 		logger.info("Loading OBO file " + source);
 		u = new OBOUtils(source.getAbsolutePath());
 		logger.info("Finished loading");
@@ -147,7 +152,7 @@ public class OBOMerger implements Merger {
 			addChildren(cladeClass,cladeTerm,target,prefix);
 		}
 		//u.setNameSpace(oboNameSpace, fileSpec);
-		defaultFormat = prefix + idSuffix;
+		//defaultFormat = prefix + idSuffix;
 
 		//targetFile = fileSpec;
 		//fillRankNames();

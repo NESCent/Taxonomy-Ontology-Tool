@@ -70,7 +70,7 @@ public class Builder {
 	final static String ATTACHFORMATSTR = "format";
 	final static String ATTACHROOTSTR = "root";   //the root of the attached tree - a new child of node named by ATTACHPARENTSTR
 	final static String ATTACHPARENTSTR = "parent";
-	final static String ATTACHPRESERVEIDSSTR = "preserveIDs";
+	final static String ATTACHPREFIXSTR = "prefix";
 	
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
@@ -149,6 +149,14 @@ public class Builder {
 		}
 	}
 	
+	
+	/**
+	 * 
+	 * @param action
+	 * @param target
+	 * @param targetRootStr
+	 * @param targetPrefixStr prefix for new nodes in target - if this prefix equals the prefix of a term's ID, don't generate a new ID for the term copy
+	 */
 	private void processAttachAction(Node action, TaxonStore target, String targetRootStr, String targetPrefixStr){
 		@SuppressWarnings("unchecked")
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
@@ -156,15 +164,17 @@ public class Builder {
 		final String formatStr = getAttribute(action,ATTACHFORMATSTR);
 		final String cladeRootStr = getAttribute(action,ATTACHROOTSTR);
 		final String sourceParentStr = getAttribute(action,ATTACHPARENTSTR);
-		final String preserveIdsStr = getAttribute(action,ATTACHPRESERVEIDSSTR);
-		boolean preserveIDs = preserveIdsStr != null && !"no".equalsIgnoreCase(preserveIdsStr);
+		final String sourcePrefixStr = getAttribute(action,ATTACHPREFIXSTR);
 		NodeList childNodes = action.getChildNodes();
 		if (childNodes.getLength()>0){
 			columns = processChildNodesOfAttach(childNodes,synPrefixes);
 		}
 		Merger m = getMerger(formatStr,columns,synPrefixes);
 		if (!m.canAttach()){
-			logger.error("Error - Merger for format " + formatStr + " can't attach branches to the tree");
+			throw new RuntimeException("Error - Merger for format " + formatStr + " can't attach branches to the tree");
+		}
+		if (!m.canPreserveID() && (sourcePrefixStr != null) && (!sourcePrefixStr.equals(targetPrefixStr))){
+			throw new RuntimeException("Error - Merger for format " + formatStr + " can't preserve id prefixes - remove prefix attribute in attach");
 		}
 		String sourceURLStr = action.getAttributes().getNamedItem("source").getNodeValue();
 		File sourceFile = getSourceFile(sourceURLStr);
@@ -177,15 +187,15 @@ public class Builder {
 		m.setTarget(target);
 		if (sourceParentStr != null){   //need to specify the clade within the sourceFile (or null?)
 			if (cladeRootStr != null)
-				m.attach(sourceParentStr,cladeRootStr,targetPrefixStr,preserveIDs);
+				m.attach(sourceParentStr,cladeRootStr,targetPrefixStr);
 			else
-				m.attach(sourceParentStr,sourceParentStr,targetPrefixStr,preserveIDs);
+				m.attach(sourceParentStr,sourceParentStr,targetPrefixStr);
 		}
 		else {
 			if (cladeRootStr != null)
-				m.attach(targetRootStr,cladeRootStr,targetPrefixStr,preserveIDs);
+				m.attach(targetRootStr,cladeRootStr,targetPrefixStr);
 			else
-				m.attach(targetRootStr,targetRootStr,targetPrefixStr,preserveIDs);
+				m.attach(targetRootStr,targetRootStr,targetPrefixStr);
 		}
 
 	}
@@ -247,96 +257,36 @@ public class Builder {
 	}
 
 	private TaxonStore getStore(String targetURLStr, String prefixStr, String formatStr) {
+		URL u = null;
+		try{
+			u = new URL(targetURLStr);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		if (!"file".equals(u.getProtocol())){
+			logger.error("OBO format must save to a local file");
+			return null;
+		}
+		File oldFile = new File(u.getFile());
+		if (oldFile.exists())
+			oldFile.delete();
 		if (OBOFORMATSTR.equals(formatStr)){
-			try {
-				URL u = new URL(targetURLStr);
-				if (!"file".equals(u.getProtocol())){
-					logger.error("OBO format must save to a local file");
-					return null;
-				}
-				File oldFile = new File(u.getFile());
-				if (oldFile.exists())
-					oldFile.delete();
-				return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
+			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		if (OWLFORMATSTR.equals(formatStr)){
-			try {
-				URL u = new URL(targetURLStr);
-				if (!"file".equals(u.getProtocol())){
-					logger.error("OWL format must save to a local file");
-					return null;
-				}
-				File oldFile = new File(u.getFile());
-				if (oldFile.exists())
-					oldFile.delete();
+			try{
 				return new OWLStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
 			} catch (OWLOntologyCreationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		if (XREFFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is implementation dependent (currently OBO)
-			try {
-				URL u = new URL(targetURLStr);
-				if (!"file".equals(u.getProtocol())){
-					logger.error("XREF format must save to a local file");
-					return null;
-				}
-				File oldFile = new File(u.getFile());
-				if (oldFile.exists())
-					oldFile.delete();
-				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
-				return result;
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
-		}
-		if (COLUMNFORMATSTR.equals(formatStr)){      //COLUMN isn't a storage format, so the store is implementation dependent (currently OBO)
-			try {
-				URL u = new URL(targetURLStr);
-				if (!"file".equals(u.getProtocol())){
-					logger.error("Column format must save to a local file");
-					return null;
-				}
-				File oldFile = new File(u.getFile());
-				if (oldFile.exists())
-					oldFile.delete();
-				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
-				return result;
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
-		}
-		if (SYNONYMFORMATSTR.equals(formatStr)){      //COLUMN isn't a storage format, so the store is implementation dependent (currently OBO)
-			try {
-				URL u = new URL(targetURLStr);
-				if (!"file".equals(u.getProtocol())){
-					logger.error("Column format must save to a local file");
-					return null;
-				}
-				File oldFile = new File(u.getFile());
-				if (oldFile.exists())
-					oldFile.delete();
-				OBOStore result = new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
-				return result;
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
+		// these source formats aren't storage formats (there's no ontology library for them) so the store is implementation dependent (currently OBO)
+		if (XREFFORMATSTR.equals(formatStr) ||
+			COLUMNFORMATSTR.equals(formatStr) ||
+			SYNONYMFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is 
+			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
