@@ -20,6 +20,8 @@ public class TestCoLDBMerger {
 	static final String TESTTAXON3 = "Ictalurus punctatus";
 	static final String TESTTAXON4 = "Aphelocoma coerulescens";
 
+	static final String CONNECTIONFILESPEC = "testConnection.properties";
+	
 	CoLDBMerger testMerger;
 	
 
@@ -35,7 +37,7 @@ public class TestCoLDBMerger {
 
 	@Test
 	public void testOpenKBFromConnections() throws SQLException {
-		Connection c = testMerger.openKBFromConnections("Connection.properties");
+		Connection c = testMerger.openKBFromConnections(CONNECTIONFILESPEC);
 		assertNotNull(c);
 	}
 
@@ -46,14 +48,14 @@ public class TestCoLDBMerger {
 
 	@Test
 	public void testMerge() {
-		File propFile = new File("Connection.properties");
+		File propFile = new File(CONNECTIONFILESPEC);
 		testMerger.setSource(propFile);
 		testMerger.merge("");
 	}
 	
 	@Test
 	public void testLookupMonomial() throws SQLException{
-		Connection c = testMerger.openKBFromConnections("Connection.properties");
+		Connection c = testMerger.openKBFromConnections(CONNECTIONFILESPEC);
 		Set<Integer> testTaxa1 = testMerger.lookupMonomial(c, TESTGENUS1);
 		assertFalse(testTaxa1.isEmpty());
 		for(Integer taxon : testTaxa1)
@@ -66,7 +68,7 @@ public class TestCoLDBMerger {
 
 	@Test
 	public void testLookupBinomial() throws SQLException{
-		Connection c = testMerger.openKBFromConnections("Connection.properties");
+		Connection c = testMerger.openKBFromConnections(CONNECTIONFILESPEC);
 		String[] components = TESTTAXON1.split(" ");
 		Set<Integer> testTaxa1 = testMerger.lookupBinomial(c, components[0],components[1]);
 		assertFalse(testTaxa1.isEmpty());
@@ -92,7 +94,7 @@ public class TestCoLDBMerger {
 	
 	@Test
 	public void testLookupSynonyms() throws SQLException{
-		Connection c = testMerger.openKBFromConnections("Connection.properties");
+		Connection c = testMerger.openKBFromConnections(CONNECTIONFILESPEC);
 		String[] components = TESTTAXON2.split(" ");
 		Set<Integer> testTaxa2 = testMerger.lookupBinomial(c, components[0],components[1]);
 		for(Integer targetTaxon : testTaxa2){

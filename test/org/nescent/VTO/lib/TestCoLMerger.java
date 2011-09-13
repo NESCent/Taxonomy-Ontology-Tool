@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,7 @@ public class TestCoLMerger {
 	
 	CoLMerger testMerger;
 	
+	static final Logger logger = Logger.getLogger(TestColumnMerger.class.getName());
 
 
 	@Before

@@ -4,11 +4,8 @@ package org.nescent.VTO;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.BeforeClass;

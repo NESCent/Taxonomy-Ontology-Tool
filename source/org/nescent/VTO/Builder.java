@@ -87,6 +87,8 @@ public class Builder {
 	 */
 	Builder(File options){
 		super();
+		if (options == null)
+			throw new IllegalArgumentException("No options file specified");
 		optionsFile = options;
 	}
 
