@@ -61,8 +61,7 @@ public class OBOMerger implements Merger {
 				//matchingTerm.addSynonym(s);
 				// add synonyms from term
 				for (Synonym syn : term.getSynonyms()){
-					Collection<Dbxref> xrefs = syn.getXrefs();
-					for (Dbxref ref : xrefs){  //need to avoid common names....
+					for (Dbxref ref : syn.getXrefs()){  //need to avoid common names....
 						SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
 						matchingTerm.addSynonym(newSyn);
 						synCount++;

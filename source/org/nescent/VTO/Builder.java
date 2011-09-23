@@ -65,7 +65,7 @@ public class Builder {
 	final static String MERGEACTIONSTR = "merge";
 	final static String TRIMACTIONSTR = "trim";
 	
-	final static String COLUMNSYNTAXSTR = "column";
+	final static String COLUMNSYNTAXSTR = "columns";
 	
 	final static String ATTACHFORMATSTR = "format";
 	final static String ATTACHROOTSTR = "root";   //the root of the attached tree - a new child of node named by ATTACHPARENTSTR
@@ -235,7 +235,7 @@ public class Builder {
 		for(int i = 0; i<childNodes.getLength();i++){
 			Node child = childNodes.item(i);
 			String childName = child.getNodeName();
-			if ("columns".equals(childName)){
+			if (COLUMNSYNTAXSTR.equals(childName)){
 				NodeList columnNames = child.getChildNodes();
 				for(int j = 0; j<columnNames.getLength();j++){
 					Node column = columnNames.item(j);

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/peter/Projects/OBOworkspace/VTOTool/output/testTaxonomy.obo" format="SYNONYM" filterprefix= "VSWG" root="Siluriformes" prefix="vswg"> 
+ 	<attach source = "file:///Users/peter/Projects/VTO/Data/NCBI/taxdump" format="NCBI" prefix="NCBIXREF">
+	</attach>  
+	<trim node="Ictaluridae"/>
+ 	<attach source = "file:///Users/peter/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Siluriformes" root="Ictaluridae">
+	</attach>
+	<!--  <merge source = "file:///Users/peter/Projects/VTO/Data/ato_Dec2010.obo" format="OBO" prefix="ATO">
+	</merge>
+	<merge source="file:///Users/peter/Projects/VTO/Data/ITIS/65137.bin" format="ITIS" prefix="ITIS">
+	</merge> -->
+	<!--<merge source="file:///Users/peter/Projects/VTO/Data/VWG_data/speciesList_accCounter.txt" format="JOINEDNAMETAB" prefix="VSWG">
+	<columns>
+		<delimitedname/>
+	</columns>
+	</merge> -->
+    <!-- 	  	<attach source="file:///Users/peter/Projects/VTO/Data/VWG_data/Meeting2/CSVmaster/master_all.csv" parent="Vertebrata" format="CSV">
+		<columns>
+			<xref prefix="vswg" />
+			<xref prefix="itis" />
+			<class/>
+			<order/>
+			<family/>
+			<genus/>
+			<species/>
+		</columns>
+	</attach> --> 
+	<!--  <attach source="file:///Users/peter/Projects/AmphibiaWeb/aweb_names_20101028.txt" parent="Sarcopterygii" format="TSV">
+	</attach>  -->
+	<!--   <merge source="" format="ITIS">
+	</merge> -->
+</taxonomy>
+

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 public class TestBuilder {
 
-	final File testFile1 = new File("/Users/peter/Projects/OBOworkspace/VTOTool/taxonOptions.xml"); 
+	final File testFile1 = new File("src/SampleProcessFiles/taxonOptions.xml"); 
 	
 	
 	@Test

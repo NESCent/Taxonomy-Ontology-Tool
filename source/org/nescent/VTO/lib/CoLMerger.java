@@ -77,8 +77,6 @@ public class CoLMerger implements Merger {
 
 	/**
 	 * 
-	 * @param source
-	 * @param target
 	 * @param prefix
 	 */
 	@Override
