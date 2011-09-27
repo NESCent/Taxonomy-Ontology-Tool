@@ -5,9 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -34,8 +37,16 @@ import org.apache.log4j.Logger;
  */
 public class PaleoDBMerger implements Merger {
 
+	private static final Pattern numeric = Pattern.compile("[0-9]+");
+	private static final Pattern monomial = Pattern.compile("[A-Za-z]+");
+	private static final Pattern binomial = Pattern.compile("[A-Za-z]+\\s[a-z]+");
+	
 	private File source;
 	private TaxonStore target;
+	
+	final private static String PBDBURL = "http://www.catalogueoflife.org";
+	final private static String PBDBSUFFIX = "/annual-checklist/";
+
 	
 	static final Logger logger = Logger.getLogger(PaleoDBMerger.class.getName());
 	@Override
@@ -67,13 +78,19 @@ public class PaleoDBMerger implements Merger {
 		f.setNamespaceAware(true);
 	    try {
 			final Collection<String> names = getNames(source);
+			for(String name : names){
+				
+			}
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	Collection <String>getNames(File source) throws IOException{
+	Collection <String>getNames(File source) throws IOException, ParseException{
 		Set<String> result = new HashSet<String>();
         if (source != null){
         	BufferedReader br = null;
@@ -82,6 +99,13 @@ public class PaleoDBMerger implements Merger {
             	br = new BufferedReader(new FileReader(source));
                 raw = br.readLine();
                 while (raw != null){
+                	Matcher monomialMatch = monomial.matcher(raw);
+                	if (!monomialMatch.matches()){
+                		Matcher binomialMatch = binomial.matcher(raw);
+                		if (!binomialMatch.matches()){
+                    		throw new ParseException("name has bad characters or syntax: " + raw,0);                			
+                		}
+                	}                		
                 	result.add(raw);   //TODO checking here (non alpha chars, empty lines?)
                 	raw = br.readLine();
                 }

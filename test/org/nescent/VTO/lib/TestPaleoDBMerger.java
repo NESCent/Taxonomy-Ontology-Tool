@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Collection;
 
 import org.junit.After;
@@ -45,21 +46,24 @@ public class TestPaleoDBMerger {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
-	@Test(expected=IOException.class) 
-	public void testBadGetNames1() throws IOException{
+	@Test(expected=ParseException.class) 
+	public void testBadGetNames1() throws IOException,ParseException{
 		Collection<String> nameList = testMerger.getNames(testBadNames1);		
 	}
 	
-	@Test(expected=IOException.class) 
-	public void testBadGetNames2() throws IOException{
+	@Test(expected=ParseException.class) 
+	public void testBadGetNames2() throws IOException,ParseException{
 		Collection<String> nameList = testMerger.getNames(testBadNames2);		
 	}
 	
-	@Test(expected=IOException.class) 
-	public void testBadGetNames3() throws IOException{
+	@Test(expected=ParseException.class) 
+	public void testBadGetNames3() throws IOException,ParseException{
 		Collection<String> nameList = testMerger.getNames(testBadNames3);		
 	}
 
