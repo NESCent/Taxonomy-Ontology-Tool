@@ -1,20 +1,35 @@
 package org.nescent.VTO.lib;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.lib.ITISMerger.ITISElement;
 
-public class PaleoDBBulkMerger implements Merger, ColumnFormat {
+public class PaleoDBBulkMerger implements Merger{
 
 	private File source;
 	private TaxonStore target;
 	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
 	
-	private final String VALIDTAXAFILENAME = "valid_taxa";
-	private final String INVALIDTAXAFILENAME = "invalid_taxa";
+	//These should be downloaded as itis format with pipe '|' delimiters
+	private final String TAXONUNITSFILENAME = "taxonomic_units.dat";
+	private final String SYNONYMLINKSFILENAME = "synonym_links.dat";
+	
+	static final Pattern pipePattern = Pattern.compile("\\|");
+	
+	//These are not currently used, but if csv downloads are supported in the future...
+	private final String VALIDTAXAFILENAME = "valid_taxa.csv";
+	private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
+	
+	static final Pattern commaPattern = Pattern.compile("\\,");
 	
 	@Override
 	public boolean canAttach() {
@@ -50,10 +65,59 @@ public class PaleoDBBulkMerger implements Merger, ColumnFormat {
 
 	}
 
-	@Override
-	public void setColumns(List<String> columns, Map<Integer, String> synPrefixes) {
-		// TODO Auto-generated method stub
-		
+	List<PBDBElement> buildPBDBList(File taxonFile) throws IOException{
+		List <PBDBElement> result = new ArrayList<PBDBElement>();
+        final BufferedReader br = new BufferedReader(new FileReader(taxonFile));
+        String raw = br.readLine();
+        while (raw != null){
+        	PBDBElement e = processLine(raw);
+        	result.add(e);
+        	raw = br.readLine();
+        }
+
+		return result;
 	}
+	
+	PBDBElement processLine(String raw){
+		final String[] digest = pipePattern.split(raw);
+		final PBDBElement result = new PBDBElement("",-1);
+		return result;
+	}
+	
+	enum TaxonomicStatus{
+		VALID,
+		JUNIOR_SYNONYM,
+		UNRECOGNIZED
+	}
+	
+	static class PBDBElement{
+		private String name;
+		private int id;
+		private TaxonomicStatus status;
+		
+		PBDBElement(String name, int id){
+			this.name = name;
+			this.id = id;
+		}
+		
+		String getName(){
+			return name;
+		}
+		
+		int getId(){
+			return id;
+		}
+		
+		void SetStatus(String statusStr){
+			//TODO switch on string to set status
+			status = TaxonomicStatus.UNRECOGNIZED;
+		}
+	}
+	
+	
+	
+	
+	
+	
 
 }

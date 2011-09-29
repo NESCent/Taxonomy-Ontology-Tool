@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taxonomy target = "file:///Users/peter/Projects/OBOworkspace/VTOTool/output/VTO.obo" format="OBO" filterprefix= "VTO" root="Chordata" prefix="VTO"> 
- 	<attach source = "file:///Users/peter/Projects/VTO/Data/PaleoDB" format="PBDBBulk" prefix="PBDB">
+ 	<attach source = "file:///Users/peter/Projects/VTO/Data/PaleoDB/taxonomic_units.dat" format="PBDBBulk" prefix="PBDB">
 	</attach>  
 </taxonomy>
 

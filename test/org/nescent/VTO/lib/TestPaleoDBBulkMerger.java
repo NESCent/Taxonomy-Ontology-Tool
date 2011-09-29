@@ -13,8 +13,7 @@ public class TestPaleoDBBulkMerger {
 	
 	private PaleoDBBulkMerger testMerger;
 	
-	private final File testValid_taxa1 = new File("src/SampleProcessFiles/Tyrannosaurus/valid_taxa.csv");
-	private final File testValid_taxa2 = new File("src/SampleProcessFiles/Tyrannosaurus/invalid_taxa.csv");
+	private final File testTaxonomic_units1 = new File("src/SampleProcessFiles/Tyrannosaurus/taxonomic_units.dat");
 
 	@Before
 	public void setUp() throws Exception {
