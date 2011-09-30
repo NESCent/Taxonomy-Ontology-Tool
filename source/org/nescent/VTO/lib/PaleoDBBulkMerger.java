@@ -25,11 +25,20 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	static final Pattern pipePattern = Pattern.compile("\\|");
 	
+	//columns for itis format
+	static final int IDCOLUMN = 0;
+	static final int NAMECOLUMN = 2;
+	static final int STATUSCOLUMN = 3;
+	static final int STATUSDETAILCOLUMN = 4;
+	
 	//These are not currently used, but if csv downloads are supported in the future...
-	private final String VALIDTAXAFILENAME = "valid_taxa.csv";
-	private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
+	static private final String VALIDTAXAFILENAME = "valid_taxa.csv";
+	static private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
 	
 	static final Pattern commaPattern = Pattern.compile("\\,");
+	
+	
+	
 	
 	@Override
 	public boolean canAttach() {
@@ -80,6 +89,9 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	PBDBElement processLine(String raw){
 		final String[] digest = pipePattern.split(raw);
+		if (digest.length != 16){
+			throw new RuntimeException("Line had wrong number of elements: " + digest.length);
+		}
 		final PBDBElement result = new PBDBElement("",-1);
 		return result;
 	}
