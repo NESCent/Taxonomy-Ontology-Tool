@@ -23,21 +23,11 @@ public class PaleoDBBulkMerger implements Merger{
 	private final String TAXONUNITSFILENAME = "taxonomic_units.dat";
 	private final String SYNONYMLINKSFILENAME = "synonym_links.dat";
 	
-	static final Pattern pipePattern = Pattern.compile("\\|");
-	
-	//columns for itis format
-	static final int IDCOLUMN = 0;
-	static final int NAMECOLUMN = 2;
-	static final int STATUSCOLUMN = 3;
-	static final int STATUSDETAILCOLUMN = 4;
-	
 	//These are not currently used, but if csv downloads are supported in the future...
 	static private final String VALIDTAXAFILENAME = "valid_taxa.csv";
 	static private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
 	
-	static final Pattern commaPattern = Pattern.compile("\\,");
-	
-	
+
 	
 	
 	@Override
@@ -74,12 +64,12 @@ public class PaleoDBBulkMerger implements Merger{
 
 	}
 
-	List<PBDBElement> buildPBDBList(File taxonFile) throws IOException{
-		List <PBDBElement> result = new ArrayList<PBDBElement>();
+	List<PBDBItem> buildPBDBList(File taxonFile) throws IOException{
+		List <PBDBItem> result = new ArrayList<PBDBItem>();
         final BufferedReader br = new BufferedReader(new FileReader(taxonFile));
         String raw = br.readLine();
         while (raw != null){
-        	PBDBElement e = processLine(raw);
+        	PBDBItem e = processLine(raw);
         	result.add(e);
         	raw = br.readLine();
         }
@@ -87,43 +77,14 @@ public class PaleoDBBulkMerger implements Merger{
 		return result;
 	}
 	
-	PBDBElement processLine(String raw){
-		final String[] digest = pipePattern.split(raw);
-		if (digest.length != 16){
-			throw new RuntimeException("Line had wrong number of elements: " + digest.length);
-		}
-		final PBDBElement result = new PBDBElement("",-1);
-		return result;
+	PBDBItem processLine(String raw){
+		return new PBDBItem(raw);
 	}
 	
 	enum TaxonomicStatus{
 		VALID,
 		JUNIOR_SYNONYM,
 		UNRECOGNIZED
-	}
-	
-	static class PBDBElement{
-		private String name;
-		private int id;
-		private TaxonomicStatus status;
-		
-		PBDBElement(String name, int id){
-			this.name = name;
-			this.id = id;
-		}
-		
-		String getName(){
-			return name;
-		}
-		
-		int getId(){
-			return id;
-		}
-		
-		void SetStatus(String statusStr){
-			//TODO switch on string to set status
-			status = TaxonomicStatus.UNRECOGNIZED;
-		}
 	}
 	
 	
