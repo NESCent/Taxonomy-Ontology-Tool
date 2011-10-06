@@ -6,8 +6,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -73,6 +75,10 @@ public class PaleoDBBulkMerger implements Merger{
 
 	}
 
+	/**
+	 * @param parent ignored in this merger
+	 * @param cladeRoot ignored in this merger - each term provides it's own parentage
+	 */
 	@Override
 	public void attach(String parent, String cladeRoot, String prefix) {
 		if (target == null){
@@ -83,11 +89,11 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		final File taxonUnitsFile = new File(source.getAbsolutePath()+'/'+TAXONUNITSFILENAME);
 		final File synonymLinksFile = new File(source.getAbsolutePath()+'/'+SYNONYMLINKSFILENAME);
-		List<PBDBItem> itemList;
+		List<PBDBItem> itemList = null; 
 		try{
 			itemList = buildPBDBList(taxonUnitsFile);
 		}
-		catch (IOException e){
+		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
 			logger.error("An IO Exception was thrown while parsing: " + taxonUnitsFile);
 			e.printStackTrace();
 		}
@@ -95,10 +101,11 @@ public class PaleoDBBulkMerger implements Merger{
 		try{
 			synonymMap = buildSynonymLinks(synonymLinksFile);
 		}
-		catch (IOException e){
+		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
 			logger.error("An IO Exception was thrown while parsing: " + synonymLinksFile);
 		}
-
+		Map<String,Set<String>>taxonTree = buildTree(itemList);
+		
 	}
 
 	List<PBDBItem> buildPBDBList(File taxonFile) throws IOException{
@@ -120,6 +127,9 @@ public class PaleoDBBulkMerger implements Merger{
 	enum TaxonomicStatus{
 		VALID,
 		JUNIOR_SYNONYM,
+		NOMEN_NUDUM,
+		NOMEN_DUBIUM,
+		ORIGINALNAME_COMBINATION,
 		UNRECOGNIZED
 	}
 	
@@ -149,7 +159,33 @@ public class PaleoDBBulkMerger implements Merger{
 	}
 	
 	
-	
+	/**
+	 * Note: this returns a String->String table because the only reference to the parent taxon is the name - the id adjacent to the
+	 * parent name is not for the parent.
+	 * @param itemList
+	 * @return
+	 */
+	Map<String,Set<String>> buildTree(List<PBDBItem> itemList){
+		if (itemList == null)
+			throw new RuntimeException("itemList was null - this code should not have been called!");
+		Map<String,Set<String>> result = new HashMap<String,Set<String>>();
+		for(PBDBItem item : itemList){
+			if (item.isValid()){
+				String name = item.getName();
+				String parentName = item.getParentName();
+				if (result.containsKey(parentName)){
+					Set<String> children = result.get(parentName);
+					children.add(name);
+				}
+				else {
+					Set<String> children = new HashSet<String>();
+					children.add(name);
+					result.put(parentName, children);
+				}
+			}
+		}
+		return result;
+	}
 	
 
 }

@@ -5,13 +5,16 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.jmock.Mockery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestPaleoDBBulkMerger {
 
+	Mockery context = new Mockery();
 	
 	private PaleoDBBulkMerger testMerger;
 	
@@ -27,6 +30,7 @@ public class TestPaleoDBBulkMerger {
 	public void setUp() throws Exception {
 		testMerger = new PaleoDBBulkMerger();
 		testMerger.setSource(testDumpDirectory);
+		testMerger.setTarget(context.mock(TaxonStore.class));
 	}
 
 	@After
@@ -48,13 +52,33 @@ public class TestPaleoDBBulkMerger {
 	}
 	
 	@Test
+	public void testBuildTree() throws Exception{
+		List<PBDBItem> items = testMerger.buildPBDBList(testTaxonomic_units1);
+		Map<String,Set<String>> testTree = testMerger.buildTree(items);
+		assertEquals(2,testTree.size());
+		assertTrue(testTree.containsKey("Tyrannosaurus"));
+		assertTrue(testTree.containsKey("Tyrannosaurinae"));
+		assertEquals(1,testTree.get("Tyrannosaurus").size());
+		assertTrue(testTree.get("Tyrannosaurus").contains("Tyrannosaurus rex"));
+		assertEquals(1,testTree.get("Tyrannosaurinae").size());
+		assertTrue(testTree.get("Tyrannosaurinae").contains("Tyrannosaurus"));
+	}
+	
+	@Test
 	public void testMerge() {
 		assertNotNull(testMerger);
+		
+		//expectations
+		
 		testMerger.merge("PBDB");
 	}
 
 	@Test
 	public void testAttach() {
+		
+		//expectations
+		
+		
 		testMerger.attach("", "", "PBDB");
 	}
 
