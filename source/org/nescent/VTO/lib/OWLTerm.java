@@ -79,4 +79,10 @@ public class OWLTerm implements Term {
 		return false;
 	}
 
+	@Override
+	public boolean isExtinct() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

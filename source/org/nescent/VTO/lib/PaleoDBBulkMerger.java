@@ -76,11 +76,11 @@ public class PaleoDBBulkMerger implements Merger{
 	}
 
 	/**
-	 * @param parent ignored in this merger
-	 * @param cladeRoot ignored in this merger - each term provides it's own parentage
+	 * @param defaultParent generally ignored, except if no names in a term's lineage resolves
+	 * @param cladeRoot ignored in this merger
 	 */
 	@Override
-	public void attach(String parent, String cladeRoot, String prefix) {
+	public void attach(String defaultParent, String cladeRoot, String prefix) {
 		if (target == null){
 			throw new IllegalStateException("Target ontology for PBDB bulk merge not set");
 		}
@@ -89,6 +89,7 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		final File taxonUnitsFile = new File(source.getAbsolutePath()+'/'+TAXONUNITSFILENAME);
 		final File synonymLinksFile = new File(source.getAbsolutePath()+'/'+SYNONYMLINKSFILENAME);
+		final Term defaultParentTaxon = target.getTerm(defaultParent);
 		List<PBDBItem> itemList = null; 
 		try{
 			itemList = buildPBDBList(taxonUnitsFile);
@@ -104,8 +105,34 @@ public class PaleoDBBulkMerger implements Merger{
 		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
 			logger.error("An IO Exception was thrown while parsing: " + synonymLinksFile);
 		}
-		Map<String,Set<String>>taxonTree = buildTree(itemList);
-		
+		Map<String,String>taxonTree = buildTree(itemList);
+		Map<String,Term> termDictionary = new HashMap<String,Term>();
+		for (Term t : target.getTerms()){
+			termDictionary.put(t.getLabel(),t);
+		}
+		for(String tName : taxonTree.keySet()){
+			System.out.println("Processing: " + tName);
+			if (!termDictionary.containsKey(tName)){
+				Term newTerm = target.addTerm(tName);
+				termDictionary.put(tName, newTerm);
+			}
+		}
+		for (String tName : taxonTree.keySet()){
+			Term child = termDictionary.get(tName);
+			Term parent = termDictionary.get(taxonTree.get(tName));
+			if (parent == null){
+				parent = defaultParentTaxon;
+			}
+			if (!parent.getChildren().contains(child)){
+				target.attachParent(child, parent);
+			}
+		}
+		for(PBDBItem item : itemList){
+			if (item.isValid()){
+			}
+			else{
+			}
+		}
 	}
 
 	List<PBDBItem> buildPBDBList(File taxonFile) throws IOException{
@@ -165,22 +192,19 @@ public class PaleoDBBulkMerger implements Merger{
 	 * @param itemList
 	 * @return
 	 */
-	Map<String,Set<String>> buildTree(List<PBDBItem> itemList){
+	Map<String,String> buildTree(List<PBDBItem> itemList){
 		if (itemList == null)
 			throw new RuntimeException("itemList was null - this code should not have been called!");
-		Map<String,Set<String>> result = new HashMap<String,Set<String>>();
+		Map<String,String> result = new HashMap<String,String>();
 		for(PBDBItem item : itemList){
 			if (item.isValid()){
 				String name = item.getName();
 				String parentName = item.getParentName();
-				if (result.containsKey(parentName)){
-					Set<String> children = result.get(parentName);
-					children.add(name);
+				if (result.containsKey(name)){
+					throw new RuntimeException("Duplicate name in treelist");
 				}
 				else {
-					Set<String> children = new HashSet<String>();
-					children.add(name);
-					result.put(parentName, children);
+					result.put(name, parentName);
 				}
 			}
 		}

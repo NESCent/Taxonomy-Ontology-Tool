@@ -189,15 +189,15 @@ public class Builder {
 		m.setTarget(target);
 		if (sourceParentStr != null){   //need to specify the clade within the sourceFile (or null?)
 			if (cladeRootStr != null)
-				m.attach(sourceParentStr,cladeRootStr,targetPrefixStr);
+				m.attach(sourceParentStr,cladeRootStr,sourcePrefixStr);
 			else
-				m.attach(sourceParentStr,sourceParentStr,targetPrefixStr);
+				m.attach(sourceParentStr,sourceParentStr,sourcePrefixStr);
 		}
 		else {
 			if (cladeRootStr != null)
-				m.attach(targetRootStr,cladeRootStr,targetPrefixStr);
+				m.attach(targetRootStr,cladeRootStr,sourcePrefixStr);
 			else
-				m.attach(targetRootStr,targetRootStr,targetPrefixStr);
+				m.attach(targetRootStr,targetRootStr,sourcePrefixStr);
 		}
 
 	}

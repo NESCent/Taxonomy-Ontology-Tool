@@ -38,6 +38,9 @@ class OBOUtils {
 	static final public String PROPERTYVALUE_TAG = "property_value";
 	static final public String ISA_PROPERTY = "OBO_REL:is_a"; 
 	static final public String RANK_PROPERTY = "has_rank";
+	static final public String EXTINCT_PROPERTY = "is_extinct";
+	
+	static final public String TRUE_VALUE = "true";   //this should probably be some sort of XST:boolean expression
 
 
 	final private OBOSession theSession;
@@ -272,6 +275,23 @@ class OBOUtils {
 		return oboFactory.createPropertyValue(PROPERTYVALUE_TAG,RANK_PROPERTY + " " + id);
 	}
 
+	public void setExtinct(IdentifiedObject c){
+		PropertyValue extinctProperty = createExtinctProperty();
+		c.addPropertyValue(extinctProperty);
+	}
+	
+	public boolean isExtinct(IdentifiedObject c){
+		for (PropertyValue v : c.getPropertyValues()){
+			String[] pair = v.getValue().split(" ");
+			if (EXTINCT_PROPERTY.equalsIgnoreCase(pair[0]))
+				return true;
+		}
+		return false;
+	}
+	
+	public PropertyValue createExtinctProperty(){
+		return oboFactory.createPropertyValue(PROPERTYVALUE_TAG,EXTINCT_PROPERTY + " " + TRUE_VALUE); 		
+	}
 
 	public void setNameSpace(String namespace, String filepath){
 		Namespace n = oboFactory.createNamespace(namespace, filepath);
@@ -285,6 +305,8 @@ class OBOUtils {
 	public OBOProperty getHasRank(){
 		return hasRankProperty; 
 	}
+	
+	
 
 	public static Map<String,OBOClass> getAllTermNamesHash(Collection <OBOClass> terms){
 		final HashMap<String,OBOClass> result = new HashMap<String,OBOClass>(terms.size());

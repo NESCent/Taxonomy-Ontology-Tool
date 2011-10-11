@@ -3,10 +3,12 @@ package org.nescent.VTO.lib;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +32,6 @@ public class TestPaleoDBBulkMerger {
 	public void setUp() throws Exception {
 		testMerger = new PaleoDBBulkMerger();
 		testMerger.setSource(testDumpDirectory);
-		testMerger.setTarget(context.mock(TaxonStore.class));
 	}
 
 	@After
@@ -54,29 +55,53 @@ public class TestPaleoDBBulkMerger {
 	@Test
 	public void testBuildTree() throws Exception{
 		List<PBDBItem> items = testMerger.buildPBDBList(testTaxonomic_units1);
-		Map<String,Set<String>> testTree = testMerger.buildTree(items);
+		Map<String,String> testTree = testMerger.buildTree(items);
 		assertEquals(2,testTree.size());
+		assertTrue(testTree.containsKey("Tyrannosaurus rex"));
 		assertTrue(testTree.containsKey("Tyrannosaurus"));
-		assertTrue(testTree.containsKey("Tyrannosaurinae"));
-		assertEquals(1,testTree.get("Tyrannosaurus").size());
-		assertTrue(testTree.get("Tyrannosaurus").contains("Tyrannosaurus rex"));
-		assertEquals(1,testTree.get("Tyrannosaurinae").size());
-		assertTrue(testTree.get("Tyrannosaurinae").contains("Tyrannosaurus"));
+		assertEquals("Tyrannosaurinae",testTree.get("Tyrannosaurus"));
+		assertEquals("Tyrannosaurus",testTree.get("Tyrannosaurus rex"));
 	}
 	
 	@Test
 	public void testMerge() {
-		assertNotNull(testMerger);
+
+		final TaxonStore testStore = context.mock(TaxonStore.class);
+		testMerger.setTarget(testStore);
 		
+		final String tName = "Tyrannosaurus";
+		final String trName = "Tyrannosaurus rex";
+
 		//expectations
+
+		context.checking(new Expectations() {{
+			allowing(testStore).getTerms(); will(returnValue(any(Collection.class)));
+			//oneOf(testStore).addTerm(tName);
+			//oneOf(testStore).addTerm(trName);
+			
+		}});
 		
 		testMerger.merge("PBDB");
 	}
 
 	@Test
 	public void testAttach() {
-		
+		final TaxonStore testStore = context.mock(TaxonStore.class);
+		testMerger.setTarget(testStore);
+
+		final String tName = "Tyrannosaurus";
+		final String trName = "Tyrannosaurus rex";
+		final String tnName = "Tyrannosaurinae";
+
+
 		//expectations
+		context.checking(new Expectations() {{
+			allowing(testStore).getTerms(); //will(returnValue(any(Collection.class)));
+			allowing(testStore).addTerm(tName);
+			allowing(testStore).addTerm(trName);
+			allowing(testStore).addTerm(tnName);
+			
+		}});
 		
 		
 		testMerger.attach("", "", "PBDB");

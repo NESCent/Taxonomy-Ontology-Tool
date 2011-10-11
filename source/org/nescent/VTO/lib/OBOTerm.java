@@ -8,6 +8,7 @@ import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
+import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
@@ -97,6 +98,19 @@ public class OBOTerm implements Term {
 	public boolean hasAncestor(String string) {
 		
 		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+
+	@Override
+	public boolean isExtinct() {
+		for (PropertyValue v : term.getPropertyValues()){
+			String[] pair = v.getValue().split(" ");
+			if ("is_extinct".equals(pair[0])){
+				return true;
+			}
+		}
 		return false;
 	}
 
