@@ -110,7 +110,8 @@ public class OBOMerger implements Merger {
 			cladeClass = parentTerm.asOBOClass();
 		}
 		// first copy all the descendents of cladeClass into the target
-		logger.info("Checkpoint 1: Gnathostomata = " + target.getTermbyName("Gnathostomata"));
+		logger.info("Checkpoint 1: Chordata = " + target.getTermbyName("Chordata"));
+		logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
 		for (Term t : target.getTerms()){
 			if ("Gnathostomata".equals(t.getLabel())){
 				logger.info("Found Gnathostomata on through search on load check");

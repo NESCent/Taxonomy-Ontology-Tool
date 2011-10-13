@@ -2,7 +2,7 @@ package org.nescent.VTO.lib;
 
 import java.util.regex.Pattern;
 
-import org.nescent.VTO.lib.PaleoDBBulkMerger.TaxonomicStatus;
+import org.apache.log4j.Logger;
 
 class PBDBItem{
 	
@@ -28,6 +28,22 @@ class PBDBItem{
 	final private String parentName;
 	final private String rankName;
 	
+	
+	static final Logger logger = Logger.getLogger(PBDBItem.class.getName());
+	
+	enum TaxonomicStatus{
+		VALID,
+		JUNIOR_SYNONYM,
+		NOMEN_NUDUM,
+		NOMEN_DUBIUM,
+		ORIGINALNAME_COMBINATION,
+		MISPLACED,
+		INVALID_SUBGROUP,
+		INCORRECT_ORIGINAL_SPELLING,
+		UNRECOGNIZED
+	}
+
+			
 	PBDBItem(String line){
 		final String[] digest = pipePattern.split(line);
 		if (digest.length != 16){
@@ -80,10 +96,22 @@ class PBDBItem{
 				 "\"original name/combination\"".equals(digest[STATUSDETAILCOLUMN])){
 			status = TaxonomicStatus.ORIGINALNAME_COMBINATION;
 		}
+		else if ("invalid".equalsIgnoreCase(digest[STATUSCOLUMN]) && 
+				digest[STATUSDETAILCOLUMN].startsWith("\"belongs to")){
+			status = TaxonomicStatus.MISPLACED;
+		}
+		else if ("invalid".equalsIgnoreCase(digest[STATUSCOLUMN]) && 
+				"\"invalid subgroup\"".equals(digest[STATUSDETAILCOLUMN])){
+			status = TaxonomicStatus.INVALID_SUBGROUP;
+		}
+		else if ("invalid".equalsIgnoreCase(digest[STATUSCOLUMN]) && 
+				"\"unavailable, incorrect original spelling\"".equals(digest[STATUSDETAILCOLUMN])){
+			status = TaxonomicStatus.INCORRECT_ORIGINAL_SPELLING;
+		}
 		else
 			status = TaxonomicStatus.UNRECOGNIZED;
 		if (this.status == TaxonomicStatus.UNRECOGNIZED){
-			throw new RuntimeException("Unrecognized taxonomic status " + digest[STATUSCOLUMN] + ") or status detail (" + digest[STATUSDETAILCOLUMN] + ") in line " + line);
+			//logger.error("Unrecognized taxonomic status " + digest[STATUSCOLUMN] + ") or status detail (" + digest[STATUSDETAILCOLUMN] + ") in line " + line);
 		}
 
 	}

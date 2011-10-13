@@ -87,16 +87,30 @@ public class PaleoDBBulkMerger implements Merger{
 		if (source == null){
 			throw new IllegalStateException("Source directory of files for PBDB bulk merge not set");
 		}
+		
+		
 		final File taxonUnitsFile = new File(source.getAbsolutePath()+'/'+TAXONUNITSFILENAME);
 		final File synonymLinksFile = new File(source.getAbsolutePath()+'/'+SYNONYMLINKSFILENAME);
-		final Term defaultParentTaxon = target.getTerm(defaultParent);
+		final Term defaultParentTaxon = target.getTermbyName(defaultParent);
+		if (defaultParentTaxon == null){
+			logger.info("Target size is " + target.getTerms().size());
+			throw new IllegalArgumentException("Supplied parent " + defaultParent + " is not in the taxonomy");
+		}
+		logger.info("Checkpoint 2: Chordata = " + target.getTermbyName("Chordata"));
+		logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
+		for (Term t : target.getTerms()){
+			if ("Chordata".equals(t.getLabel())){
+				logger.info("Found Chordata on through search on load check");
+			}
+		}
 		List<PBDBItem> itemList = null; 
 		try{
 			itemList = buildPBDBList(taxonUnitsFile);
 		}
-		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
+		catch (IOException e){  
 			logger.error("An IO Exception was thrown while parsing: " + taxonUnitsFile);
 			e.printStackTrace();
+			throw new RuntimeException("");
 		}
 		Map<Integer,Integer> synonymMap;
 		try{
@@ -110,20 +124,33 @@ public class PaleoDBBulkMerger implements Merger{
 		for (Term t : target.getTerms()){
 			termDictionary.put(t.getLabel(),t);
 		}
+
+		int startingSize = target.getTerms().size();
+		Set <Term>newTerms = new HashSet<Term>();
 		for(String tName : taxonTree.keySet()){
-			System.out.println("Processing: " + tName);
 			if (!termDictionary.containsKey(tName)){
 				Term newTerm = target.addTerm(tName);
+				newTerms.add(newTerm);
 				termDictionary.put(tName, newTerm);
+				//System.out.println("Adding taxon: " + tName);
 			}
 		}
+		int orphanCount = 0;
+		for (String tName : taxonTree.keySet()){
+			if (termDictionary.get(taxonTree.get(tName)) == null){
+				orphanCount++;
+			}
+		}
+		
+		logger.info("Taxontree contains " + taxonTree.keySet().size() + " entries and " + orphanCount + " orphans");
+		
 		for (String tName : taxonTree.keySet()){
 			Term child = termDictionary.get(tName);
 			Term parent = termDictionary.get(taxonTree.get(tName));
 			if (parent == null){
 				parent = defaultParentTaxon;
 			}
-			if (!parent.getChildren().contains(child)){
+			if (newTerms.contains(child) && !parent.getChildren().contains(child)){
 				target.attachParent(child, parent);
 			}
 		}
@@ -133,6 +160,9 @@ public class PaleoDBBulkMerger implements Merger{
 			else{
 			}
 		}
+		int endingSize = target.getTerms().size();
+		logger.info("Taxon store grew from " + startingSize + " to " + endingSize);
+		logger.info(defaultParent + " received " + defaultParentTaxon.getChildren().size() + " children");
 	}
 
 	List<PBDBItem> buildPBDBList(File taxonFile) throws IOException{
@@ -151,14 +181,6 @@ public class PaleoDBBulkMerger implements Merger{
 		return new PBDBItem(raw);
 	}
 	
-	enum TaxonomicStatus{
-		VALID,
-		JUNIOR_SYNONYM,
-		NOMEN_NUDUM,
-		NOMEN_DUBIUM,
-		ORIGINALNAME_COMBINATION,
-		UNRECOGNIZED
-	}
 	
 	//This reads from a three column file: syn_id, accepted_taxon_id, date of last modification 
 	Map<Integer,Integer> buildSynonymLinks(File synonymFile) throws IOException{
@@ -201,7 +223,7 @@ public class PaleoDBBulkMerger implements Merger{
 				String name = item.getName();
 				String parentName = item.getParentName();
 				if (result.containsKey(name)){
-					throw new RuntimeException("Duplicate name in treelist");
+					logger.error("Duplicate name in treelist");
 				}
 				else {
 					result.put(name, parentName);

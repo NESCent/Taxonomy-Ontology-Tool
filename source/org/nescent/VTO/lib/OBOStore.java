@@ -123,6 +123,16 @@ public class OBOStore implements TaxonStore {
 
 	@Override
 	public Term addTermbyID(String ID, String name) {
+		String[] idComponents = ID.split(":");
+		if (idComponents.length < 2){
+			throw new IllegalArgumentException("Provided ID: " + ID + " is not valid OBO syntax");
+		}
+		if (idComponents[0].equalsIgnoreCase(defaultPrefix)){
+			int idIndex = Integer.parseInt(idComponents[1]);
+			if (idIndex > idCounter){
+				idCounter = idIndex+1;
+			}
+		}
 		return new OBOTerm(u.makeTerm(ID, name));
 	}
 

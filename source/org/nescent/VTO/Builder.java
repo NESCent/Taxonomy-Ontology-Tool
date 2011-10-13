@@ -31,6 +31,7 @@ import org.nescent.VTO.lib.OBOStore;
 import org.nescent.VTO.lib.OWLMerger;
 import org.nescent.VTO.lib.ColumnMerger;
 import org.nescent.VTO.lib.OWLStore;
+import org.nescent.VTO.lib.PaleoDBBulkMerger;
 import org.nescent.VTO.lib.TaxonStore;
 import org.nescent.VTO.lib.UnderscoreJoinedNamesMerger;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -52,6 +53,8 @@ public class Builder {
 	final static String IOCFORMATSTR = "IOC";     //XML format used by IOC checklist (birds)
 	final static String COLFORMATSTR = "COL";     //Catalogue of Life website
 	final static String COLDBFORMATSTR = "COLDB";  //Catalogue of Life via MySQL
+	final static String PBDBBULKFORMATSTR = "PBDBbulk";  //Paleobiology Database bulk taxon downloads
+	final static String PBDBUPDATEFORMATSTR = "PBDBupdate";  //Paleobiology Database update (list of names to add from PBDB)
 	final static String JOINEDNAMETABBEDCOLUMNS = "JOINEDNAMETAB";
 	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
@@ -199,7 +202,6 @@ public class Builder {
 			else
 				m.attach(targetRootStr,targetRootStr,sourcePrefixStr);
 		}
-
 	}
 	
 	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){
@@ -325,6 +327,9 @@ public class Builder {
 		}
 		if (COLFORMATSTR.equals(formatStr)){
 			return new CoLMerger();
+		}
+		if (PBDBBULKFORMATSTR.equals(formatStr)){
+			return new PaleoDBBulkMerger();
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
