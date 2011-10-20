@@ -24,8 +24,8 @@ public class TestPaleoDBBulkMerger {
 	
 	final String fileSeparator = System.getProperty("file.separator");
 	
-	private final File testTaxonomic_units1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "taxonomic_units.dat");
-	private final File testSynonym_links1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "synonym_links.dat");
+	private final File testValidTaxa1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "valid_taxa.csv");
+	private final File testInvalidTaxa1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "invalid_taxa.csv");
 
 
 	@Before
@@ -41,20 +41,20 @@ public class TestPaleoDBBulkMerger {
 	
 	@Test
 	public void testBuildPDBDList() throws Exception{
-		List<PBDBItem> items = testMerger.buildPBDBList(testTaxonomic_units1);
-		assertEquals(17,items.size());
+		List<PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
+		assertEquals(2,items.size());
 		
 	}
 	
 	@Test
 	public void testBuildSynonymLinks() throws Exception{
-		Map<Integer,Integer> links = testMerger.buildSynonymLinks(testSynonym_links1);
-		assertEquals(14,links.size());
+		Map<String,String> links = testMerger.buildSynonymLinks(testInvalidTaxa1);
+		assertEquals(10,links.size());
 	}
 	
 	@Test
 	public void testBuildTree() throws Exception{
-		List<PBDBItem> items = testMerger.buildPBDBList(testTaxonomic_units1);
+		List<PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
 		Map<String,String> testTree = testMerger.buildTree(items);
 		assertEquals(2,testTree.size());
 		assertTrue(testTree.containsKey("Tyrannosaurus rex"));

@@ -22,20 +22,11 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
 	
-	//These should be downloaded as itis format with pipe '|' delimiters
-	private final String TAXONUNITSFILENAME = "taxonomic_units.dat";
-	private final String SYNONYMLINKSFILENAME = "synonym_links.dat";
 	
-	static final Pattern pipePattern = Pattern.compile("\\|");
 	
-	//columns for itis format
-	static final int SYNIDCOLUMN = 0;
-	static final int ACCEPTEDIDCOLUMN = 1;
-	static final int DATECOLUMN = 2;
 
 
-	
-	//These are not currently used, but if csv downloads are supported in the future...
+	//Need to download using full fields (to get extinction status and other reasons)
 	static private final String VALIDTAXAFILENAME = "valid_taxa.csv";
 	static private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
 	
@@ -89,8 +80,8 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		
 		
-		final File taxonUnitsFile = new File(source.getAbsolutePath()+'/'+TAXONUNITSFILENAME);
-		final File synonymLinksFile = new File(source.getAbsolutePath()+'/'+SYNONYMLINKSFILENAME);
+		final File validTaxaFile = new File(source.getAbsolutePath()+'/'+VALIDTAXAFILENAME);
+		final File invalidTaxaFile = new File(source.getAbsolutePath()+'/'+INVALIDTAXAFILENAME);
 		final Term defaultParentTaxon = target.getTermbyName(defaultParent);
 		if (defaultParentTaxon == null){
 			logger.info("Target size is " + target.getTerms().size());
@@ -103,23 +94,23 @@ public class PaleoDBBulkMerger implements Merger{
 				logger.info("Found Chordata on through search on load check");
 			}
 		}
-		List<PBDBItem> itemList = null; 
+		List<PBDBItem> validTaxaList = null; 
 		try{
-			itemList = buildPBDBList(taxonUnitsFile);
+			validTaxaList = buildPBDBList(validTaxaFile);
 		}
 		catch (IOException e){  
-			logger.error("An IO Exception was thrown while parsing: " + taxonUnitsFile);
+			logger.error("An IO Exception was thrown while parsing: " + validTaxaFile);
 			e.printStackTrace();
 			throw new RuntimeException("");
 		}
-		Map<Integer,Integer> synonymMap;
+		Map<String,String> synonymMap;
 		try{
-			synonymMap = buildSynonymLinks(synonymLinksFile);
+			synonymMap = buildSynonymLinks(invalidTaxaFile);
 		}
 		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
-			logger.error("An IO Exception was thrown while parsing: " + synonymLinksFile);
+			logger.error("An IO Exception was thrown while parsing: " + invalidTaxaFile);
 		}
-		Map<String,String>taxonTree = buildTree(itemList);
+		Map<String,String>taxonTree = buildTree(validTaxaList);
 		Map<String,Term> termDictionary = new HashMap<String,Term>();
 		for (Term t : target.getTerms()){
 			termDictionary.put(t.getLabel(),t);
@@ -154,7 +145,7 @@ public class PaleoDBBulkMerger implements Merger{
 				target.attachParent(child, parent);
 			}
 		}
-		for(PBDBItem item : itemList){
+		for(PBDBItem item : validTaxaList){
 			if (item.isValid()){
 			}
 			else{
@@ -169,39 +160,29 @@ public class PaleoDBBulkMerger implements Merger{
 		List <PBDBItem> result = new ArrayList<PBDBItem>();
         final BufferedReader br = new BufferedReader(new FileReader(taxonFile));
         String raw = br.readLine();
+        if (raw.startsWith("authorizer"))
+        	raw = br.readLine();    //if column headers (in csv format) then skip them
         while (raw != null){
-        	PBDBItem e = processLine(raw);
+        	PBDBItem e = PBDBItem.getValidInstance(raw);
         	result.add(e);
         	raw = br.readLine();
         }
 		return result;
 	}
-	
-	PBDBItem processLine(String raw){
-		return new PBDBItem(raw);
-	}
-	
+
 	
 	//This reads from a three column file: syn_id, accepted_taxon_id, date of last modification 
-	Map<Integer,Integer> buildSynonymLinks(File synonymFile) throws IOException{
-		Map<Integer,Integer> result = new HashMap<Integer,Integer>();
+	Map<String,String> buildSynonymLinks(File synonymFile) throws IOException{
+		Map<String,String> result = new HashMap<String,String>();
 		final BufferedReader br = new BufferedReader(new FileReader(synonymFile));
 		String raw = br.readLine();
+        if (raw.startsWith("authorizer"))
+        	raw = br.readLine();    //if column headers (in csv format) then skip them
 		while(raw != null){
-			final String[] digest = pipePattern.split(raw);
-			int synID = -1;
-			int acceptedID = -1;
-			if (digest.length != 3){  // should be exactly 3
-				throw new RuntimeException("Line had wrong number of elements: " + digest.length);
-			}
-			try {
-				synID =Integer.parseInt(digest[SYNIDCOLUMN]);
-				acceptedID = Integer.parseInt(digest[ACCEPTEDIDCOLUMN]);
-			}
-			catch (NumberFormatException e){
-				throw new RuntimeException("Misformatted ID (synid = " + digest[SYNIDCOLUMN] + "; acceptedid = " + digest[ACCEPTEDIDCOLUMN] + ") in line " + raw);
-			}
-			result.put(synID, acceptedID);
+			PBDBItem e = PBDBItem.getInvalidInstance(raw);
+			String synonym = e.getName();
+			String validName = e.getValidName();
+			result.put(synonym, validName);
 			raw = br.readLine();
 		}
 		return result;
