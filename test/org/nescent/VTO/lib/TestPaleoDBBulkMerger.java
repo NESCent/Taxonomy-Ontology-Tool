@@ -41,21 +41,17 @@ public class TestPaleoDBBulkMerger {
 	
 	@Test
 	public void testBuildPDBDList() throws Exception{
-		List<PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
+		Map<String,PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
 		assertEquals(2,items.size());
 		
 	}
 	
-	@Test
-	public void testBuildSynonymLinks() throws Exception{
-		Map<String,String> links = testMerger.buildSynonymLinks(testInvalidTaxa1);
-		assertEquals(10,links.size());
-	}
 	
 	@Test
 	public void testBuildTree() throws Exception{
-		List<PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
-		Map<String,String> testTree = testMerger.buildTree(items);
+		Map<String,PBDBItem> items = testMerger.buildPBDBList(testValidTaxa1);
+		Map<String,PBDBItem> invalidItems = testMerger.buildPBDBList(testInvalidTaxa1);
+		Map<String,String> testTree = testMerger.buildTree(items,invalidItems);
 		assertEquals(2,testTree.size());
 		assertTrue(testTree.containsKey("Tyrannosaurus rex"));
 		assertTrue(testTree.containsKey("Tyrannosaurus"));
