@@ -100,7 +100,7 @@ public class CoLMerger implements Merger {
 						try {
 							Thread.sleep(800);
 						} catch (InterruptedException e) {
-							logger.info("Got an interrupted exception");
+							logger.error("Got an interrupted exception");
 						}
 						logger.info("Done");
 					}

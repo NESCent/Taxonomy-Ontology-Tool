@@ -9,7 +9,6 @@ import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
 
 public class OBOMerger implements Merger {

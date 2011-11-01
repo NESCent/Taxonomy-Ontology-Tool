@@ -120,6 +120,7 @@ public class ITISMerger implements Merger{
             		result.setID(idNum);
             	}
             	catch (NumberFormatException e){
+            		throw new RuntimeException("Error processing ITIS id: " + idStr + " which was not an integer");
             	}
             }
         	String name1 = digest[3];

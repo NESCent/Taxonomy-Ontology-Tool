@@ -1,8 +1,8 @@
 package org.nescent.VTO.lib;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.util.Collection;
 
 import javax.xml.parsers.DocumentBuilderFactory;

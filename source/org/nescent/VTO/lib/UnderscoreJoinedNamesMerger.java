@@ -91,17 +91,17 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 			else if (splitName.length == 2){
 				StringBuilder b = new StringBuilder();
 				b.append(splitName[0]);
-				b.append(" ");
+				b.append(' ');
 				b.append(splitName[1]);
 				speciesName =  b.toString();
 			}
 			else {
 				StringBuilder b = new StringBuilder();
 				b.append(splitName[0]);
-				b.append(" ");
+				b.append(' ');
 				b.append(splitName[1]);
 				speciesName = b.toString();
-				b.append(" ");
+				b.append(' ');
 				b.append(splitName[2]);
 				subSpeciesName = b.toString();
 			}
@@ -154,17 +154,17 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				else if (splitName.length == 2){
 					StringBuilder b = new StringBuilder();
 					b.append(splitName[0]);
-					b.append(" ");
+					b.append(' ');
 					b.append(splitName[1]);
 					speciesName =  b.toString();
 				}
 				else {
 					StringBuilder b = new StringBuilder();
 					b.append(splitName[0]);
-					b.append(" ");
+					b.append(' ');
 					b.append(splitName[1]);
 					speciesName = b.toString();
-					b.append(" ");
+					b.append(' ');
 					b.append(splitName[2]);
 					subSpeciesName = b.toString();
 				}

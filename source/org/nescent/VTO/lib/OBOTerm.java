@@ -102,7 +102,6 @@ public class OBOTerm implements Term {
 	}
 
 
-
 	@Override
 	public boolean isExtinct() {
 		for (PropertyValue v : term.getPropertyValues()){

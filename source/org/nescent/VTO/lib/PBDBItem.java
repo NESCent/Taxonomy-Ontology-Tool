@@ -1,9 +1,7 @@
 package org.nescent.VTO.lib;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -49,7 +47,7 @@ class PBDBItem{
 	static final int pages = 18;
 	static final int figures = 19;	
 	static final int PARENT_NAME = 20;
-	static final int extant = 21;
+	static final int EXTANT = 21;
 	static final int preservation = 22;	
 	static final int type_taxon = 23;
 	static final int type_specimen = 24;	
@@ -80,6 +78,7 @@ class PBDBItem{
 	final private String rankName;
 	private TaxonomicStatus status;
 	private String validName;     //Used for synonyms
+	private boolean isExtinct;
 	
 	
 	static final Logger logger = Logger.getLogger(PBDBItem.class.getName());
@@ -121,6 +120,7 @@ class PBDBItem{
 		final int taxon_name = columns.get("taxon_name");
 		final int parent_name = columns.get("parent_name");
 		final int taxon_rank = columns.get("taxon_rank");
+		final int extant = columns.get("extant");
 		int id;
 		try {
 			id =Integer.parseInt(digest[taxon_id]);
@@ -137,8 +137,15 @@ class PBDBItem{
 		if (digest[taxon_rank].isEmpty()){
 			throw new RuntimeException("Misformatted rank name in line " + line);
 		}
+		if (!("yes".equalsIgnoreCase(digest[extant]) || "no".equalsIgnoreCase(digest[extant]) || digest[extant].isEmpty())){
+			throw new RuntimeException("Misformated extinction indication in line " + line);
+		}
 		final PBDBItem result = new PBDBItem(id,stripQuotes(digest[taxon_name]),digest[taxon_rank],stripQuotes(digest[PARENT_NAME]));
 		result.setStatus(digest,columns);
+		if ("yes".equalsIgnoreCase(digest[extant]))
+			result.isExtinct = false;
+		else
+			result.isExtinct = true;
 		return result;
 	}
 	
@@ -247,5 +254,9 @@ class PBDBItem{
 	
 	boolean isInvalidSubgroup(){
 		return (status == TaxonomicStatus.INVALID_SUBGROUP);
+	}
+	
+	boolean isExtinct(){
+		return isExtinct;
 	}
 }

@@ -12,23 +12,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
-
 import org.apache.log4j.Logger;
-import org.obo.dataadapter.DefaultOBOParser;
-import org.obo.dataadapter.OBOParseEngine;
-import org.obo.dataadapter.OBOParseException;
 import org.obo.datamodel.Dbxref;
-import org.obo.datamodel.IdentifiedObject;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.OBORestriction;
-import org.obo.datamodel.OBOSession;
-import org.obo.datamodel.ObjectFactory;
 import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
 
@@ -543,6 +533,10 @@ public class OBOStore implements TaxonStore {
 		else
 			return null;
 	}
+	
+	
+	
+	
 
 	//the following is included to support matching applications that want ranks filled in
 	//Ideally these should be specified in the XML configuration 
@@ -681,6 +675,12 @@ public class OBOStore implements TaxonStore {
 		}
 
 
+	}
+
+
+	@Override
+	public void setExtinct(Term term) {
+		u.setExtinct(term.asOBOClass());		
 	}
 
 

@@ -21,9 +21,11 @@ public class PaleoDBBulkMerger implements Merger{
 
 
 	//Need to download using full fields (to get extinction status and other reasons)
-	static private final String VALIDTAXAFILENAME = "valid_taxa.csv";
-	static private final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
+	private static final String VALIDTAXAFILENAME = "valid_taxa.csv";
+	private static final String INVALIDTAXAFILENAME = "invalid_taxa.csv";
 	
+	private static final String TARGETNOTSETMESSAGE = "Target ontology for PBDB bulk attach/merge not set";
+	private static final String SOURCENOTSETMESSAGE = "Source directory of files for PBDB bulk attach/merge not set";
 	
 	@Override
 	public boolean canAttach() {
@@ -49,10 +51,10 @@ public class PaleoDBBulkMerger implements Merger{
 	@Override
 	public void merge(String prefix) {
 		if (target == null){
-			throw new IllegalStateException("Target ontology for PBDB bulk merge not set");
+			throw new IllegalStateException(TARGETNOTSETMESSAGE);
 		}
 		if (source == null){
-			throw new IllegalStateException("Source directory of files for PBDB bulk merge not set");
+			throw new IllegalStateException(SOURCENOTSETMESSAGE);
 		}
 		// TODO Auto-generated method stub
 
@@ -65,10 +67,10 @@ public class PaleoDBBulkMerger implements Merger{
 	@Override
 	public void attach(String defaultParent, String cladeRoot, String prefix) {
 		if (target == null){
-			throw new IllegalStateException("Target ontology for PBDB bulk merge not set");
+			throw new IllegalStateException(TARGETNOTSETMESSAGE);
 		}
 		if (source == null){
-			throw new IllegalStateException("Source directory of files for PBDB bulk merge not set");
+			throw new IllegalStateException(SOURCENOTSETMESSAGE);
 		}
 		
 		final File validTaxaFile = new File(source.getAbsolutePath()+'/'+VALIDTAXAFILENAME);
@@ -84,8 +86,7 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		catch (IOException e){  
 			logger.error("An IO Exception was thrown while parsing: " + validTaxaFile);
-			e.printStackTrace();
-			throw new RuntimeException("");
+			throw new RuntimeException("",e);
 		}
 		Map<String,PBDBItem> invalidTaxa = null;
 		try{
@@ -93,28 +94,32 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
 			logger.error("An IO Exception was thrown while parsing: " + invalidTaxaFile);
-			e.printStackTrace();
-			throw new RuntimeException("");
+			throw new RuntimeException("",e);
 		}
 
-		Map<String,String>taxonTree = buildTree(validTaxa,invalidTaxa);
+		final Map<String,String>taxonTree = buildTree(validTaxa,invalidTaxa);
 
-		Set<String> orphans = orphanCheck(taxonTree,defaultParent);
+		final Set<String> orphans = orphanCheck(taxonTree,defaultParent);
 		
 		pruneOrphans(taxonTree,orphans);
 				
 		logger.info("Taxontree contains " + taxonTree.keySet().size() + " entries and " + orphans.size() + " orphans");
 		
-		Map<String,Term> termDictionary = new HashMap<String,Term>();
+		final Map<String,Term> termDictionary = new HashMap<String,Term>();
 		for (Term t : target.getTerms()){
 			termDictionary.put(t.getLabel(),t);
 		}
 
-		int startingSize = target.getTerms().size();
-		Set <Term>newTerms = new HashSet<Term>();
+		final int startingSize = target.getTerms().size();
+		final Set <Term>newTerms = new HashSet<Term>();
 		for(String tName : taxonTree.keySet()){
 			if (!termDictionary.containsKey(tName)){
-				Term newTerm = target.addTerm(tName);
+				final PBDBItem item = validTaxa.get(tName);
+				final Term newTerm = target.addTerm(tName);
+				target.addXRefToTerm(newTerm, "PALEODB", Integer.toString(item.getId()));
+				if (item.isExtinct()){
+					target.setExtinct(newTerm);
+				}
 				newTerms.add(newTerm);
 				termDictionary.put(tName, newTerm);
 				//System.out.println("Adding taxon: " + tName);
@@ -131,14 +136,14 @@ public class PaleoDBBulkMerger implements Merger{
 				target.attachParent(child, parent);
 			}
 		}
-		int endingSize = target.getTerms().size();
+		final int endingSize = target.getTerms().size();
 		logger.info("Taxon store grew from " + startingSize + " to " + endingSize);
 		logger.info(defaultParent + " received " + defaultParentTaxon.getChildren().size() + " children");
 	}
 
 
 	Map<String,PBDBItem> buildPBDBList(File taxonFile) throws IOException{
-		Map<String,PBDBItem> result = new HashMap<String,PBDBItem>();
+		final Map<String,PBDBItem> result = new HashMap<String,PBDBItem>();
         final BufferedReader br = new BufferedReader(new FileReader(taxonFile));
         Map<String,Integer>columns = null;
         String raw = br.readLine();
@@ -169,7 +174,7 @@ public class PaleoDBBulkMerger implements Merger{
 	Map<String,String> buildTree(Map<String, PBDBItem> validTaxa,Map<String,PBDBItem> invalidTaxa){
 		if (validTaxa == null)
 			throw new RuntimeException("itemList was null - this code should not have been called!");
-		Map<String,String> result = new HashMap<String,String>();
+		final Map<String,String> result = new HashMap<String,String>();
 		for(String name : validTaxa.keySet()){
 			PBDBItem item = validTaxa.get(name);
 			String finalParent = null;
@@ -239,7 +244,7 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	int orphanCount = 0;
 	private void pruneOrphans(Map<String, String> taxonTree, Set<String> orphans) {
-		Set<String>treeNodes = new HashSet<String>();
+		final Set<String>treeNodes = new HashSet<String>();
 		treeNodes.addAll(taxonTree.keySet());
 		for(String orphan : orphans)
 			pruneOrphan(taxonTree,treeNodes,orphan);

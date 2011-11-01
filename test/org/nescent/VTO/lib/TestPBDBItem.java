@@ -49,10 +49,12 @@ public class TestPBDBItem {
 		assertEquals(38613, element1.getId());
 		assertEquals("Tyrannosaurus",element1.getName());
 		assertTrue(element1.isValid());
+		assertTrue(element1.isExtinct());
 		PBDBItem element2 = PBDBItem.getValidInstance(validLine2,validMap);
 		assertNotNull(element2);
 		assertEquals(54833, element2.getId());
 		assertEquals("Tyrannosaurus rex",element2.getName());
+		assertTrue(element2.isExtinct());
 		Map<String,Integer>invalidMap = PBDBItem.processHeaders(invalidHeaders);
 		PBDBItem syn1 = PBDBItem.getValidInstance(invalidLine1,invalidMap);
 		assertNotNull(syn1);

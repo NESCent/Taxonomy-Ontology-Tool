@@ -234,8 +234,8 @@ class OBOUtils {
 
 	private static String cleanIllegalCharactersAndDelimiters(final String syn){
 		final String cleanString = cleanIllegalCharacters(syn);
-		if ((cleanString.startsWith("\"") && cleanString.endsWith("\"")) ||
-				(cleanString.startsWith("'") && cleanString.endsWith("'"))){
+		if ((cleanString.charAt(0) =='"' && cleanString.endsWith("\"")) ||
+				(cleanString.charAt(0) == '\'' && cleanString.endsWith("'"))){
 			return cleanString.substring(1,cleanString.length()-1);
 		}
 		else return cleanString;

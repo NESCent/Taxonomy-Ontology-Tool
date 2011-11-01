@@ -1,12 +1,11 @@
 package org.nescent.VTO.lib;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jmock.Expectations;
 import org.jmock.Mockery;

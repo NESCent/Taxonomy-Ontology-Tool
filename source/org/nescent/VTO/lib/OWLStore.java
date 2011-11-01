@@ -72,8 +72,7 @@ public class OWLStore implements TaxonStore {
 
 	@Override
 	public void setRankFromName(Term term, String rank) {
-		return;
-		//throw new RuntimeException("Not Implemented");
+		throw new RuntimeException("Not Implemented");
 		// TODO Auto-generated method stub
 		
 	}
@@ -167,13 +166,18 @@ public class OWLStore implements TaxonStore {
 		//Dbxref newRef = u.createDbxref(dbName, dbID, null, Dbxref.ANALOG);   //not sure this is exactly right, but the short-form constructors in DbxrefImpl suggest it works 
 		//t.asOBOClass().addDbxref(newRef);
 
-		//throw new RuntimeException("Not Implemented");
-		return;
+		throw new RuntimeException("Not Implemented");
 	}
 
 	@Override
 	public Term getTermByXRef(String dbName, String dbID) {
 		throw new RuntimeException("Not Implemented");
+	}
+
+	@Override
+	public void setExtinct(Term term) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

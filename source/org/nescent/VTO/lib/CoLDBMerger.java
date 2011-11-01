@@ -174,7 +174,7 @@ public class CoLDBMerger implements Merger {
 			}
 			StringBuilder synBuilder = new StringBuilder(30);
 			synBuilder.append(genusString);
-			synBuilder.append(" ");
+			synBuilder.append(' ');
 			synBuilder.append(speciesString);
 			result.add(synBuilder.toString());
 		}

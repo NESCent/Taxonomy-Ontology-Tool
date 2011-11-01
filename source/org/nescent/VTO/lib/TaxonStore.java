@@ -71,5 +71,7 @@ public interface TaxonStore {
 
 	public String getRankString(Term term);
 	
+	public void setExtinct(Term term);
+	
 	// these should be accept from Merger
 }
