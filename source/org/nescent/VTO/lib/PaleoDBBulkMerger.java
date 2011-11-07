@@ -12,12 +12,9 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 public class PaleoDBBulkMerger implements Merger{
-
-	private File source = null;
-	private TaxonStore target = null;
 	
-	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
-	
+	final public String PALEODBTAXONPREFIX = "PaleoDBTaxon";
+	final public String FIRSTCOLUMNHEADER = "authorizer";   //This might be subject to change - look at cell 1,1 using Excel
 
 
 	//Need to download using full fields (to get extinction status and other reasons)
@@ -26,6 +23,13 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	private static final String TARGETNOTSETMESSAGE = "Target ontology for PBDB bulk attach/merge not set";
 	private static final String SOURCENOTSETMESSAGE = "Source directory of files for PBDB bulk attach/merge not set";
+
+	
+	private File source = null;
+	private TaxonStore target = null;
+	
+	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
+	
 	
 	@Override
 	public boolean canAttach() {
@@ -116,7 +120,7 @@ public class PaleoDBBulkMerger implements Merger{
 			if (!termDictionary.containsKey(tName)){
 				final PBDBItem item = validTaxa.get(tName);
 				final Term newTerm = target.addTerm(tName);
-				target.addXRefToTerm(newTerm, "PALEODB", Integer.toString(item.getId()));
+				target.addXRefToTerm(newTerm, PALEODBTAXONPREFIX, Integer.toString(item.getId()));
 				if (item.isExtinct()){
 					target.setExtinct(newTerm);
 				}
@@ -137,8 +141,19 @@ public class PaleoDBBulkMerger implements Merger{
 			}
 		}
 		final int endingSize = target.getTerms().size();
+		int synCount = 0;
+		for(String synStr : invalidTaxa.keySet()){
+			PBDBItem synItem = invalidTaxa.get(synStr);
+			Term validItem = termDictionary.get(synItem.getValidName());
+			if (validItem != null){
+				SynonymI newSyn = target.makeSynonymWithXref(synStr, PALEODBTAXONPREFIX, Integer.toString(synItem.getId()));
+				validItem.addSynonym(newSyn);
+				synCount++;
+			}
+		}
 		logger.info("Taxon store grew from " + startingSize + " to " + endingSize);
 		logger.info(defaultParent + " received " + defaultParentTaxon.getChildren().size() + " children");
+		logger.info("Store added " + synCount + " synonyms");
 	}
 
 
@@ -147,7 +162,7 @@ public class PaleoDBBulkMerger implements Merger{
         final BufferedReader br = new BufferedReader(new FileReader(taxonFile));
         Map<String,Integer>columns = null;
         String raw = br.readLine();
-        if (raw.startsWith("authorizer")){ //if column headers (in csv format) then skip them
+        if (raw.startsWith(FIRSTCOLUMNHEADER)){ //capture column headers
         	columns = PBDBItem.processHeaders(raw);
         	raw = br.readLine();    //read the next line
         }	
