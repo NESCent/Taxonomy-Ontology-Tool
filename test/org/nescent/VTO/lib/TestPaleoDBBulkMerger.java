@@ -7,15 +7,12 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestPaleoDBBulkMerger {
 
-	Mockery context = new Mockery();
 	
 	private PaleoDBBulkMerger testMerger;
 	
@@ -61,43 +58,14 @@ public class TestPaleoDBBulkMerger {
 	@Test
 	public void testMerge() {
 
-		final TaxonStore testStore = context.mock(TaxonStore.class);
-		testMerger.setTarget(testStore);
 		
 		final String tName = "Tyrannosaurus";
 		final String trName = "Tyrannosaurus rex";
 
-		//expectations
-
-		context.checking(new Expectations() {{
-			allowing(testStore).getTerms(); will(returnValue(any(Collection.class)));
-			//oneOf(testStore).addTerm(tName);
-			//oneOf(testStore).addTerm(trName);
-			
-		}});
-		
-		testMerger.merge("PBDB");
 	}
 
 	@Test
 	public void testAttach() {
-		final TaxonStore testStore = context.mock(TaxonStore.class);
-		testMerger.setTarget(testStore);
-
-		final String tName = "Tyrannosaurus";
-		final String trName = "Tyrannosaurus rex";
-		final String tnName = "Tyrannosaurinae";
-
-
-		//expectations
-		context.checking(new Expectations() {{
-			allowing(testStore).getTerms(); //will(returnValue(any(Collection.class)));
-			allowing(testStore).addTerm(tName);
-			allowing(testStore).addTerm(trName);
-			allowing(testStore).addTerm(tnName);
-			
-		}});
-		
 		
 		testMerger.attach("", "", "PBDB");
 	}

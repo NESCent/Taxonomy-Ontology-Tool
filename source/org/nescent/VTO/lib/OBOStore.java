@@ -21,6 +21,8 @@ import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
 import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
+import org.obo.datamodel.SynonymType;
+import org.obo.util.TermUtil;
 
 public class OBOStore implements TaxonStore {
 
@@ -143,7 +145,11 @@ public class OBOStore implements TaxonStore {
 			return null;
 	}
 
+	public boolean hasTermbyName(String termName){
+		return (u.lookupTermByName(termName) != null);
+	}
 
+	
 	public SynonymI makeSynonym(String synString){
 		Synonym s = u.makeSynonym(synString);
 		return new OBOSynonym(s);
@@ -534,8 +540,11 @@ public class OBOStore implements TaxonStore {
 			return null;
 	}
 	
-	
-	
+	@Override
+	public List<String> countTerms(){
+		return u.countTerms();
+	}
+
 	
 
 	//the following is included to support matching applications that want ranks filled in

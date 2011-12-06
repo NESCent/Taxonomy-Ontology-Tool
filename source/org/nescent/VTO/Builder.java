@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,12 @@ import org.nescent.VTO.lib.OWLStore;
 import org.nescent.VTO.lib.PaleoDBBulkMerger;
 import org.nescent.VTO.lib.TaxonStore;
 import org.nescent.VTO.lib.UnderscoreJoinedNamesMerger;
+import org.obo.datamodel.Dbxref;
+import org.obo.datamodel.OBOClass;
+import org.obo.datamodel.PropertyValue;
+import org.obo.datamodel.Synonym;
+import org.obo.datamodel.SynonymType;
+import org.obo.util.TermUtil;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -42,7 +49,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class Builder {
-	
+
 	/* formats, supported for input, output (store) or both */
 	final static String OBOFORMATSTR = "OBO"; 	//OBO format (as supported by OBO-Edit); supports merge, attach, output
 	final static String ITISFORMATSTR = "ITIS";		//ITIS dump format (merge, attach)
@@ -59,28 +66,28 @@ public class Builder {
 	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
 	final static String SYNONYMFORMATSTR = "SYNONYM"; //This a variant of the column format
-	
+
 	final static String TARGETTAXONOMYSTR = "target";
 	final static String TARGETFORMATSTR = "format";
 	final static String TARGETROOTSTR = "root";
-	
+
 	final static String ATTACHACTIONSTR = "attach";
 	final static String MERGEACTIONSTR = "merge";
 	final static String TRIMACTIONSTR = "trim";
-	
+
 	final static String COLUMNSYNTAXSTR = "columns";
-	
+
 	final static String ATTACHFORMATSTR = "format";
 	final static String ATTACHROOTSTR = "root";   //the root of the attached tree - a new child of node named by ATTACHPARENTSTR
 	final static String ATTACHPARENTSTR = "parent";
 	final static String ATTACHPREFIXSTR = "prefix";
-	
+
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
-	
+
 	final private File optionsFile;
-	
-	
+
+
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
 
 
@@ -120,9 +127,12 @@ public class Builder {
 		for(int i=0;i<actions.getLength();i++){
 			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
 		}
+		for(String reportStr : target.countTerms()){
+			logger.info(reportStr);
+		}
 		saveTarget(targetFormatStr, targetFilterPrefixStr, target);
 	}
-	
+
 	private NodeList parseXMLOptionsFile() throws ParserConfigurationException, SAXException, IOException{
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);
@@ -131,7 +141,7 @@ public class Builder {
 		Document d = db.parse(optionsFile);
 		return d.getElementsByTagNameNS("","taxonomy");
 	}
-	
+
 	private void processChildNode(Node action, TaxonStore target,String targetRootStr, String targetFormatStr, String targetPrefixStr){
 		final String actionName = action.getNodeName();
 		if (ATTACHACTIONSTR.equalsIgnoreCase(actionName)){
@@ -153,8 +163,8 @@ public class Builder {
 			logger.warn("Unknown action: " + action);
 		}
 	}
-	
-	
+
+
 	/**
 	 * 
 	 * @param action
@@ -203,7 +213,7 @@ public class Builder {
 				m.attach(targetRootStr,targetRootStr,sourcePrefixStr);
 		}
 	}
-	
+
 	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){
 		@SuppressWarnings("unchecked")
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
@@ -230,8 +240,8 @@ public class Builder {
 		}
 
 	}
-	
-	
+
+
 	private List<String> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
 		List<String> result = new ArrayList<String>();
 		for(int i = 0; i<childNodes.getLength();i++){
@@ -288,15 +298,15 @@ public class Builder {
 		}
 		// these source formats aren't storage formats (there's no ontology library for them) so the store is implementation dependent (currently OBO)
 		if (XREFFORMATSTR.equals(formatStr) ||
-			COLUMNFORMATSTR.equals(formatStr) ||
-			SYNONYMFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is 
+				COLUMNFORMATSTR.equals(formatStr) ||
+				SYNONYMFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is 
 			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
 	}
-	
-	
+
+
 	private Merger getMerger(String formatStr, List<String> columns, Map<Integer, String> synPrefixes){
 		if (OBOFORMATSTR.equals(formatStr))
 			return new OBOMerger();
@@ -334,7 +344,7 @@ public class Builder {
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
 	}
-	
+
 	private File getSourceFile(String sourceURLStr) {
 		try {
 			URL u = new URL(sourceURLStr);
@@ -365,7 +375,7 @@ public class Builder {
 		}
 	}
 
-// Utilities
+	// Utilities
 	private String getAttribute(Node n,String attribute_id){
 		final Node attNode = n.getAttributes().getNamedItem(attribute_id);
 		if (attNode != null)
@@ -373,9 +383,6 @@ public class Builder {
 		else
 			return null;
 	}
-	
-	
-
 
 }
 

@@ -36,7 +36,7 @@ class PBDBItem{
 	static final int common_name = 7;	
 	static final int TAXON_RANK	= 8;
 	static final int original_taxon_no = 9;	
-	static final int original_taxon_name = 10;	
+	static final int ORIGINAL_TAXON_NAME = 10;	
 	static final int original_taxon_rank = 11;
 	static final int author1init = 12;	
 	static final int author1last = 13;
@@ -78,6 +78,7 @@ class PBDBItem{
 	final private String rankName;
 	private TaxonomicStatus status;
 	private String validName;     //Used for synonyms
+	private String originalName;
 	private boolean isExtinct;
 	
 	
@@ -146,6 +147,7 @@ class PBDBItem{
 			result.isExtinct = false;
 		else
 			result.isExtinct = true;
+		result.setOriginalName(digest,columns);
 		return result;
 	}
 	
@@ -258,5 +260,16 @@ class PBDBItem{
 	
 	boolean isExtinct(){
 		return isExtinct;
+	}
+	
+	void setOriginalName(String[] digest, Map<String,Integer> columns){
+		originalName = null;
+		String oName = stripQuotes(digest[columns.get("original_taxon_name")]);
+		if (!oName.equals(validName))
+			originalName = oName;
+	}
+	
+	String getRankName(){
+		return rankName;
 	}
 }

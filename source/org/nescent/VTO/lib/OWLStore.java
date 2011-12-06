@@ -1,6 +1,8 @@
 package org.nescent.VTO.lib;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.semanticweb.owlapi.model.OWLIndividual;
@@ -178,6 +180,18 @@ public class OWLStore implements TaxonStore {
 	public void setExtinct(Term term) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<String> countTerms() {
+		List<String> result = new ArrayList<String>();
+		return result;
+	}
+
+	@Override
+	public boolean hasTermbyName(String taxonName) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 

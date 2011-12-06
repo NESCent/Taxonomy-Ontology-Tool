@@ -1,8 +1,10 @@
 package org.nescent.VTO.lib;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -23,6 +25,7 @@ import org.obo.datamodel.OBOSession;
 import org.obo.datamodel.ObjectFactory;
 import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
+import org.obo.datamodel.SynonymType;
 import org.obo.datamodel.impl.DefaultObjectFactory;
 import org.obo.util.TermUtil;
 
@@ -260,6 +263,7 @@ class OBOUtils {
 	public void installTerm(IdentifiedObject newTerm,Map<String, IdentifiedObject> termIDs){
 		theSession.addObject(newTerm);
 		termIDs.put(newTerm.getID(), newTerm);
+		dirtyTermSets = true;
 	}
 
 	private void addRankProperty(IdentifiedObject c, String rank){
@@ -314,8 +318,9 @@ class OBOUtils {
 			if (item.getName() == null)
 				logger.error("Term " + item.getID() + " has null for name");
 			else {
-				if (result.get(item.getName()) != null)
-					logger.error("Hash collision in building names hash; Name = " + item.getName() + " old ID = " + ((OBOClass)result.get(item.getName())).getID() + " new ID = " + item.getID());
+				if (result.get(item.getName()) != null){
+					//logger.error("Hash collision in building names hash; Name = " + item.getName() + " old ID = " + ((OBOClass)result.get(item.getName())).getID() + " new ID = " + item.getID());
+				}
 				else
 					result.put(item.getName(), item);
 			}
@@ -329,18 +334,30 @@ class OBOUtils {
 	}
 
 	public OBOClass lookupTermByName(String termName) {
-		terms = TermUtil.getTerms(theSession);
+		if (dirtyTermSets){
+			terms = TermUtil.getTerms(theSession);
+			termNames = getAllTermNamesHash(terms);
+			termIDs = getAllTermIDsHash(terms);
+			dirtyTermSets = false;
+		}
 		if (termName == null){
 			throw new RuntimeException("Item is null");
 		}
-		for (OBOClass item : terms){
-			if (termName.equals(item.getName()))
-				return item;
-		}
-		return null;
+		return termNames.get(termName);
+//		for (OBOClass item : terms){
+//			if (termName.equals(item.getName()))
+//				return item;
+//		}
+//		return null;
 	}
 	
 	public OBOClass lookupTermByXRef(String dbName, String dbID) {
+		if (dirtyTermSets){
+			terms = TermUtil.getTerms(theSession);
+			termNames = getAllTermNamesHash(terms);
+			termIDs = getAllTermIDsHash(terms);
+			dirtyTermSets = false;
+		}
 		terms = TermUtil.getTerms(theSession);
 		if (dbName == null){
 			throw new RuntimeException("lookupTermByXref received null for database");
@@ -357,10 +374,6 @@ class OBOUtils {
 		}
 		return null;
 	}
-
-
-	
-	
 	
 
 	public Map<String,String> getSynonyms(OBOClass term){
@@ -470,6 +483,74 @@ class OBOUtils {
 		theSession.removeObject(target);		
 	}
 
+	public List<String> countTerms(){
+		List<String> result = new ArrayList<String>();
+		List<String> rankUsages = new ArrayList<String>();
+		int[] rankCounts = new int[100];
+		int termCount = 0;
+		int synonymCount = 0;
+		int commonNameCount = 0;
+		int misspellingCount = 0;
+		int NCBIxrefCount = 0;
+		int extinctCount = 0;
+		SynonymType commonNameType = null;
+		SynonymType misspellingType = null;
+		for(SynonymType st : theSession.getSynonymTypes()){
+			if ("COMMONNAME".equals(st.getID()))
+				commonNameType = st;
+			if ("MISSPELLING".equals(st.getID()))
+				misspellingType = st;
+		}
+		Collection<OBOClass> terms = TermUtil.getTerms(theSession);
+		for (OBOClass term : terms){
+			String termID = term.getID();
+			String[] idSplit = termID.split(":");
+			if (!term.isObsolete()){
+				termCount++;
+				for (Synonym syn : term.getSynonyms()){
+					synonymCount++;
+					if (commonNameType != null && commonNameType.equals(syn.getSynonymType())){
+						commonNameCount++;
+					}
+					if (misspellingType != null && misspellingType.equals(syn.getSynonymType())){
+						misspellingCount++;
+					}
+				}
+				for (Dbxref xref : term.getDbxrefs()){
+					if ("NCBITaxon".equals(xref.getDatabase()))
+						NCBIxrefCount++;
+				}
+				for (PropertyValue v : term.getPropertyValues()){
+					String[] pair = v.getValue().split(" ");
+					if (RANK_PROPERTY.equals(pair[0])){
+						String rankStr = pair[1];
+						int rankPos = rankUsages.indexOf(rankStr);
+						if (rankPos == -1){
+							rankUsages.add(rankStr);
+							rankPos = rankUsages.indexOf(rankStr);
+							rankCounts[rankPos] = 1;
+						}
+						else{
+							rankCounts[rankPos]++;
+						}
+					}
+					if (EXTINCT_PROPERTY.equals(pair[0])){
+						extinctCount++;
+					}
+				}
+			}
+		}
+		result.add("Taxon Terms " + termCount);
+		result.add("Synonyms " + synonymCount);
+		result.add("Common Names " + commonNameCount);
+		result.add("Synonyms resulting from misspelling " + misspellingCount);
+		result.add("Extinct taxa " + extinctCount);
+		result.add("NCBI Taxa cross referenced " + NCBIxrefCount);
+		for(int i = 0; i< rankUsages.size(); i++){
+			result.add("Rank: " + getRankName(rankUsages.get(i)) + " count: " + rankCounts[i]);
+		}
+		return result;
+	}
 
 
 

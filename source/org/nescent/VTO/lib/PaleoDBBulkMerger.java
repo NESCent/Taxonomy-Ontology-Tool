@@ -51,15 +51,19 @@ public class PaleoDBBulkMerger implements Merger{
 	public void setTarget(TaxonStore target) {
 		this.target = target;
 	}
-
-	@Override
-	public void merge(String prefix) {
+	
+	private void checkInitialization(){
 		if (target == null){
 			throw new IllegalStateException(TARGETNOTSETMESSAGE);
 		}
 		if (source == null){
 			throw new IllegalStateException(SOURCENOTSETMESSAGE);
-		}
+		}		
+	}
+
+	@Override
+	public void merge(String prefix) {
+		checkInitialization();
 		// TODO Auto-generated method stub
 
 	}
@@ -70,13 +74,7 @@ public class PaleoDBBulkMerger implements Merger{
 	 */
 	@Override
 	public void attach(String defaultParent, String cladeRoot, String prefix) {
-		if (target == null){
-			throw new IllegalStateException(TARGETNOTSETMESSAGE);
-		}
-		if (source == null){
-			throw new IllegalStateException(SOURCENOTSETMESSAGE);
-		}
-		
+		checkInitialization();
 		final File validTaxaFile = new File(source.getAbsolutePath()+'/'+VALIDTAXAFILENAME);
 		final File invalidTaxaFile = new File(source.getAbsolutePath()+'/'+INVALIDTAXAFILENAME);
 		final Term defaultParentTaxon = target.getTermbyName(defaultParent);
@@ -85,22 +83,20 @@ public class PaleoDBBulkMerger implements Merger{
 			throw new IllegalArgumentException("Supplied parent " + defaultParent + " is not in the taxonomy");
 		}
 		Map<String,PBDBItem> validTaxa = null; 
-		try{
-			validTaxa = buildPBDBList(validTaxaFile);
-		}
-		catch (IOException e){  
-			logger.error("An IO Exception was thrown while parsing: " + validTaxaFile);
-			throw new RuntimeException("",e);
-		}
 		Map<String,PBDBItem> invalidTaxa = null;
 		try{
+			validTaxa = buildPBDBList(validTaxaFile);
 			invalidTaxa = buildPBDBList(invalidTaxaFile);
 		}
-		catch (IOException e){   //TODO think hard about allowing mergers to just pass these through
-			logger.error("An IO Exception was thrown while parsing: " + invalidTaxaFile);
+		catch (IOException e){  
+			if (validTaxa == null){
+				logger.error("An IO Exception was thrown while parsing: " + validTaxaFile);
+			}
+			else{
+				logger.error("An IO Exception was thrown while parsing: " + invalidTaxaFile);				
+			}
 			throw new RuntimeException("",e);
 		}
-
 		final Map<String,String>taxonTree = buildTree(validTaxa,invalidTaxa);
 
 		final Set<String> orphans = orphanCheck(taxonTree,defaultParent);
@@ -109,30 +105,38 @@ public class PaleoDBBulkMerger implements Merger{
 				
 		logger.info("Taxontree contains " + taxonTree.keySet().size() + " entries and " + orphans.size() + " orphans");
 		
-		final Map<String,Term> termDictionary = new HashMap<String,Term>();
-		for (Term t : target.getTerms()){
-			termDictionary.put(t.getLabel(),t);
-		}
+//		final Map<String,Term> termDictionary = new HashMap<String,Term>();
+//		for (Term t : target.getTerms()){
+//			termDictionary.put(t.getLabel(),t);
+//		}
 
 		final int startingSize = target.getTerms().size();
+		logger.info("Checkpoint 0; target contains " + startingSize);
 		final Set <Term>newTerms = new HashSet<Term>();
 		for(String tName : taxonTree.keySet()){
-			if (!termDictionary.containsKey(tName)){
+//			if (!termDictionary.containsKey(tName)){
+			if (!target.hasTermbyName(tName)){
 				final PBDBItem item = validTaxa.get(tName);
 				final Term newTerm = target.addTerm(tName);
 				target.addXRefToTerm(newTerm, PALEODBTAXONPREFIX, Integer.toString(item.getId()));
 				if (item.isExtinct()){
 					target.setExtinct(newTerm);
 				}
+				processRank(item.getRankName(),newTerm,target);
 				newTerms.add(newTerm);
-				termDictionary.put(tName, newTerm);
-				//System.out.println("Adding taxon: " + tName);
+				//termDictionary.put(tName, newTerm);
+				System.out.println("Adding taxon: " + tName);
+			}
+			else{
+				System.out.println("Skipping term: " + tName);
 			}
 		}
-		
+		logger.info("Checkpoint 1; target contains " + target.getTerms().size());
 		for (String tName : taxonTree.keySet()){
-			Term child = termDictionary.get(tName);
-			Term parent = termDictionary.get(taxonTree.get(tName));
+//			Term child = termDictionary.get(tName);
+//			Term parent = termDictionary.get(taxonTree.get(tName));
+			Term child = target.getTermbyName(tName);
+			Term parent = target.getTermbyName(taxonTree.get(tName));
 			if (parent == null){
 				parent = defaultParentTaxon;
 			}
@@ -141,14 +145,18 @@ public class PaleoDBBulkMerger implements Merger{
 			}
 		}
 		final int endingSize = target.getTerms().size();
+		logger.info("Checkpoint 2; target contains " + endingSize);
 		int synCount = 0;
 		for(String synStr : invalidTaxa.keySet()){
 			PBDBItem synItem = invalidTaxa.get(synStr);
-			Term validItem = termDictionary.get(synItem.getValidName());
-			if (validItem != null){
-				SynonymI newSyn = target.makeSynonymWithXref(synStr, PALEODBTAXONPREFIX, Integer.toString(synItem.getId()));
-				validItem.addSynonym(newSyn);
-				synCount++;
+//			Term validItem = termDictionary.get(synItem.getValidName());
+			if (synItem.getValidName() != null){
+				Term validItem = target.getTermbyName(synItem.getValidName());
+				if (validItem != null){
+					SynonymI newSyn = target.makeSynonymWithXref(synStr, PALEODBTAXONPREFIX, Integer.toString(synItem.getId()));
+					validItem.addSynonym(newSyn);
+					synCount++;
+				}
 			}
 		}
 		logger.info("Taxon store grew from " + startingSize + " to " + endingSize);
@@ -222,7 +230,7 @@ public class PaleoDBBulkMerger implements Merger{
 						if (parentItem.isValid()){
 							finalParent = parentItem.getName();
 						}
-						if (parentItem.isSynonym()){
+						else if (parentItem.isSynonym()){
 							finalParent = parentItem.getValidName();
 						}
 					}
@@ -276,6 +284,10 @@ public class PaleoDBBulkMerger implements Merger{
 		taxonTree.remove(orphan);
 	}
 	
-	
+	private void processRank(String rankStr,Term newTerm,TaxonStore target){
+		target.setRankFromName(newTerm, rankStr);
+		
+	}
+
 
 }
