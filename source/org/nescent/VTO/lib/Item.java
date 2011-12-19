@@ -1,11 +1,8 @@
-/*
- * OBOVocab - a tool for building OBO files from term lists
+/**
+ * VTOTool - a tool for merging and building ontologies from multiple taxonomic sources
  * 
- * Created on Jan 30, 2008
- * Last updated on  June 2, 2010
- *
+ * Peter Midford
  */
-
 package org.nescent.VTO.lib;
 
 import java.util.Collection;
@@ -16,6 +13,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * 
+ * @author pmidford
+ *
+ */
 public class Item {
 	
 	// This list ought to be constructed from TAXRANK  - perhaps need to add 'clade' to TAXRANK appears in ATO and NCBI taxonomy not sure

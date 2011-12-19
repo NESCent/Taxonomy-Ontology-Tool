@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +22,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.nescent.VTO.lib.CoLMerger;
+import org.nescent.VTO.lib.ColumnMerger;
 import org.nescent.VTO.lib.IOCMerger;
 import org.nescent.VTO.lib.ITISMerger;
 import org.nescent.VTO.lib.Merger;
@@ -30,17 +30,10 @@ import org.nescent.VTO.lib.NCBIMerger;
 import org.nescent.VTO.lib.OBOMerger;
 import org.nescent.VTO.lib.OBOStore;
 import org.nescent.VTO.lib.OWLMerger;
-import org.nescent.VTO.lib.ColumnMerger;
 import org.nescent.VTO.lib.OWLStore;
 import org.nescent.VTO.lib.PaleoDBBulkMerger;
 import org.nescent.VTO.lib.TaxonStore;
 import org.nescent.VTO.lib.UnderscoreJoinedNamesMerger;
-import org.obo.datamodel.Dbxref;
-import org.obo.datamodel.OBOClass;
-import org.obo.datamodel.PropertyValue;
-import org.obo.datamodel.Synonym;
-import org.obo.datamodel.SynonymType;
-import org.obo.util.TermUtil;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -66,6 +59,7 @@ public class Builder {
 	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
 	final static String SYNONYMFORMATSTR = "SYNONYM"; //This a variant of the column format
+	final static String ALLCOLUMNSFORMATSTR = "ALLCOLUMNS"; //IS THIS NECESSARY?
 
 	final static String TARGETTAXONOMYSTR = "target";
 	final static String TARGETFORMATSTR = "format";
@@ -297,9 +291,10 @@ public class Builder {
 			}
 		}
 		// these source formats aren't storage formats (there's no ontology library for them) so the store is implementation dependent (currently OBO)
-		if (XREFFORMATSTR.equals(formatStr) ||
+		if (XREFFORMATSTR.equals(formatStr) || //XREF isn't a storage format, so the store is 
 				COLUMNFORMATSTR.equals(formatStr) ||
-				SYNONYMFORMATSTR.equals(formatStr)){      //XREF isn't a storage format, so the store is 
+				SYNONYMFORMATSTR.equals(formatStr) ||
+				ALLCOLUMNSFORMATSTR.equals(formatStr)){      
 			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
@@ -369,6 +364,9 @@ public class Builder {
 		}
 		else if (SYNONYMFORMATSTR.equals(targetFormatStr)){
 			target.saveSynonymFormat(targetFilterPrefixStr);
+		}
+		else if (ALLCOLUMNSFORMATSTR.equals(targetFormatStr)){
+			target.saveAllColumnFormat(targetFormatStr);
 		}
 		else{
 			target.saveStore();

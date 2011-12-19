@@ -2,6 +2,11 @@ package org.nescent.VTO.lib;
 
 import java.io.File;
 
+/**
+ * 
+ * @author pmidford
+ *
+ */
 public interface Merger {
 	
 	/* Metadata methods report what the Merger can and cannot do */

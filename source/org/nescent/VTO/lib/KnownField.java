@@ -3,6 +3,9 @@ package org.nescent.VTO.lib;
 
 //Ideally this should be derived in some fashion from the taxrank ontology.  This would probably require tricky class design
 
+/**
+ * @author pmidford
+ */
 public enum KnownField {
 	CLASS("class",true),
 	ORDER("order",true),

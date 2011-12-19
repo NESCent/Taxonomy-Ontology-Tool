@@ -1,5 +1,5 @@
 /**
- * VTOBuilder - a tool for merging and building ontologies from multiple taxonomic sources
+ * VTOTool - a tool for merging and building ontologies from multiple taxonomic sources
  * 
  * Peter Midford
  * 

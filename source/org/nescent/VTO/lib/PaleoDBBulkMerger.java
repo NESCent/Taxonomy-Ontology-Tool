@@ -84,6 +84,7 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		Map<String,PBDBItem> validTaxa = null; 
 		Map<String,PBDBItem> invalidTaxa = null;
+		target.updateIDGenerator(prefix);
 		try{
 			validTaxa = buildPBDBList(validTaxaFile);
 			invalidTaxa = buildPBDBList(invalidTaxaFile);

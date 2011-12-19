@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 
+ * @author pmidford
+ *
+ */
 public class ItemList {
 
 	private final List<Item> contents;

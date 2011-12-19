@@ -154,6 +154,13 @@ public class OWLStore implements TaxonStore {
 	}
 
 	@Override
+	public void saveAllColumnFormat(String targetFilterPrefixStr) {
+		throw new RuntimeException("Not Implemented");
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public void trim(String nodeStr) {
 		throw new RuntimeException("Not Implemented");
 		// TODO Auto-generated method stub
@@ -192,6 +199,12 @@ public class OWLStore implements TaxonStore {
 	public boolean hasTermbyName(String taxonName) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public void updateIDGenerator(String prefix) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

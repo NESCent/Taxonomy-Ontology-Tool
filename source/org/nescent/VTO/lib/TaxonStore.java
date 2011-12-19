@@ -1,6 +1,7 @@
 package org.nescent.VTO.lib;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface TaxonStore {
 	
@@ -46,6 +47,13 @@ public interface TaxonStore {
 	public String getRankID(String rankName);
 	
 	public Term getTermbyName(String taxonName);
+	
+	/**
+	 * This just checks that a term exists, doesn't need to build anything
+	 * @param taxonName
+	 * @return true if store has a term with taxonName
+	 */
+	public boolean hasTermbyName(String taxonName);
 
 	public SynonymI makeSynonym(String syn);
 	
@@ -64,6 +72,8 @@ public interface TaxonStore {
 	void saveColumnsFormat(String targetFilterPrefixStr);
 
 	public void saveSynonymFormat(String targetFilterPrefixStr);
+	
+	public void saveAllColumnFormat(String targetFilterPrefixStr);
 
 	public void trim(String nodeStr);
 
@@ -72,6 +82,19 @@ public interface TaxonStore {
 	public String getRankString(Term term);
 	
 	public void setExtinct(Term term);
+	
+	/**
+	 * This generates a report of counts of terms, synonyms, breakdown by rank, etc.
+	 * @return
+	 */
+	public List<String> countTerms();
+
+	/**
+	 * This provides the store a chance to (re)initialize the id generator before a merge
+	 * @param prefix 
+	 */
+	public void updateIDGenerator(String prefix);
+
 	
 	// these should be accept from Merger
 }

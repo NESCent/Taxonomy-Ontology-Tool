@@ -52,6 +52,7 @@ public class OBOMerger implements Merger {
 		logger.info("Finished loading");
 		int termCount = 0;
 		int synCount = 0;
+		target.updateIDGenerator(prefix);
 		Collection <OBOClass> allTerms = u.getTerms();
 		for (OBOClass term : allTerms){
 			Term matchingTerm = target.getTermbyName(term.getName());

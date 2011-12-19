@@ -19,10 +19,7 @@ import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
-import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
-import org.obo.datamodel.SynonymType;
-import org.obo.util.TermUtil;
 
 public class OBOStore implements TaxonStore {
 
@@ -105,6 +102,28 @@ public class OBOStore implements TaxonStore {
 	}
 
 
+	
+	@Override
+	public void updateIDGenerator(String prefix){
+		int maxCounter = 0;
+		for (OBOClass c : u.getTerms()){
+			final String id = c.getID();
+			if (prefix != null && id.startsWith(prefix)){
+				int colonIndex = id.indexOf(':');
+				String suffix = id.substring(colonIndex);
+				try{
+					int index = Integer.parseInt(suffix);
+					if (index > maxCounter)
+						maxCounter = index;
+				}
+				catch (NumberFormatException e){
+				//this really is safe to silently ignore...
+				}
+			}
+		}
+		idCounter = maxCounter+1;
+	}
+	
 	@Override
 	public Term addTerm(String name) {
 		// need to generate the ID
@@ -386,6 +405,28 @@ public class OBOStore implements TaxonStore {
 								result.put(rankName, parent);
 							}
 						}
+						curTerm = parent;
+					}
+				}
+			}
+			else{
+				curTerm = null;
+			}
+		}
+		return result;
+	}
+	
+	private List<OBOClass> getAllParents(OBOClass cl){
+		final List<OBOClass>result = new ArrayList<OBOClass>();
+		final OBOProperty isaProperty = u.getISAproperty();
+		OBOClass curTerm = cl;
+		result.add(curTerm);
+		while (curTerm != null){
+			if (curTerm.getParents() != null && !curTerm.getParents().isEmpty()){
+				for (Link l : curTerm.getParents()){
+					if (l.getType().equals(isaProperty)){
+						OBOClass parent = (OBOClass)l.getParent();
+						result.add(parent);
 						curTerm = parent;
 					}
 				}
@@ -682,9 +723,49 @@ public class OBOStore implements TaxonStore {
 		if (orderClass != null && "Petromyzontiformes".equals(orderClass.getName())){
 			parentTable.put("class", cephalaspidomorphiFiller);
 		}
-
-
 	}
+	
+	@Override
+	public void saveAllColumnFormat(String targetFilterPrefixStr) {
+		File originalTargetFile = new File(targetFile);
+		String targetName = originalTargetFile.getName();
+		File targetAllColumnsFile;
+		if (targetName.contains(".")){
+			int dotpos = targetName.indexOf('.');
+			String dstName = originalTargetFile.getParent() + fileSep + targetName.substring(0,dotpos) + ".txt";
+			targetAllColumnsFile = new File(dstName);
+		}
+		else {
+			targetAllColumnsFile = new File(targetName + ".txt");
+		}
+		PrintWriter targetWriter = null;
+		try {
+			targetWriter = new PrintWriter(new BufferedWriter(new FileWriter(targetAllColumnsFile)));
+		} catch (IOException e) {
+			logger.error("An error occurred when opening " + targetAllColumnsFile.getName() + " for output");
+			throw new RuntimeException("");
+		}
+		logger.info("Writing to " + targetAllColumnsFile.getAbsolutePath());		
+		
+		List<OBOClass> tipList = getTips();
+		logger.info("TipList contains " + tipList.size() + " terminal taxa");
+		int tipCount = 0;
+		for(OBOClass term : tipList){
+			tipCount++;
+        	List<OBOClass> parents = getAllParents(term);        		
+			for (OBOClass parent: parents){  //parent list includes the term itself...
+				targetWriter.write(parent.getName());
+				targetWriter.write("\t");
+			}
+			targetWriter.write(lineSeparator);
+		}
+		targetWriter.close();
+		logger.info("Detected " + homonymTable.size() + " homonyms");
+//		for (String homonym : homonymTable){
+//			System.out.println(homonym);
+//		}
+	}
+
 
 
 	@Override

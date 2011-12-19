@@ -11,6 +11,11 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+/**
+ * 
+ * @author pmidford
+ *
+ */
 public class ITISMerger implements Merger{
 
     static final Pattern pipePattern = Pattern.compile("\\|");   //try this pattern as it matches the documentation
