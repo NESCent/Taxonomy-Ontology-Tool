@@ -81,6 +81,9 @@ public class CoLMerger implements Merger {
 	 */
 	@Override
 	public void merge(String prefix) {
+		if (target == null){
+			throw new IllegalStateException("Target ontology not loaded or initialized");
+		}
 		//TODO - filter out non-child taxa
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);

@@ -26,8 +26,8 @@ import org.nescent.VTO.lib.TestUnderscoreJoinedNamesMerger;
 
 public class RunAll {
 
-	private int runTotal = 0;
-	private int failureTotal = 0;
+	private static int runTotal = 0;
+	private static int failureTotal = 0;
 
 	
 	/**
@@ -36,7 +36,7 @@ public class RunAll {
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
 
-		
+		long startTime = System.nanoTime();
 		//testOneClass(TestCoLDBMerger.class);
 		testOneClass(TestCoLMerger.class);
 		testOneClass(TestColumnMerger.class);
@@ -54,6 +54,8 @@ public class RunAll {
 		testOneClass(TestUnderscoreJoinedNamesMerger.class);
 		testOneClass(TestPBDBItem.class);
 		testOneClass(TestPaleoDBBulkMerger.class);
+		
+		System.out.println("Total time = " + ((double)(System.nanoTime()-startTime))/1E9 + " sec");
 	}
 
 	private static void testOneClass(Class<?> c){
@@ -71,6 +73,8 @@ public class RunAll {
 			System.err.println(f.getException());
 			System.err.println("");
 		}
+		runTotal += r.getRunCount();
+		failureTotal += r.getFailureCount();
 
 	}
 

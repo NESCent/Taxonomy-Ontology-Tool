@@ -7,6 +7,8 @@ import java.util.Collection;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import junit.framework.Assert;
+
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -46,24 +48,27 @@ public class TestCoLMerger {
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);
 		Collection<NamePair> taxon1Synonyms = testMerger.queryOneName(TESTTAXON1, f);
-		System.out.println("There are " + taxon1Synonyms.size() + " synonyms of " + TESTTAXON1);
+		Assert.assertEquals(0,taxon1Synonyms.size());
 		Collection<NamePair> taxon2Synonyms = testMerger.queryOneName(TESTTAXON2, f);
-		System.out.println("There are " + taxon2Synonyms.size() + " synonyms of " + TESTTAXON2);
+		Assert.assertEquals(9,taxon2Synonyms.size());
 		Collection<NamePair> taxon3Synonyms = testMerger.queryOneName(TESTTAXON3, f);
-		System.out.println("There are " + taxon3Synonyms.size() + " synonyms of " + TESTTAXON3);
+		Assert.assertEquals(1,taxon3Synonyms.size());
 		Collection<NamePair> taxon4Synonyms = testMerger.queryOneName(TESTTAXON4, f);
+		Assert.assertEquals(0, taxon4Synonyms.size());
 		System.out.println("There are " + taxon4Synonyms.size() + " synonyms of " + TESTTAXON4);
 	}
 
-
+	
 	@Test
 	public void testMerge() {
-		fail("Not yet implemented");
+		testMerger.setTarget(testStore);
+		testMerger.merge("CoL");
 	}
 
 	@Test
 	public void testAttach() {
-		fail("Not yet implemented");
+		testMerger.setTarget(testStore);
+		testMerger.merge("CoL");
 	}
 
 }

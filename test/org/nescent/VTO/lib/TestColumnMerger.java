@@ -34,7 +34,8 @@ public class TestColumnMerger {
 
 	@Test
 	public void testCanAttach() {
-		fail("Not yet implemented");
+		assert(testMerger_comma.canAttach());
+		assert(testMerger_tab.canAttach());
 	}
 
 	@Test
