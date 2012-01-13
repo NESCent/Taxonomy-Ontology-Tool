@@ -8,15 +8,15 @@ import org.junit.Test;
 
 public class TestIOCMerger {
 
-	CoLMerger testMerger;
-	File testFile;
-	TaxonStore testStore;
+	private IOCMerger testMerger;
+	private File testFile;
+	private TaxonStore testStore;
 	
 	@Before
 	public void setUp() throws Exception {
-		testMerger = new CoLMerger();
-		testFile = new File("/Users/peter/Projects/VTO/Data/ioc-names-2.4.xml");
-		testStore = null;   //TODO put something here
+		testMerger = new IOCMerger();
+		testFile = new File("src/SampleProcessFiles/ioc-names-2.4.xml");
+		testStore = new OBOStore(null, null, null);   //TODO put something here
 		testMerger.setSource(testFile);
 		testMerger.setTarget(testStore);
 	}
@@ -27,7 +27,7 @@ public class TestIOCMerger {
 
 	@Test
 	public void testMerge() {
-		testMerger.merge("CoL");
+		testMerger.merge("IOC");
 	}
 
 }

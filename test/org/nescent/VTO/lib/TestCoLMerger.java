@@ -20,7 +20,8 @@ public class TestCoLMerger {
 	static final String TESTTAXON3 = "Ictalurus punctatus";
 	static final String TESTTAXON4 = "Aphelocoma coerulescens";
 	
-	CoLMerger testMerger;
+	private CoLMerger testMerger;
+	private TaxonStore testStore;
 	
 	static final Logger logger = Logger.getLogger(TestColumnMerger.class.getName());
 
@@ -28,6 +29,7 @@ public class TestCoLMerger {
 	@Before
 	public void setUp() throws Exception {
 		testMerger = new CoLMerger();
+		testStore = new OBOStore(null,null,null);
 	}
 
 	@After

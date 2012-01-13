@@ -15,6 +15,7 @@ public class TestPaleoDBBulkMerger {
 
 	
 	private PaleoDBBulkMerger testMerger;
+	private TaxonStore testStore;
 	
 	private final File testDumpDirectory = new File("src/SampleProcessFiles/Tyrannosaurus");
 	
@@ -28,6 +29,7 @@ public class TestPaleoDBBulkMerger {
 	public void setUp() throws Exception {
 		testMerger = new PaleoDBBulkMerger();
 		testMerger.setSource(testDumpDirectory);
+		testStore = new OBOStore(null,null,null);  //will need to flesh this out eventually
 	}
 
 	@After

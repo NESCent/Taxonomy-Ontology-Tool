@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestColumnReader {
+	
+	private ColumnReader testReader;
 
 	@Before
 	public void setUp() throws Exception {

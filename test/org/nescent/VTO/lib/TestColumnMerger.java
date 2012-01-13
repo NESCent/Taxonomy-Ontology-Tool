@@ -8,8 +8,9 @@ import org.junit.Test;
 
 public class TestColumnMerger {
 
-	ColumnMerger testMerger_comma;
-	ColumnMerger testMerger_tab;
+	private ColumnMerger testMerger_comma;
+	private ColumnMerger testMerger_tab;
+	private TaxonStore testStore;
 	
 	static final Logger logger = Logger.getLogger(TestColumnMerger.class.getName());
 
@@ -17,6 +18,7 @@ public class TestColumnMerger {
 	public void setUp() throws Exception {
 		testMerger_comma = new ColumnMerger(",");
 		testMerger_tab = new ColumnMerger("\t");
+		testStore = new OBOStore(null,null,null);
 	}
 
 

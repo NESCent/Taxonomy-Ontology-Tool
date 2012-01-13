@@ -23,12 +23,14 @@ public class TestCoLDBMerger {
 	static final String CONNECTIONFILESPEC = "testConnection.properties";
 	
 	CoLDBMerger testMerger;
+	private TaxonStore testStore;
 	
 
 
 	@Before
 	public void setUp() throws Exception {
 		testMerger = new CoLDBMerger();
+		testStore = new OBOStore(null, null, null);
 	}
 
 	@After

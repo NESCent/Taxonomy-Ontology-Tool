@@ -184,7 +184,7 @@ public class OBOStore implements TaxonStore {
 	public void trim(String targetNode){
 		final OBOClass cladeRoot = u.lookupTermByName(targetNode);
 		if (cladeRoot == null){
-			logger.error("Clade root " + targetNode + " not found");
+			logger.error("Clade root to trim " + targetNode + " not found");
 		}
 		else{
 			removeClade(cladeRoot);
