@@ -86,4 +86,10 @@ public class OWLTerm implements Term {
 		return false;
 	}
 
+	@Override
+	public void createAltID(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

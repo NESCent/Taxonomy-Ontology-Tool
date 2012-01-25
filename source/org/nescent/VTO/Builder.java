@@ -110,13 +110,13 @@ public class Builder {
 			return;
 		}
 		final Node taxonomyRoot = parseList.item(0);
-		final String targetURLStr = getAttribute(taxonomyRoot,TARGETTAXONOMYSTR);
+		final String targetStr = getAttribute(taxonomyRoot,TARGETTAXONOMYSTR);
 		final String targetFormatStr = getAttribute(taxonomyRoot,TARGETFORMATSTR);
 		final String targetRootStr = getAttribute(taxonomyRoot,TARGETROOTSTR);
 		final String targetPrefixStr = getAttribute(taxonomyRoot,PREFIXITEMSTR);
 		final String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
-		final TaxonStore target = getStore(targetURLStr, targetPrefixStr, targetFormatStr);
-		logger.info("Building taxonomy to save at " + targetURLStr + " in the " + targetFormatStr + " format\n");
+		final TaxonStore target = getStore(targetStr, targetPrefixStr, targetFormatStr);
+		logger.info("Building taxonomy to save at " + targetStr + " in the " + targetFormatStr + " format\n");
 		NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
 			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
@@ -185,9 +185,9 @@ public class Builder {
 		if (!m.canPreserveID() && (sourcePrefixStr != null) && (!sourcePrefixStr.equals(targetPrefixStr))){
 			throw new RuntimeException("Error - Merger for format " + formatStr + " can't preserve id prefixes - remove prefix attribute in attach");
 		}
-		String sourceURLStr = action.getAttributes().getNamedItem("source").getNodeValue();
-		File sourceFile = getSourceFile(sourceURLStr);
-		logger.info("Attaching taxonomy from " + sourceURLStr);
+		String sourceStr = action.getAttributes().getNamedItem("source").getNodeValue();
+		File sourceFile = getSourceFile(sourceStr);
+		logger.info("Attaching taxonomy from " + sourceStr);
 		if (targetPrefixStr == null){
 			logger.warn("No prefix for newly generated ids specified - will default to filename component");
 			targetPrefixStr = sourceFile.getName();
@@ -218,12 +218,12 @@ public class Builder {
 		}
 		String formatStr = getAttribute(action,"format");
 		Merger m = getMerger(formatStr,columns,synPrefixes);
-		String sourceURLStr = getAttribute(action,"source");
+		String sourceStr = getAttribute(action,"source");
 		String mergePrefix = getAttribute(action,PREFIXITEMSTR);
 		File sourceFile = null;  //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
-		if (!"".equals(sourceURLStr))
-			sourceFile = getSourceFile(sourceURLStr);
-		logger.info("Merging names from " + sourceURLStr);
+		if (!"".equals(sourceStr))
+			sourceFile = getSourceFile(sourceStr);
+		logger.info("Merging names from " + sourceStr);
 		m.setSource(sourceFile);
 		m.setTarget(target);
 		if (mergePrefix == null){
@@ -264,27 +264,16 @@ public class Builder {
 		return result;
 	}
 
-	private TaxonStore getStore(String targetURLStr, String prefixStr, String formatStr) {
-		URL u = null;
-		try{
-			u = new URL(targetURLStr);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			return null;
-		}
-		if (!"file".equals(u.getProtocol())){
-			logger.error("OBO format must save to a local file");
-			return null;
-		}
-		File oldFile = new File(u.getFile());
-		if (oldFile.exists())
-			oldFile.delete();
+	private TaxonStore getStore(String targetStr, String prefixStr, String formatStr) {
+		File targetFile = getSourceFile(targetStr);
+		if (targetFile.exists())
+			targetFile.delete();
 		if (OBOFORMATSTR.equals(formatStr)){
-			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		if (OWLFORMATSTR.equals(formatStr)){
 			try{
-				return new OWLStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+				return new OWLStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 			} catch (OWLOntologyCreationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -295,7 +284,7 @@ public class Builder {
 				COLUMNFORMATSTR.equals(formatStr) ||
 				SYNONYMFORMATSTR.equals(formatStr) ||
 				ALLCOLUMNSFORMATSTR.equals(formatStr)){      
-			return new OBOStore(u.getFile(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
@@ -340,18 +329,19 @@ public class Builder {
 		return null;
 	}
 
-	private File getSourceFile(String sourceURLStr) {
-		try {
-			URL u = new URL(sourceURLStr);
+	//Requiring URL's was unnecessary - now will allow local files
+	private File getSourceFile(String sourceStr) {
+		URL u;
+		try{
+			u = new URL(sourceStr);
 			if (!"file".equals(u.getProtocol())){
 				System.err.println("Can only load from a local file");
 				return null;
 			}
 			return new File(u.getFile());
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+		}
+		catch (MalformedURLException e) {
+			return new File(sourceStr);
 		}
 	}
 

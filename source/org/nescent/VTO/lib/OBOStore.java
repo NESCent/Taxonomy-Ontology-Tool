@@ -47,17 +47,20 @@ public class OBOStore implements TaxonStore {
 
 	String targetFile;
 
+	/**
+	 * The Utils object holds the obo session and takes care of most of the ugliness
+	 */
 	private final OBOUtils u;
 
 	private int idCounter = 0;
 	private String idSuffix = ":%07d";
-	private String defaultFormat;
+	final private String defaultFormat;
 
 	/**
 	 * 
-	 * @param fileSpec
-	 * @param prefix
-	 * @param oboNameSpace
+	 * @param fileSpec - where this store will eventually write its contents
+	 * @param prefix - default prefix for adding terms (may be overridden in some cases)
+	 * @param oboNameSpace - default namespace for adding terms
 	 */
 	public OBOStore(String fileSpec, String prefix, String oboNameSpace) {
 		u = new OBOUtils();
@@ -370,8 +373,9 @@ public class OBOStore implements TaxonStore {
 	
 	private boolean isTip(OBOClass term){
 		if (term.getChildren()!= null && !term.getChildren().isEmpty()){
+			final OBOProperty isaProperty = u.getISAproperty();
 			for (Link l : term.getChildren()){
-				if (l.getType().equals(u.getISAproperty())){
+				if (l.getType().equals(isaProperty)){
 					return false;
 				}
 			}
@@ -385,11 +389,12 @@ public class OBOStore implements TaxonStore {
 	private Map<String,OBOClass> getParents(OBOClass cl){
 		final Map<String,OBOClass> result = new HashMap<String,OBOClass>();
 		final OBOProperty isaProperty = u.getISAproperty();
+		final List<String> columnNames = Arrays.asList(COLUMNRANKS);
 		OBOClass curTerm = cl;
 		if (!curTerm.getPropertyValues().isEmpty()){
 			String rankName = u.getRankString(curTerm);
 			if (rankName != null){
-				if (Arrays.asList(COLUMNRANKS).contains(rankName)){
+				if (columnNames.contains(rankName)){
 					result.put(rankName, curTerm);
 				}
 			}
@@ -401,7 +406,7 @@ public class OBOStore implements TaxonStore {
 						OBOClass parent = (OBOClass)l.getParent();
 						String rankName = u.getRankString(parent);
 						if (rankName != null){
-							if (Arrays.asList(COLUMNRANKS).contains(rankName)){
+							if (columnNames.contains(rankName)){
 								result.put(rankName, parent);
 							}
 						}
@@ -501,18 +506,15 @@ public class OBOStore implements TaxonStore {
 					if (!parentTable.isEmpty()){
 						if (parentTable.containsKey(SPECIESSTRING)) {
 							String speciesStr = parentTable.get(SPECIESSTRING).getName();
-							String[] components = speciesStr.split(" ");
-							if (components.length == 1){
+							if (!speciesStr.contains(" ")){
 								targetWriter.write(speciesStr);
 								targetWriter.write("\t");
 							}
-							else if (components.length>1){
+							else {  //trinomials should not be here
+								String[] components = speciesStr.split(" ");
 								targetWriter.write(components[0]);
 								targetWriter.write("\t");
 								targetWriter.write(components[1]);
-							}
-							else {
-								throw new RuntimeException("String '" + speciesStr + "' could not be split, something's wrong");
 							}
 							targetWriter.write("\t");
 						}
@@ -580,6 +582,7 @@ public class OBOStore implements TaxonStore {
 		else
 			return null;
 	}
+	
 	
 	@Override
 	public List<String> countTerms(){

@@ -190,8 +190,6 @@ public class NCBIMerger implements Merger {
 			logger.error(e);
 			return;
 		}
-		// TODO Auto-generated method stub
-		return;
 	}
 
 	

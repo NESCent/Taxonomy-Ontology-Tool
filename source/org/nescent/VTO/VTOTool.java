@@ -16,6 +16,7 @@ public class VTOTool {
 	
 	private static final String usageStr = "usage: VTOTool [spec-file] [--help]";
 	private static final String helpStr = "VTOTool builds a new VTO (combined vertebrate taxonomy ontology)\n"+
+										  "detailed documentation at http://github.com/NESCent/Taxonomy-Ontology-Tool/wiki/  \n"+
 	                                      "args: spec-file xml file specifying taxonomy, attachments and merge files\n";
 
 

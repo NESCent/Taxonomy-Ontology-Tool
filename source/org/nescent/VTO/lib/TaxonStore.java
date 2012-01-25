@@ -3,10 +3,8 @@ package org.nescent.VTO.lib;
 import java.util.Collection;
 import java.util.List;
 
-public interface TaxonStore {
+public interface TaxonStore {	
 	
-	
-	public void saveStore();
 	
 	/**
 	 * 
@@ -20,6 +18,14 @@ public interface TaxonStore {
 	 * @return all terms in the store
 	 */
 	public Collection<Term> getTerms();
+
+	/**
+	 * This implements the trim command on the taxonomy in the store
+	 * @param nodeStr name of the node (and its children) that will be removed
+	 */
+	public void trim(String nodeStr);
+
+
 	
 	/**
 	 * 
@@ -66,6 +72,12 @@ public interface TaxonStore {
 	//needs to be here as terms don't carry around their factories
 	public void addXRefToTerm(Term t, String dbName, String dbID);
 
+	/**
+	 * This saves to the store's 'native' format, currently OBO, but might be OWL in the future
+	 */
+	public void saveStore();
+	
+	
 	// This saves a file of cross references
 	public void saveXref(String targetFilterPrefixStr);
 
@@ -74,8 +86,6 @@ public interface TaxonStore {
 	public void saveSynonymFormat(String targetFilterPrefixStr);
 	
 	public void saveAllColumnFormat(String targetFilterPrefixStr);
-
-	public void trim(String nodeStr);
 
 	public Term getTermByXRef(String dbName, String dbID);
 
@@ -94,7 +104,4 @@ public interface TaxonStore {
 	 * @param prefix 
 	 */
 	public void updateIDGenerator(String prefix);
-
-	
-	// these should be accept from Merger
 }

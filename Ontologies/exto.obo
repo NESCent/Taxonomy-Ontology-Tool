@@ -1,0 +1,107 @@
+format-version: 1.2
+date: 17:01:2012 14:24
+saved-by: pmidford
+auto-generated-by: OBO-Edit 2.1-rc3
+default-namespace: default_namespace
+
+[Term]
+id: EXTO:0000000
+name: Chordata
+created_by: pmidford
+creation_date: 2012-01-04T03:32:08Z
+
+[Term]
+id: EXTO:0000001
+name: Gnathostomata
+is_a: EXTO:0000000 ! Chordata
+created_by: pmidford
+creation_date: 2012-01-04T03:32:28Z
+
+[Term]
+id: EXTO:0000002
+name: Chondrichithyes
+is_a: EXTO:0000001 ! Gnathostomata
+created_by: pmidford
+creation_date: 2012-01-04T03:35:37Z
+
+[Term]
+id: EXTO:0000003
+name: Euteleostomi
+is_a: EXTO:0000001 ! Gnathostomata
+created_by: pmidford
+creation_date: 2012-01-04T03:36:02Z
+
+[Term]
+id: EXTO:0000004
+name: Actinopterygii
+is_a: EXTO:0000003 ! Euteleostomi
+created_by: pmidford
+creation_date: 2012-01-04T03:36:47Z
+
+[Term]
+id: EXTO:0000005
+name: Sarcopterygii
+is_a: EXTO:0000003 ! Euteleostomi
+created_by: pmidford
+creation_date: 2012-01-04T03:37:36Z
+
+[Term]
+id: EXTO:0000006
+name: Tetrapoda
+is_a: EXTO:0000005 ! Sarcopterygii
+created_by: pmidford
+creation_date: 2012-01-04T03:38:10Z
+
+[Term]
+id: EXTO:0000007
+name: Homo
+is_a: EXTO:0000006 ! Tetrapoda
+created_by: pmidford
+creation_date: 2012-01-04T03:38:33Z
+
+[Term]
+id: EXTO:0000008
+name: Homo sapiens
+is_a: EXTO:0000007 ! Homo
+created_by: pmidford
+creation_date: 2012-01-04T03:38:55Z
+
+[Term]
+id: EXTO:0000009
+name: Ictalurus
+is_a: EXTO:0000004 ! Actinopterygii
+created_by: pmidford
+creation_date: 2012-01-04T03:39:17Z
+
+[Term]
+id: EXTO:0000010
+name: Ictalurus punctatus
+is_a: EXTO:0000009 ! Ictalurus
+created_by: pmidford
+creation_date: 2012-01-04T03:39:33Z
+
+[Term]
+id: EXTO:0000011
+name: Raja
+is_a: EXTO:0000002 ! Chondrichithyes
+created_by: pmidford
+creation_date: 2012-01-04T03:39:56Z
+
+[Term]
+id: EXTO:0000012
+name: Raja pulchra
+is_a: EXTO:0000011 ! Raja
+created_by: pmidford
+creation_date: 2012-01-04T03:40:08Z
+
+[Term]
+id: EXTO:0000013
+name: Tyrannosauridae
+is_a: EXTO:0000006 ! Tetrapoda
+created_by: pmidford
+creation_date: 2012-01-17T02:21:09Z
+
+[Typedef]
+id: has_rank
+name: has taxonomic rank
+

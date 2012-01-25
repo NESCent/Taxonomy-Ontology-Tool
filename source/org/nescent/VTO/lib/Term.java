@@ -25,13 +25,12 @@ public interface Term {
 
 	public Set<Term> getChildren();
 	
-	//these correspond to OBO Xrefs and their OWL equivalent
-	//public void AddCrossReference(String crossRefID);
-	
 	public Set<String> getCrossReferences();
 
 	public boolean hasAncestor(String string);
 	
 	public boolean isExtinct();
+
+	void createAltID(String id);
 
 }

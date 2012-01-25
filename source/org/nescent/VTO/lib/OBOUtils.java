@@ -252,6 +252,7 @@ class OBOUtils {
 	public Dbxref createDbxref(String db, String id, String desc, int synonymtype){
 		return theSession.getObjectFactory().createDbxref(db, id, desc, synonymtype,null);
 	}
+	
 
 	public OBORestriction attachParent(OBOClass child, OBOClass parent){
 		final OBORestriction res = theSession.getObjectFactory().createOBORestriction(child,getISAproperty(),parent,false);

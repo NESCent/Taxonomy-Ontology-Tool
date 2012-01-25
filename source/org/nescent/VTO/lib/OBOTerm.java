@@ -113,6 +113,10 @@ public class OBOTerm implements Term {
 		return false;
 	}
 
-	
+	@Override
+	public void createAltID(String id){
+		term.addSecondaryID(id);
+	}
+
 	
 }

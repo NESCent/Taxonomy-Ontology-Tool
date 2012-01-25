@@ -4,11 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestPaleoDBBulkMerger {
@@ -18,18 +21,52 @@ public class TestPaleoDBBulkMerger {
 	private TaxonStore testStore;
 	
 	private final File testDumpDirectory = new File("src/SampleProcessFiles/Tyrannosaurus");
+	private final String baseTaxonomy = "src/Ontologies/exto.obo";
+	private final String testMergeOntology = "TestPaleoDBMerge.obo";
+	private final String testAttachOntology = "TestPaleoDBAttach.obo";
+	
+	private final File baseTaxonomyFile = new File(baseTaxonomy);
 	
 	final String fileSeparator = System.getProperty("file.separator");
 	
 	private final File testValidTaxa1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "valid_taxa.csv");
 	private final File testInvalidTaxa1 = new File(testDumpDirectory.getAbsoluteFile() + fileSeparator + "invalid_taxa.csv");
 
+	private static String testOntologiesPath;
+	private static String testProcessFilesPath;
+	private static String testOutputPath;
+	
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+        ClassLoader sysCL = ClassLoader.getSystemClassLoader();
+        if (!(sysCL instanceof URLClassLoader)){
+            throw new RuntimeException("Plugin area can not be located - Fatal");
+        }
+        final URL headURL = ((URLClassLoader)sysCL).getURLs()[0];
+        String headPath = headURL.getPath();
+        int cutPoint;
+        if (headPath.charAt(headPath.length()-1) == '/'){
+            cutPoint = headPath.lastIndexOf('/',headPath.length()-2);
+        }
+        else {
+            cutPoint = headPath.lastIndexOf('/');
+            cutPoint = headPath.lastIndexOf('/',cutPoint-2);  // cut twice
+        }
+        testOntologiesPath = headPath.substring(0,cutPoint+1) + "src/Ontologies/";
+        testProcessFilesPath = headPath.substring(0,cutPoint+1) + "src/SampleProcessFiles/";
+        testOutputPath = headPath.substring(0,cutPoint+1) + "output/";
+        System.out.println("test ontologies path is " +testOntologiesPath);
+        System.out.println("process files path is " +testProcessFilesPath);
+        System.out.println("output files path is " + testOutputPath);
 
+	}
+
+	
+	
 	@Before
 	public void setUp() throws Exception {
 		testMerger = new PaleoDBBulkMerger();
 		testMerger.setSource(testDumpDirectory);
-		testStore = new OBOStore(null,null,null);  //will need to flesh this out eventually
 	}
 
 	@After
@@ -57,10 +94,20 @@ public class TestPaleoDBBulkMerger {
 		assertEquals("Tyrannosaurus",testTree.get("Tyrannosaurus rex"));
 	}
 	
+	//don't need to load the base taxonomy for every test
+	private void initBaseTaxonomy(){
+		Merger initMerger = new OBOMerger();
+		initMerger.setSource(baseTaxonomyFile);
+		initMerger.setTarget(testStore);
+		initMerger.attach("Chordata", "Chordata", "EXTO");
+	}
+	
 	@Test
 	public void testMerge() {
-
-		
+		testStore = new OBOStore(testOutputPath+testMergeOntology,null,"test-namespace");  //will need to flesh this out eventually
+		testMerger.setTarget(testStore);
+		initBaseTaxonomy();
+		testStore.saveStore();
 		final String tName = "Tyrannosaurus";
 		final String trName = "Tyrannosaurus rex";
 
@@ -68,8 +115,11 @@ public class TestPaleoDBBulkMerger {
 
 	@Test
 	public void testAttach() {
-		
-		testMerger.attach("", "", "PBDB");
+		testStore = new OBOStore(testOutputPath+testAttachOntology,null,"test-namespace");  //will need to flesh this out eventually
+		testMerger.setTarget(testStore);
+		initBaseTaxonomy();
+		testStore.saveStore();		
+		testMerger.attach("Tyrannosauridae", "", "PBDB");
 	}
 
 
