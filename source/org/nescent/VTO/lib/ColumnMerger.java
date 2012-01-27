@@ -138,6 +138,9 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private void processFamilyColumn(ItemList items, Term parentTerm){
 		for (Item it : items.getContents()){
 			final String familyName = it.getName(KnownField.FAMILY);
+			if (familyName == null){
+				throw new RuntimeException("Found empty family name in item; Order is: " + it.getName(KnownField.ORDER));
+			}
 			if (target.getTermbyName(familyName) == null){
 				final Term familyTerm = target.addTerm(familyName);
 				target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
@@ -155,15 +158,17 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private void processSubFamilyColumn(ItemList items, Term parentTerm){
 		for (Item it : items.getContents()){
 			final String subFamilyName = it.getName(KnownField.SUBFAMILY);
-			if (target.getTermbyName(subFamilyName) == null){
-				final Term subFamilyTerm = target.addTerm(subFamilyName);
-				target.setRankFromName(subFamilyTerm, KnownField.SUBFAMILY.getCannonicalName());
-				if (it.hasColumn(KnownField.FAMILY) && target.getTermbyName(it.getName(KnownField.FAMILY)) != null){
-					final String parentName = it.getName(KnownField.FAMILY);
-					target.attachParent(subFamilyTerm,target.getTermbyName(parentName));
+			if (subFamilyName != null){
+				if (target.getTermbyName(subFamilyName) == null){
+					final Term subFamilyTerm = target.addTerm(subFamilyName);
+					target.setRankFromName(subFamilyTerm, KnownField.SUBFAMILY.getCannonicalName());
+					if (it.hasColumn(KnownField.FAMILY) && target.getTermbyName(it.getName(KnownField.FAMILY)) != null){
+						final String parentName = it.getName(KnownField.FAMILY);
+						target.attachParent(subFamilyTerm,target.getTermbyName(parentName));
+					}
+					else if (parentTerm != null)
+						target.attachParent(subFamilyTerm, parentTerm);
 				}
-				else if (parentTerm != null)
-					target.attachParent(subFamilyTerm, parentTerm);
 			}
 		}		
 	}
@@ -214,6 +219,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 			if (target.getTermbyName(speciesName) == null){
 				final Term speciesTerm = target.addTerm(speciesName);
 				target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
+				//logger.info("Species is " + speciesName);
 				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
 					final String parentName = it.getName(KnownField.GENUS);
 					target.attachParent(speciesTerm,target.getTermbyName(parentName));

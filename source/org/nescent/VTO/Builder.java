@@ -246,10 +246,15 @@ public class Builder {
 				for(int j = 0; j<columnNames.getLength();j++){
 					Node column = columnNames.item(j);
 					if (column.getNodeType() == Node.ELEMENT_NODE){
-						result.add(column.getNodeName());
 						if (column.getAttributes().getLength()>0){
-							String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
-							synPrefixes.put(j, synPrefix);
+							if (column.getAttributes().getNamedItem("name") != null)
+								result.add(column.getAttributes().getNamedItem("name").getNodeValue());
+							else
+								result.add("Column " + Integer.toString(j));
+							if (column.getAttributes().getNamedItem(PREFIXITEMSTR) != null){
+								String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
+								synPrefixes.put(j, synPrefix);
+							}
 						}
 					}
 				}
@@ -292,37 +297,37 @@ public class Builder {
 
 
 	private Merger getMerger(String formatStr, List<String> columns, Map<Integer, String> synPrefixes){
-		if (OBOFORMATSTR.equals(formatStr))
+		if (OBOFORMATSTR.equalsIgnoreCase(formatStr))
 			return new OBOMerger();
-		if (ITISFORMATSTR.equals(formatStr))
+		if (ITISFORMATSTR.equalsIgnoreCase(formatStr))
 			return new ITISMerger();
-		if (NCBIFORMATSTR.equals(formatStr))
+		if (NCBIFORMATSTR.equalsIgnoreCase(formatStr))
 			return new NCBIMerger();
-		if (CSVFORMATSTR.equals(formatStr)){
+		if (CSVFORMATSTR.equalsIgnoreCase(formatStr)){
 			ColumnMerger result = new ColumnMerger(",");
 			result.setColumns(columns, synPrefixes);
 			return (Merger)result;
 		}
-		if (TSVFORMATSTR.equals(formatStr)){
+		if (TSVFORMATSTR.equalsIgnoreCase(formatStr)){
 			ColumnMerger result = new ColumnMerger("\t");
 			result.setColumns(columns, synPrefixes);
 			return (Merger)result;
 		}
-		if (JOINEDNAMETABBEDCOLUMNS.equals(formatStr)){
+		if (JOINEDNAMETABBEDCOLUMNS.equalsIgnoreCase(formatStr)){
 			UnderscoreJoinedNamesMerger result = new UnderscoreJoinedNamesMerger("\t");
 			result.setColumns(columns, synPrefixes);
 			return (Merger)result;
 		}
-		if (OWLFORMATSTR.equals(formatStr)){
+		if (OWLFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new OWLMerger();
 		}
-		if (IOCFORMATSTR.equals(formatStr)){
+		if (IOCFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new IOCMerger();
 		}
-		if (COLFORMATSTR.equals(formatStr)){
+		if (COLFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new CoLMerger();
 		}
-		if (PBDBBULKFORMATSTR.equals(formatStr)){
+		if (PBDBBULKFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new PaleoDBBulkMerger();
 		}
 		logger.error("Format " + formatStr + " not supported for merging");

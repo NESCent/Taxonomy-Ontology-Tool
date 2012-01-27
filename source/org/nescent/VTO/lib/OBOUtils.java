@@ -281,7 +281,11 @@ class OBOUtils {
 	}
 
 	public void setExtinct(IdentifiedObject c){
-		PropertyValue extinctProperty = createExtinctProperty();
+		final PropertyValue extinctProperty = 
+			      oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
+			    		                         EXTINCT_PROPERTY + 
+			    		                         " " + 
+			    		                         TRUE_VALUE); 
 		c.addPropertyValue(extinctProperty);
 	}
 	
@@ -294,9 +298,6 @@ class OBOUtils {
 		return false;
 	}
 	
-	public PropertyValue createExtinctProperty(){
-		return oboFactory.createPropertyValue(PROPERTYVALUE_TAG,EXTINCT_PROPERTY + " " + TRUE_VALUE); 		
-	}
 
 	public void setNameSpace(String namespace, String filepath){
 		Namespace n = oboFactory.createNamespace(namespace, filepath);
@@ -345,11 +346,6 @@ class OBOUtils {
 			throw new RuntimeException("Item is null");
 		}
 		return termNames.get(termName);
-//		for (OBOClass item : terms){
-//			if (termName.equals(item.getName()))
-//				return item;
-//		}
-//		return null;
 	}
 	
 	public OBOClass lookupTermByXRef(String dbName, String dbID) {

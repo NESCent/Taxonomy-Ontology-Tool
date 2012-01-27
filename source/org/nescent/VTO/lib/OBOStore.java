@@ -55,6 +55,9 @@ public class OBOStore implements TaxonStore {
 	private int idCounter = 0;
 	private String idSuffix = ":%07d";
 	final private String defaultFormat;
+	
+	//When taxa are trimmed, we want to preserve the id in case the name is reintroduced with a subsequent attach
+	private final Map<String,OBOClass> trimmedNames = new HashMap<String,OBOClass>();    //taxon name -> id
 
 	/**
 	 * 
@@ -127,11 +130,34 @@ public class OBOStore implements TaxonStore {
 		idCounter = maxCounter+1;
 	}
 	
+	/**
+	 * This will either reuse an id (from a trimmed tree) that matches a name or generate a fresh it using the default id prefix
+	 */
 	@Override
 	public Term addTerm(String name) {
-		// need to generate the ID
-		String newID = String.format(defaultFormat,idCounter++);
-		return new OBOTerm(u.makeTerm(newID, name));
+		OBOClass addedClass;
+		if (trimmedNames.containsKey(name)){
+			final OBOClass oldClass = trimmedNames.get(name);
+			String[] oldComponents = oldClass.getID().split(":");
+			if ((oldComponents.length > 1) && defaultPrefix.equals(oldComponents[0])){
+				addedClass = u.makeTerm(oldClass.getID(), name);
+			}
+			else { //wrong prefix, need new id
+				String newID = String.format(defaultFormat,idCounter++);
+				addedClass = u.makeTerm(newID, name);
+			}
+			if (u.isExtinct(oldClass)){
+				u.setExtinct(addedClass);
+			}
+			for (Synonym s : oldClass.getSynonyms()){
+				addedClass.addSynonym(s);
+			}
+		}
+		else { 		// need to generate the ID
+			String newID = String.format(defaultFormat,idCounter++);
+			addedClass = u.makeTerm(newID, name);
+		}
+		return new OBOTerm(addedClass);
 	}
 
 
@@ -195,20 +221,22 @@ public class OBOStore implements TaxonStore {
 	}
 	
 	
-	private void removeClade(OBOClass clRoot){
-		if (isTip(clRoot)){
-			u.removeNode(clRoot);
+	private void removeClade(OBOClass node){
+		if (isTip(node)){
+			trimmedNames.put(node.getName(),node);
+			u.removeNode(node);
 		}
 		else {
 			Set<Link> links = new HashSet<Link>();
-			links.addAll(clRoot.getChildren());
+			links.addAll(node.getChildren());
 			for (Link l : links){
 				OBOClass childNode = (OBOClass) l.getChild();
-				clRoot.removeChild(l);
+				node.removeChild(l);
 				childNode.removeParent(l);
 				removeClade(childNode);
 			}
-			u.removeNode(clRoot);
+			trimmedNames.put(node.getName(), node);
+			u.removeNode(node);
 		}
 	}
 
