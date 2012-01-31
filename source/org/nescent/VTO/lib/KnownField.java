@@ -12,7 +12,6 @@ public enum KnownField {
 	FAMILY("family",true),
 	SUBFAMILY("subfamily",true),
 	GENUS("genus",true),
-	CLADE("clade",true),
 	SPECIES("species",true),
 	SYNONYM("",false),
 	SYNONYMS("",false),

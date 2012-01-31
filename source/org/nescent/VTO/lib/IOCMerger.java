@@ -184,10 +184,6 @@ public class IOCMerger implements Merger {
 				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
 					target.attachParent(speciesTerm,target.getTermbyName(genusName));
 				}
-				else if (it.hasColumn(KnownField.CLADE) && target.getTermbyName(it.getName(KnownField.CLADE)) != null){
-					final String parentName = it.getName(KnownField.CLADE);
-					target.attachParent(speciesTerm,target.getTermbyName(parentName));
-				}
 				else if (parentTerm != null)
 					target.attachParent(speciesTerm, parentTerm);
 				else {

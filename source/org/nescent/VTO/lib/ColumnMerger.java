@@ -97,9 +97,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.GENUS)){
 			processGenusColumn(items,attachTerm);
 		}	
-		if (items.hasColumn(KnownField.CLADE)){   // This was used in amphibianet
-			processCladeColumn(items,attachTerm);
-		}	
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm);
 		}
@@ -203,25 +200,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		}
 	}
 
-	private void processCladeColumn(ItemList items, Term attachTerm){
-		for (Item it : items.getContents()){
-			String cladeLevelName = it.getName(KnownField.CLADE);  //call it a cladeLevel to reduce ambiguity
-			if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-				final String parentName = it.getName(KnownField.GENUS);   //if it has a known parent (it ought to) render the parent genus parenthetically
-				cladeLevelName = cladeLevelName + " (" + parentName + ")";
-			}
-			if (target.getTermbyName(cladeLevelName) == null){
-				final Term cladeLevelTerm = target.addTerm(cladeLevelName);
-				target.setRankFromName(cladeLevelTerm, KnownField.CLADE.getCannonicalName());
-				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-					final String parentName = it.getName(KnownField.GENUS);
-					target.attachParent(cladeLevelTerm,target.getTermbyName(parentName));
-				}
-				else if (attachTerm != null)
-					target.attachParent(cladeLevelTerm, attachTerm);
-			}
-		}		
-	}
 
 	private void processSpeciesColumn(ItemList items, Term attachTerm){
 		for (Item it : items.getContents()){
@@ -231,14 +209,8 @@ public class ColumnMerger implements Merger,ColumnFormat {
 				if (target.getTermbyName(speciesName) == null){
 					speciesTerm = target.addTerm(speciesName);
 					target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
-					if (it.hasColumn(KnownField.CLADE) && target.getTermbyName(it.getName(KnownField.CLADE)) != null){  //Clade is an infrageneric level
-						final String parentName = it.getName(KnownField.CLADE);
-						target.attachParent(speciesTerm,target.getTermbyName(parentName));
-					}
-					else{   // usual condition parent is genus
-						final String parentName = it.getName(KnownField.GENUS);
-						target.attachParent(speciesTerm,target.getTermbyName(parentName));
-					}
+					final String parentName = it.getName(KnownField.GENUS);
+					target.attachParent(speciesTerm,target.getTermbyName(parentName));
 				}
 				else{
 					speciesTerm = target.getTermbyName(speciesName);  //already exists  - so just update xrefs and synonyms (? not sure about this - might be a homonymy)
