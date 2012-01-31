@@ -7,9 +7,13 @@
 package org.nescent.VTO;
 
 import java.io.File;
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
 
 public class VTOTool {
@@ -24,18 +28,16 @@ public class VTOTool {
 
 	/**
 	 * @param args
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
 		BasicConfigurator.configure();
 		File processFile = processArgs(args);
 		if (processFile != null){
 			Builder b = new Builder(processFile);
-			try {
 				b.build();
-			} catch (Exception e) {
-				logger.fatal("Error in processing; message is " + e.getLocalizedMessage());
-				e.printStackTrace();
-			}
 		}
 	}
 

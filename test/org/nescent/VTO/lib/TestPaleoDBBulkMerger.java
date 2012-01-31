@@ -40,7 +40,7 @@ public class TestPaleoDBBulkMerger {
 	public static void setUpBeforeClass() throws Exception {
         ClassLoader sysCL = ClassLoader.getSystemClassLoader();
         if (!(sysCL instanceof URLClassLoader)){
-            throw new RuntimeException("Plugin area can not be located - Fatal");
+            throw new RuntimeException("Data area can not be located");
         }
         final URL headURL = ((URLClassLoader)sysCL).getURLs()[0];
         String headPath = headURL.getPath();
@@ -55,10 +55,6 @@ public class TestPaleoDBBulkMerger {
         testOntologiesPath = headPath.substring(0,cutPoint+1) + "src/Ontologies/";
         testProcessFilesPath = headPath.substring(0,cutPoint+1) + "src/SampleProcessFiles/";
         testOutputPath = headPath.substring(0,cutPoint+1) + "output/";
-        System.out.println("test ontologies path is " +testOntologiesPath);
-        System.out.println("process files path is " +testProcessFilesPath);
-        System.out.println("output files path is " + testOutputPath);
-
 	}
 
 	

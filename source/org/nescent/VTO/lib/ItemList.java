@@ -62,6 +62,8 @@ public class ItemList {
 		return synonymSources.containsKey(source);
 	}
 	
-	
+	public int size(){
+		return contents.size();
+	}
 	
 }
