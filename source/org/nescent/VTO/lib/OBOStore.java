@@ -65,7 +65,7 @@ public class OBOStore implements TaxonStore {
 	 * @param prefix - default prefix for adding terms (may be overridden in some cases)
 	 * @param oboNameSpace - default namespace for adding terms
 	 */
-	public OBOStore(String fileSpec, String prefix, String oboNameSpace) {
+	public OBOStore(final String fileSpec, final String prefix, final String oboNameSpace) {
 		u = new OBOUtils();
 		u.setNameSpace(oboNameSpace, fileSpec);
 		defaultPrefix = prefix;
@@ -103,14 +103,18 @@ public class OBOStore implements TaxonStore {
 	 * @param child
 	 * @param parent
 	 */
-	public void attachParent(Term child, Term parent){
+	public void attachParent(final Term child,final  Term parent){
 		u.attachParent(child.asOBOClass(), parent.asOBOClass());
 	}
 
 
-	
+	/**
+	 * @param prefix specifies the prefix this store will be generating from, so only terms with that prefix are checked
+	 * side-effect: the class field idCounter is set to one more than the largest count found in any term id with the 
+	 * specified prefix
+	 */
 	@Override
-	public void updateIDGenerator(String prefix){
+	public void updateIDGenerator(final String prefix){
 		int maxCounter = 0;
 		for (OBOClass c : u.getTerms()){
 			final String id = c.getID();
@@ -134,7 +138,7 @@ public class OBOStore implements TaxonStore {
 	 * This will either reuse an id (from a trimmed tree) that matches a name or generate a fresh it using the default id prefix
 	 */
 	@Override
-	public Term addTerm(String name) {
+	public Term addTerm(final String name) {
 		OBOClass addedClass;
 		if (trimmedNames.containsKey(name)){
 			final OBOClass oldClass = trimmedNames.get(name);
@@ -161,8 +165,14 @@ public class OBOStore implements TaxonStore {
 	}
 
 
+	/**
+	 * 
+	 * @param ID the new term will have this id
+	 * @param name the new term will be assigned this name
+	 * @return a OBOTerm wrapping an OBOClass with the specified id and name
+	 */
 	@Override
-	public Term addTermbyID(String ID, String name) {
+	public Term addTermbyID(final String ID, final String name) {
 		String[] idComponents = ID.split(":");
 		if (idComponents.length < 2){
 			throw new IllegalArgumentException("Provided ID: " + ID + " is not valid OBO syntax");
@@ -177,15 +187,21 @@ public class OBOStore implements TaxonStore {
 	}
 
 
+	/**
+	 * wrapper to call save the OBOSession to the Store's targetFile
+	 */
 	@Override
 	public void saveStore() {
 		u.saveOBOSession(targetFile);
 	}
 
 
-
+	/**
+	 * @param termName
+	 * @return an OBOTerm wrapping the OBOClass with the specified name or null if none found
+	 */
 	@Override
-	public Term getTermbyName(String termName) {
+	public Term getTermbyName(final String termName) {
 		final OBOClass term = u.lookupTermByName(termName);
 		if (term != null)
 			return new OBOTerm(term);
@@ -193,12 +209,16 @@ public class OBOStore implements TaxonStore {
 			return null;
 	}
 
-	public boolean hasTermbyName(String termName){
+	/**
+	 * @param termName name to search the taxonomy for.
+	 * @return true if a term exists in the taxonomy with the specified name
+	 */
+	public boolean hasTermbyName(final String termName){
 		return (u.lookupTermByName(termName) != null);
 	}
 
 	
-	public SynonymI makeSynonym(String synString){
+	public SynonymI makeSynonym(final String synString){
 		Synonym s = u.makeSynonym(synString);
 		return new OBOSynonym(s);
 	}
