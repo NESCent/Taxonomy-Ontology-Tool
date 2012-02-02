@@ -35,6 +35,7 @@ package org.nescent.VTO.lib;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -135,7 +136,7 @@ public class ColumnReader {
                     raw = br.readLine();
                 }
             }
-            catch (Exception e) {
+            catch (IOException e) {
                 System.out.print(e);
                 return result;
             }
@@ -153,29 +154,31 @@ public class ColumnReader {
     private Item processLine(String[] digest, ItemList resultList){
     	final Item result = new Item(); 
     	for(int i = 0;i<fields.size();i++){   //this allows ignoring trailing fields that are undefined in the xml columns element
-    		String curColumn = digest[i];
-    		if (curColumn.length() > 2 && curColumn.charAt(0) == '"' && curColumn.charAt(curColumn.length()-1) == '"')
-    			curColumn = curColumn.substring(1,curColumn.length()-1);
-    		curColumn = curColumn.trim();  //At least some sources have extra trailing white space in names 
-    		if (fields.get(i).isTaxon()){
-    			if (curColumn.length()>0){
-    				result.putName(fields.get(i),curColumn);
+    		if (digest.length>i){
+    			String curColumn = digest[i]; //this allows files that are (unfortunately) missing trailing empty fields (Excel can write tab files like this)
+    			if (curColumn.length() > 2 && curColumn.charAt(0) == '"' && curColumn.charAt(curColumn.length()-1) == '"')
+    				curColumn = curColumn.substring(1,curColumn.length()-1);
+    			curColumn = curColumn.trim();  //At least some sources have extra trailing white space in names 
+    			if (fields.get(i).isTaxon()){
+    				if (curColumn.length()>0){
+    					result.putName(fields.get(i),curColumn);
+    				}
     			}
-    		}
-    		else if (synonymFields.contains(i)){
-    			if (curColumn.length()>2){
-    				String [] syns = curColumn.split(", ");
-    				for(String syn : syns)
-    					result.addSynonym(fields.get(i).toString(),syn,"", resultList);
+    			else if (synonymFields.contains(i)){
+    				if (curColumn.length()>2){
+    					String [] syns = curColumn.split(", ");
+    					for(String syn : syns)
+    						result.addSynonym(fields.get(i).toString(),syn,"", resultList);
+    				}
     			}
-    		}
-    		else if (fields.get(i).equals(KnownField.DELIMITEDNAME)){
-    			if (curColumn.length()>0){
-    				result.putName(fields.get(i), curColumn);
+    			else if (fields.get(i).equals(KnownField.DELIMITEDNAME)){
+    				if (curColumn.length()>0){
+    					result.putName(fields.get(i), curColumn);
+    				}
     			}
     		}
     	}
     	return result;
-   	}        
+    }        
 
 }

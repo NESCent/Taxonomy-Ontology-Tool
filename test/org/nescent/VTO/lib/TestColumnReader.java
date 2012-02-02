@@ -5,6 +5,10 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -13,6 +17,10 @@ import org.junit.Test;
 public class TestColumnReader {
 	
 	private ColumnReader testReader;
+	final static private Map<Integer,String> emptySynPrefixes = new HashMap<Integer,String>();
+	
+	final static String AMPHIBIASTR = "AmphibiaWeb.txt";
+	final static List<String>amphibiaColumns = new ArrayList<String>();
 
 	private static String testImportsPath;
 
@@ -33,30 +41,39 @@ public class TestColumnReader {
             cutPoint = headPath.lastIndexOf('/',cutPoint-2);  // cut twice
         }
         testImportsPath = headPath.substring(0,cutPoint+1) + "src/imports/";
+        amphibiaColumns.add("order");
+        amphibiaColumns.add("family");
+        amphibiaColumns.add("subfamily");
+        amphibiaColumns.add("genus");
+        amphibiaColumns.add("species");
 	}
 
 
 	@Before
 	public void setUp() throws Exception {
-		testReader = new ColumnReader(":");
 	}
 
 	@Test
 	public void testColumnReader() {
-		File test1 = new File (testImportsPath + "AmphibiaWeb.txt");
-		ItemList items = testReader.processCatalog(test1, true);
-		assertNotNull(items);
-		assertEquals(items.size(),7046);
+		ColumnReader dummyReader = new ColumnReader("\t");
 	}
 
 	@Test
-	public void testSetColumns() {
-		fail("Not yet implemented");
+	public void testSetColumns() {		
+		ColumnReader dummyReader = new ColumnReader("\t");
+		dummyReader.setColumns(amphibiaColumns, emptySynPrefixes);
 	}
+
+
 
 	@Test
 	public void testProcessCatalog() {
-		fail("Not yet implemented");
+		testReader = new ColumnReader("\t");
+		File test1 = new File (testImportsPath + AMPHIBIASTR);
+		testReader.setColumns(amphibiaColumns, emptySynPrefixes);
+		ItemList items = testReader.processCatalog(test1, true);
+		assertNotNull(items);
+		assertEquals(items.size(),7046);
 	}
 
 }

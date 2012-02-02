@@ -59,7 +59,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	public void merge(String prefix) {
 		ItemList items = reader.processCatalog(source, true);
 		for(Item item : items.getContents()){
-
+			
 		}
 		// TODO finish
 
@@ -203,32 +203,38 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 	private void processSpeciesColumn(ItemList items, Term attachTerm){
 		for (Item it : items.getContents()){
-			Term speciesTerm;
-			if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
-				final String speciesName = it.getName(KnownField.GENUS) + " " + it.getName(KnownField.SPECIES);
-				if (target.getTermbyName(speciesName) == null){
-					speciesTerm = target.addTerm(speciesName);
-					target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
-					final String parentName = it.getName(KnownField.GENUS);
-					target.attachParent(speciesTerm,target.getTermbyName(parentName));
-				}
-				else{
-					speciesTerm = target.getTermbyName(speciesName);  //already exists  - so just update xrefs and synonyms (? not sure about this - might be a homonymy)
-				}
-				if (items.hasColumn(KnownField.XREF)){
-					//TODO make sure xrefs are handled
-				}
-				for (String synSource : it.getSynonymSources()){
-					for(String syn : it.getSynonymsForSource(synSource))
-						if (true) { //!syn.equals(speciesName)){
-							String[] sourceComps = synSource.split(":",2);
-							SynonymI s = target.makeSynonymWithXref(syn, sourceComps[0], sourceComps[1]);
-							speciesTerm.addSynonym(s);
-						}
+			if (it.getName(KnownField.SPECIES) != null){
+				Term speciesTerm;
+				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(it.getName(KnownField.GENUS)) != null){
+					final String speciesName = it.getName(KnownField.GENUS) + " " + it.getName(KnownField.SPECIES);
+					if (target.getTermbyName(speciesName) == null){
+						speciesTerm = target.addTerm(speciesName);
+						target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
+						final String parentName = it.getName(KnownField.GENUS);
+						target.attachParent(speciesTerm,target.getTermbyName(parentName));
+					}
+					else{
+						speciesTerm = target.getTermbyName(speciesName);  //already exists  - so just update xrefs and synonyms (? not sure about this - might be a homonymy)
+					}
+					if (items.hasColumn(KnownField.XREF)){
+						//TODO make sure xrefs are handled
+					}
+					addSpeciesSynonyms(it,speciesTerm);
 				}
 			}
 		}
 	}
 
 
+	private void addSpeciesSynonyms(Item it, Term speciesTerm){
+		for (String synSource : it.getSynonymSources()){
+			String[] sourceComps = synSource.split(":",2);
+			for(String syn : it.getSynonymsForSource(synSource))
+				if (true) { //!syn.equals(speciesName)){
+					SynonymI s = target.makeSynonymWithXref(syn, sourceComps[0], sourceComps[1]);
+					speciesTerm.addSynonym(s);
+				}
+		}
+		
+	}
 }
