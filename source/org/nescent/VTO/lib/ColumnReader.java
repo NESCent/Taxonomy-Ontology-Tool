@@ -154,13 +154,13 @@ public class ColumnReader {
     private Item processLine(String[] digest, ItemList resultList){
     	final Item result = new Item(); 
     	for(int i = 0;i<fields.size();i++){   //this allows ignoring trailing fields that are undefined in the xml columns element
-    		if (digest.length>i){
-    			String curColumn = digest[i]; //this allows files that are (unfortunately) missing trailing empty fields (Excel can write tab files like this)
-    			if (curColumn.length() > 2 && curColumn.charAt(0) == '"' && curColumn.charAt(curColumn.length()-1) == '"')
-    				curColumn = curColumn.substring(1,curColumn.length()-1);
-    			curColumn = curColumn.trim();  //At least some sources have extra trailing white space in names 
+    		if (digest.length>i){ //this allows files that are (unfortunately) missing trailing empty fields (Excel can write tab files like this)
+    			String rawColumn = digest[i]; 
+    			if (rawColumn.length() > 2 && rawColumn.charAt(0) == '"' && rawColumn.charAt(rawColumn.length()-1) == '"')
+    				rawColumn = rawColumn.substring(1,rawColumn.length()-1);
+    			final String curColumn = rawColumn.trim();  //At least some sources have extra trailing white space in names 
     			if (fields.get(i).isTaxon()){
-    				if (curColumn.length()>0){
+    				if (curColumn.length()>0 && !"Incertae sedis".equalsIgnoreCase(curColumn)){
     					result.putName(fields.get(i),curColumn);
     				}
     			}

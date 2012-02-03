@@ -59,7 +59,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	public void merge(String prefix) {
 		ItemList items = reader.processCatalog(source, true);
 		for(Item item : items.getContents()){
-			
+
 		}
 		// TODO finish
 
@@ -136,19 +136,18 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private void processFamilyColumn(ItemList items, Term attachTerm){
 		for (Item it : items.getContents()){
 			final String familyName = it.getName(KnownField.FAMILY);
-			if (familyName == null || INCERTAESEDIS.equalsIgnoreCase(familyName)){
-				logger.info("item found incertae sedis at family level, no parent at family level will be added");
-				return;
-			}
-			if (target.getTermbyName(familyName) == null){
-				final Term familyTerm = target.addTerm(familyName);
-				target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
-				if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(it.getName(KnownField.ORDER)) != null){
-					final String parentName = it.getName(KnownField.ORDER);
-					target.attachParent(familyTerm,target.getTermbyName(parentName));
+			if (familyName != null){
+				logger.info("family is " + familyName);
+				if (target.getTermbyName(familyName) == null){
+					final Term familyTerm = target.addTerm(familyName);
+					target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
+					if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(it.getName(KnownField.ORDER)) != null){
+						final String parentName = it.getName(KnownField.ORDER);
+						target.attachParent(familyTerm,target.getTermbyName(parentName));
+					}
+					else if (attachTerm != null)
+						target.attachParent(familyTerm, attachTerm);
 				}
-				else if (attachTerm != null)
-					target.attachParent(familyTerm, attachTerm);
 			}
 		}		
 	}
@@ -235,6 +234,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 					speciesTerm.addSynonym(s);
 				}
 		}
-		
+
 	}
 }
