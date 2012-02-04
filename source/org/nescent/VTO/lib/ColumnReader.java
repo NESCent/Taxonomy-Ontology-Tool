@@ -160,9 +160,7 @@ public class ColumnReader {
     				rawColumn = rawColumn.substring(1,rawColumn.length()-1);
     			final String curColumn = rawColumn.trim();  //At least some sources have extra trailing white space in names 
     			if (fields.get(i).isTaxon()){
-    				if (curColumn.length()>0 && !"Incertae sedis".equalsIgnoreCase(curColumn)){
-    					result.putName(fields.get(i),curColumn);
-    				}
+    				result.putName(fields.get(i),curColumn);
     			}
     			else if (synonymFields.contains(i)){
     				if (curColumn.length()>2){

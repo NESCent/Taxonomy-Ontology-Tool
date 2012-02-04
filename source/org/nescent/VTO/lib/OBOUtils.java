@@ -84,8 +84,8 @@ class OBOUtils {
 	}
 
 	/**
-	 * Constructor for use by OBOMerger where the session
-	 * @param path
+	 * Constructor for use by OBOMerger - will load an OBO file into a fresh session within this Utils instance
+	 * @param path specifies the OBO file to load into the session
 	 */
 	OBOUtils(String path){
 		DefaultOBOParser parser = new DefaultOBOParser();

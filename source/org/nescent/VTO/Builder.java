@@ -145,6 +145,7 @@ public class Builder {
 			processMergeAction(action, target, targetPrefixStr);
 		}
 		else if (TRIMACTIONSTR.equalsIgnoreCase(actionName)){
+			logger.info("Processing trim action: " + getAttribute(action,"node"));
 			target.trim(getAttribute(action,"node"));
 		}
 		else if (action.getNodeType() == Node.TEXT_NODE){

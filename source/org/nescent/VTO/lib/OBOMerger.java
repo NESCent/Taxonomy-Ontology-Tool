@@ -14,12 +14,12 @@ import org.obo.datamodel.Synonym;
 public class OBOMerger implements Merger {
 
 
-	private OBOUtils u = null;
+	private OBOUtils sourceUtils = null;
 
 	//String defaultPrefix;
 	private final String idSuffix = ":%07d";
 	
-	private File source;
+	private File sourceFile;
 	private TaxonStore target;
 
 	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
@@ -35,8 +35,8 @@ public class OBOMerger implements Merger {
 	}
 
 	@Override
-	public void setSource(File sourceFile){
-		source = sourceFile;
+	public void setSource(File source){
+		sourceFile = source;
 	}
 	
 	@Override
@@ -47,13 +47,13 @@ public class OBOMerger implements Merger {
 
 	@Override
 	public void merge(String prefix) {
-		logger.info("Loading OBO file " + source);
-		u = new OBOUtils(source.getAbsolutePath());
+		logger.info("Loading OBO file " + sourceFile);
+		sourceUtils = new OBOUtils(sourceFile.getAbsolutePath());
 		logger.info("Finished loading");
 		int termCount = 0;
 		int synCount = 0;
 		target.updateIDGenerator(prefix);
-		Collection <OBOClass> allTerms = u.getTerms();
+		Collection <OBOClass> allTerms = sourceUtils.getTerms();
 		for (OBOClass term : allTerms){
 			Term matchingTerm = target.getTermbyName(term.getName());
 			if (matchingTerm != null){
@@ -82,20 +82,21 @@ public class OBOMerger implements Merger {
 	 */
 	@Override
 	public void attach(String attachment, String cladeRoot, String prefix) {
-		logger.info("Loading OBO file " + source);
-		u = new OBOUtils(source.getAbsolutePath());
+		logger.info("Loading OBO file " + sourceFile);
+		sourceUtils = new OBOUtils(sourceFile.getAbsolutePath());
 		logger.info("Finished loading");
 		logger.info("Attach started target size = " + target.getTerms().size());
+		logger.info("               source size = " + sourceUtils.getTerms().size());
 		Term parentTerm = null;
-		OBOClass cladeClass = u.lookupTermByName(cladeRoot);
+		OBOClass cladeClass = sourceUtils.lookupTermByName(cladeRoot);  //this is where we want to attach
 		parentTerm = target.getTermbyName(attachment);
 		if (parentTerm == null){   //parent is unknown
 			if (!target.isEmpty()){
-				logger.error("Can not attach " + source.getAbsolutePath() + " specified parent: " + attachment + " is unknown to " + target);
+				logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified parent: " + attachment + " is unknown to " + target);
 				return;
 			}
 			else { // attachment will be added first to provide a root for an otherwise empty target
-				OBOClass attachmentClass = u.lookupTermByName(attachment);
+				OBOClass attachmentClass = sourceUtils.lookupTermByName(attachment);
 				if (attachmentClass != null){
 					parentTerm = target.addTermbyID(attachmentClass.getID(),attachment);
 				}
@@ -110,20 +111,31 @@ public class OBOMerger implements Merger {
 			cladeClass = parentTerm.asOBOClass();
 		}
 		// first copy all the descendents of cladeClass into the target
-		logger.info("Checkpoint 1: Chordata = " + target.getTermbyName("Chordata"));
+		logger.info("Checkpoint 1: Amphibia = " + target.getTermbyName("Amphibia"));
 		logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
 		for (Term t : target.getTerms()){
-			if ("Gnathostomata".equals(t.getLabel())){
-				logger.info("Found Gnathostomata on through search on load check");
+			if ("Temnospondyli".equals(t.getLabel())){
+				logger.info("Found Temnospondyli on through search on load check");
 			}
 		}
 		Term cladeTerm = copyTerm(cladeClass,prefix);
+		logger.info("Checkpoint 1b: Amphibia = " + target.getTermbyName("Amphibia"));
+		logger.info("Checkpoint 1b: cladeTerm = " + cladeTerm + "; name is " + cladeTerm.getLabel());
+	
 		if (cladeTerm != null){
-			if (u.getRankString(cladeClass) != null)
-				target.setRankFromName(cladeTerm, u.getRankString(cladeClass));
+			if (sourceUtils.getRankString(cladeClass) != null)
+				target.setRankFromName(cladeTerm, sourceUtils.getRankString(cladeClass));
 			if (!cladeTerm.getID().equals(parentTerm.getID()))
 				target.attachParent(cladeTerm, parentTerm);
 			addChildren(cladeClass,cladeTerm,target,prefix);
+		}
+		logger.info("Checkpoint 2: Amphibia = " + target.getTermbyName("Amphibia"));
+		logger.info("Checkpoint 2: Temnospondyli = " + target.getTermbyName("Temnospondyli"));
+		logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
+		for (Term t : target.getTerms()){
+			if ("Amphibia".equals(t.getLabel())){
+				logger.info("Found Amphibia on through search on load check");
+			}
 		}
 		//u.setNameSpace(oboNameSpace, fileSpec);
 		//defaultFormat = prefix + idSuffix;
@@ -143,8 +155,8 @@ public class OBOMerger implements Merger {
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
 				Term childTerm = copyTerm(childClass,prefix);
-				if (u.getRankString(childClass) != null)
-					target.setRankFromName(childTerm, u.getRankString(childClass));
+				if (sourceUtils.getRankString(childClass) != null)
+					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
 				for (Synonym syn : childClass.getSynonyms()){
 					String synText = syn.getText();
 					Collection <Dbxref> xrefs = syn.getXrefs();
@@ -193,8 +205,8 @@ public class OBOMerger implements Merger {
 							cladeTerm.addSynonym(newSyn);
 					}
 				}
-				if (u.isExtinct(cladeClass))
-					u.setExtinct(cladeTerm.asOBOClass());
+				if (sourceUtils.isExtinct(cladeClass))
+					sourceUtils.setExtinct(cladeTerm.asOBOClass());
 			}
 			else{
 				cladeTerm = target.addTerm(cladeClass.getName());
