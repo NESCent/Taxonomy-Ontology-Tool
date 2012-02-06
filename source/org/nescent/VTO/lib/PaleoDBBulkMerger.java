@@ -28,6 +28,8 @@ public class PaleoDBBulkMerger implements Merger{
 	private File source = null;
 	private TaxonStore target = null;
 	
+	private SynonymSource preserveSynonyms;
+	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
 	
 	
@@ -40,6 +42,17 @@ public class PaleoDBBulkMerger implements Merger{
 	public boolean canPreserveID() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because TBD");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
 	}
 
 	@Override

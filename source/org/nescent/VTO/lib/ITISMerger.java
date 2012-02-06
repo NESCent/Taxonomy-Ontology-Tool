@@ -23,6 +23,8 @@ public class ITISMerger implements Merger{
 	private File source;
 	private TaxonStore target;
     
+	private SynonymSource preserveSynonyms;
+	
 	static final Logger logger = Logger.getLogger(ITISMerger.class.getName());
 	
 	/* metadata methods */
@@ -47,6 +49,15 @@ public class ITISMerger implements Merger{
 		target = targetStore;
 	}
 	
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because TBD");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
 
     @Override
     public void merge(String prefix) {

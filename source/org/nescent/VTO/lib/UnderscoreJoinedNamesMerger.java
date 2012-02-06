@@ -27,12 +27,16 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	private final ColumnReader reader;
 
 	private int namesCounter = 0;
+	
+	private int matchCount;
+	private int unresolvedCount;
 
 	private Set<Item> resolvedItems = new HashSet<Item>();
 	
 	private File source;
 	private TaxonStore target;
-
+	private SynonymSource preserveSynonyms;
+	
 	static Logger logger = Logger.getLogger(OBOStore.class.getName());
 
 
@@ -73,12 +77,28 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 
 	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because TBD");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
+
+	@Override
 	public void merge(String prefix) {
-		int matchCount = 0;
 		ItemList items = reader.processCatalog(source, true);
 		if (!items.hasColumn(KnownField.DELIMITEDNAME)){
 			throw new RuntimeException("No delimitedname column specified for joined name formatted file");
 		}
+		matchCount = 0;
+		unresolvedCount = 0;
+		mergeFirstPass(items,prefix);
+		mergeSecondPass(items,prefix);
+	}
+	
+	private void mergeFirstPass(ItemList items, String prefix){
 		for(Item item : items.getContents()){
 			String genusName = null;
 			String speciesName = null;
@@ -89,21 +109,11 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				genusName = splitName[0];
 			}
 			else if (splitName.length == 2){
-				StringBuilder b = new StringBuilder();
-				b.append(splitName[0]);
-				b.append(' ');
-				b.append(splitName[1]);
-				speciesName =  b.toString();
+				speciesName = buildBinomial(splitName);
 			}
 			else {
-				StringBuilder b = new StringBuilder();
-				b.append(splitName[0]);
-				b.append(' ');
-				b.append(splitName[1]);
-				speciesName = b.toString();
-				b.append(' ');
-				b.append(splitName[2]);
-				subSpeciesName = b.toString();
+				speciesName = buildBinomial(splitName);
+				subSpeciesName = buildTrinomial(splitName);
 			}
 			if (subSpeciesName != null && target.getTermbyName(subSpeciesName) != null){
 				Term t = target.getTermbyName(subSpeciesName);
@@ -138,35 +148,27 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 				//System.out.println("Found matching genus: \t" + genusName + " total is " + matchCount);
 			}
 		}
+	}
+	
+	private void mergeSecondPass(ItemList items, String prefix){
 		//Second pass looking for matches to synonyms
 		logger.info("Starting synonym search pass");
-		int unresolvedCount = 0;
 		for(Item item : items.getContents()){ 
 			if (!resolvedItems.contains(item)) {
 				String genusName = null;
 				String speciesName = null;
 				String subSpeciesName = null;
 				final String taxonName = item.getFieldValue(KnownField.DELIMITEDNAME);
-				String[] splitName = taxonName.split(nameSeparator);
+				final String[] splitName = taxonName.split(nameSeparator);
 				if (splitName.length == 1 ){
 					genusName = splitName[0];
 				}
 				else if (splitName.length == 2){
-					StringBuilder b = new StringBuilder();
-					b.append(splitName[0]);
-					b.append(' ');
-					b.append(splitName[1]);
-					speciesName =  b.toString();
+					speciesName =  buildBinomial(splitName);
 				}
 				else {
-					StringBuilder b = new StringBuilder();
-					b.append(splitName[0]);
-					b.append(' ');
-					b.append(splitName[1]);
-					speciesName = b.toString();
-					b.append(' ');
-					b.append(splitName[2]);
-					subSpeciesName = b.toString();
+					speciesName = buildBinomial(splitName);
+					subSpeciesName = buildTrinomial(splitName);
 				}
 				if (subSpeciesName != null){
 					for (Term t : target.getTerms()){
@@ -227,6 +229,25 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 		logger.info("Unresolved count = " + (items.getContents().size()-matchCount));
 	}
 
+	private String buildBinomial(final String[] components){
+		final StringBuilder b = new StringBuilder();
+		b.append(components[0]);
+		b.append(' ');
+		b.append(components[1]);
+		return b.toString();
+	}
+	
+	private String buildTrinomial(final String[] components){
+		final StringBuilder b = new StringBuilder();
+		b.append(components[0]);
+		b.append(' ');
+		b.append(components[1]);
+		b.append(' ');
+		b.append(components[2]);
+		return b.toString();
+	}
+	
+	
 	@Override
 	public void attach(String parent, String cladeRoot, String prefix) {
 		throw new RuntimeException("UnderscoreJoinedName does not support attach");

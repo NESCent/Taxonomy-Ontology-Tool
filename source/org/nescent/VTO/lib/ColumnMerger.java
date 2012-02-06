@@ -16,6 +16,8 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 	private File source;
 	private TaxonStore target;
+	
+	private SynonymSource preserveSynonyms;
 
 	static Logger logger = Logger.getLogger(ColumnMerger.class.getName());
 
@@ -29,6 +31,16 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	@Override
 	public boolean canPreserveID() {
 		return false;
+	}
+
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because column format does not support ids");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
 	}
 
 

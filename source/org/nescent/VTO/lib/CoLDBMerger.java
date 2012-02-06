@@ -29,6 +29,8 @@ public class CoLDBMerger implements Merger {
 
 	private File source;
 	private TaxonStore target;
+	
+	private SynonymSource preserveSynonyms;
 
 	static final Logger logger = Logger.getLogger(CoLDBMerger.class.getName());
 
@@ -59,6 +61,16 @@ public class CoLDBMerger implements Merger {
 	@Override
 	public void setTarget(TaxonStore targetStore){
 		target = targetStore;
+	}
+	
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because CoL ids are not stable");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
 	}
 	
 	/**

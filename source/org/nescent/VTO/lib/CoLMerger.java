@@ -43,7 +43,7 @@ public class CoLMerger implements Merger {
 
 	private File source;       //TODO support overriding default base URL?
 	private TaxonStore target;
-
+	private SynonymSource preserveSynonyms;
 	
 	static final Logger logger = Logger.getLogger(CoLMerger.class.getName());
 
@@ -74,6 +74,16 @@ public class CoLMerger implements Merger {
 		target = targetStore;
 	}
 	
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because CoL ids are not stable");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
+
 
 	/**
 	 * 

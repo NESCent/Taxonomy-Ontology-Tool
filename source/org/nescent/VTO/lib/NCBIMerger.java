@@ -70,6 +70,9 @@ public class NCBIMerger implements Merger {
     private File source;
     private TaxonStore target;
     
+    private boolean preserveID;
+    private SynonymSource preserveSynonyms;
+    
 	static Logger logger = Logger.getLogger(NCBIMerger.class.getName());
 
     /* Metadata methods */
@@ -84,6 +87,17 @@ public class NCBIMerger implements Merger {
 	public boolean canPreserveID(){
 		return true;
 	}
+
+	@Override
+	public void setPreserveID(boolean v){
+		preserveID = v;
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
+
 
 	/**
 	 * @arg sourceDirectory until most mergers, the NCBI dump is a set of files in a common directory

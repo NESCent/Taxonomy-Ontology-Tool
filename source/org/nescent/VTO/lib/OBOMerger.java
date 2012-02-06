@@ -21,11 +21,14 @@ public class OBOMerger implements Merger {
 	
 	private File sourceFile;
 	private TaxonStore target;
+	
+	private boolean preserveID = false;
+	private SynonymSource preserveSynonyms;
 
 	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
 
 	@Override
-	public boolean canAttach() {
+	public final boolean canAttach() {
 		return true;
 	}
 
@@ -34,6 +37,16 @@ public class OBOMerger implements Merger {
 		return true;
 	}
 
+	@Override
+	public void setPreserveID(boolean v){
+		preserveID = v;
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
+	
 	@Override
 	public void setSource(File source){
 		sourceFile = source;
@@ -76,73 +89,76 @@ public class OBOMerger implements Merger {
 	}
 
 	/**
-	 * @param attachment name of parent node for attached clade
-	 * @param cladeRoot name of root node (child of parent) for attached clade
+	 * @param targetParentName name of parent node for attached clade
+	 * @param sourceRootName name of root node (child of parent) for attached clade
 	 * @param prefix default prefix for target ontology
 	 */
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix) {
+	public void attach(String targetParentName, String sourceRootName, String prefix) {
 		logger.info("Loading OBO file " + sourceFile);
 		sourceUtils = new OBOUtils(sourceFile.getAbsolutePath());
 		logger.info("Finished loading");
 		logger.info("Attach started target size = " + target.getTerms().size());
 		logger.info("               source size = " + sourceUtils.getTerms().size());
-		Term parentTerm = null;
-		OBOClass cladeClass = sourceUtils.lookupTermByName(cladeRoot);  //this is where we want to attach
-		parentTerm = target.getTermbyName(attachment);
-		if (parentTerm == null){   //parent is unknown
+		Term targetParent = target.getTermbyName(targetParentName);  //the node in target that will be the parent of the attached clade
+		if (targetParent == null){   //parent is unknown
 			if (!target.isEmpty()){
-				logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified parent: " + attachment + " is unknown to " + target);
+				logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified parent: " + targetParentName + " is unknown to " + target);
 				return;
 			}
 			else { // attachment will be added first to provide a root for an otherwise empty target
-				OBOClass attachmentClass = sourceUtils.lookupTermByName(attachment);
+				OBOClass attachmentClass = sourceUtils.lookupTermByName(targetParentName);
 				if (attachmentClass != null){
-					parentTerm = target.addTermbyID(attachmentClass.getID(),attachment);
+					targetParent = target.addTermbyID(attachmentClass.getID(),targetParentName);
 				}
 				else {
-					parentTerm = target.addTerm(attachment);
+					targetParent = target.addTerm(targetParentName);
 				}
-				logger.info("Assigning " + attachment + " as root");
+				logger.info("Assigning " + targetParentName + " as root");
 			}
 		}
-		if (cladeClass == null){
-			logger.warn("Clade root to attach " + cladeRoot + " was not found");
-			cladeClass = parentTerm.asOBOClass();
+		OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
+		if (sourceRoot == null){
+			logger.warn("source root (" + sourceRootName + ") to copy from was not found");
+			sourceRoot = targetParent.asOBOClass();
 		}
 		// first copy all the descendents of cladeClass into the target
-		logger.info("Checkpoint 1: Amphibia = " + target.getTermbyName("Amphibia"));
+		logger.info("Checkpoint 1: targetParent = " + targetParent);
+		logger.info("Checkpoint 1: " + targetParentName + " = " + target.getTermbyName(targetParentName));
 		logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-		for (Term t : target.getTerms()){
-			if ("Temnospondyli".equals(t.getLabel())){
-				logger.info("Found Temnospondyli on through search on load check");
-			}
-		}
-		Term cladeTerm = copyTerm(cladeClass,prefix);
-		logger.info("Checkpoint 1b: Amphibia = " + target.getTermbyName("Amphibia"));
-		logger.info("Checkpoint 1b: cladeTerm = " + cladeTerm + "; name is " + cladeTerm.getLabel());
+		checkTarget("Temnospondyli");
+		Term targetRoot = copyTerm(sourceRoot,prefix);
+		logger.info("Checkpoint 1b: targetParent = " + targetParent);
+		logger.info("Checkpoint 1b: node named by targetParentName (" + targetParentName + ") = " + target.getTermbyName(targetParentName));
+		logger.info("Checkpoint 1b: targetRoot = " + targetRoot + "; name is " + targetRoot.getLabel());
 	
-		if (cladeTerm != null){
-			if (sourceUtils.getRankString(cladeClass) != null)
-				target.setRankFromName(cladeTerm, sourceUtils.getRankString(cladeClass));
-			if (!cladeTerm.getID().equals(parentTerm.getID()))
-				target.attachParent(cladeTerm, parentTerm);
-			addChildren(cladeClass,cladeTerm,target,prefix);
+		if (targetRoot != null){
+			if (sourceUtils.getRankString(sourceRoot) != null)
+				target.setRankFromName(targetRoot, sourceUtils.getRankString(sourceRoot));
+			if (!targetRoot.getID().equals(targetParent.getID()))
+				target.attachParent(targetRoot, targetParent);
+			addChildren(sourceRoot,targetRoot,target,prefix);
 		}
-		logger.info("Checkpoint 2: Amphibia = " + target.getTermbyName("Amphibia"));
+		logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName("Amphibia"));
 		logger.info("Checkpoint 2: Temnospondyli = " + target.getTermbyName("Temnospondyli"));
 		logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
-		for (Term t : target.getTerms()){
-			if ("Amphibia".equals(t.getLabel())){
-				logger.info("Found Amphibia on through search on load check");
-			}
-		}
+		checkTarget("Amphibia");
 		//u.setNameSpace(oboNameSpace, fileSpec);
 		//defaultFormat = prefix + idSuffix;
 
 		//targetFile = fileSpec;
 		//fillRankNames();
 
+	}
+	
+	
+	private void checkTarget(String s){
+		for (Term t : target.getTerms()){
+			if (s.equals(t.getLabel())){
+				logger.info("Found " + s + " on through search on load check");
+			}
+		}
+		
 	}
 
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree

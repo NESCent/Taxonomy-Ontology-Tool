@@ -42,6 +42,7 @@ public class PaleoDBMerger implements Merger {
 	
 	private File source;
 	private TaxonStore target;
+	private SynonymSource preserveSynonyms;
 	
 	final private static String PBDBURL = "http://www.catalogueoflife.org";
 	final private static String PBDBSUFFIX = "/annual-checklist/";
@@ -71,6 +72,18 @@ public class PaleoDBMerger implements Merger {
 		this.target=target;
 	}
 
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because TBD");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
+	}
+
+
+	
 	@Override
 	public void merge(String prefix) {
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();

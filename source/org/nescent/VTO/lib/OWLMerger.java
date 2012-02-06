@@ -10,7 +10,8 @@ public class OWLMerger implements Merger {
 	private File source;
 	private TaxonStore target;
 
-	
+	private SynonymSource preserveSynonyms;
+
 	static final Logger logger = Logger.getLogger(OWLMerger.class.getName());
 
 	/* MetaData methods */
@@ -22,6 +23,16 @@ public class OWLMerger implements Merger {
 	@Override
 	public boolean canPreserveID(){
 		return false;   //TODO look into this
+	}
+
+	@Override
+	public void setPreserveID(boolean v){
+		throw new RuntimeException("This merger can't preserve IDs because TBD");
+	}
+	
+	@Override
+	public void setPreserveSynonyms(SynonymSource s){
+		preserveSynonyms = s;
 	}
 
 	
