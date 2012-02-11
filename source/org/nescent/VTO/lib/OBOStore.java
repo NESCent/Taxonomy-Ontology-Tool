@@ -259,6 +259,10 @@ public class OBOStore implements TaxonStore {
 			u.removeNode(node);
 		}
 	}
+	
+	public Term getTrimmed(String nodeName){
+		return new OBOTerm(trimmedNames.get(nodeName));
+	}
 
 
 	@Override

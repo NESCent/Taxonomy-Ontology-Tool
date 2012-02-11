@@ -32,6 +32,7 @@ import org.nescent.VTO.lib.OBOStore;
 import org.nescent.VTO.lib.OWLMerger;
 import org.nescent.VTO.lib.OWLStore;
 import org.nescent.VTO.lib.PaleoDBBulkMerger;
+import org.nescent.VTO.lib.SynonymSource;
 import org.nescent.VTO.lib.TaxonStore;
 import org.nescent.VTO.lib.UnderscoreJoinedNamesMerger;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -75,6 +76,8 @@ public class Builder {
 	final static String ATTACHROOTSTR = "root";   //the root of the attached tree - a new child of node named by ATTACHPARENTSTR
 	final static String ATTACHPARENTSTR = "parent";
 	final static String ATTACHPREFIXSTR = "prefix";
+	final static String PRESERVEIDSSTR = "preserveIds";
+	final static String PRESERVESYNONYMSSTR = "preserveSynonyms";
 
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
@@ -172,9 +175,11 @@ public class Builder {
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
 		Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
 		final String formatStr = getAttribute(action,ATTACHFORMATSTR);
-		final String cladeRootStr = getAttribute(action,ATTACHROOTSTR);
-		final String sourceParentStr = getAttribute(action,ATTACHPARENTSTR);
+		final String sourceRootStr = getAttribute(action,ATTACHROOTSTR);
+		final String targetParentStr = getAttribute(action,ATTACHPARENTSTR);
 		final String sourcePrefixStr = getAttribute(action,ATTACHPREFIXSTR);
+		final String preserveIDsStr = getAttribute(action,PRESERVEIDSSTR);
+		final String preserveSynonymsStr = getAttribute(action,PRESERVESYNONYMSSTR);
 		NodeList childNodes = action.getChildNodes();
 		if (childNodes.getLength()>0){
 			columns = processChildNodesOfAttach(childNodes,synPrefixes);
@@ -193,20 +198,35 @@ public class Builder {
 			logger.warn("No prefix for newly generated ids specified - will default to filename component");
 			targetPrefixStr = sourceFile.getName();
 		}
+		m.setPreserveID(processBooleanAttribute(getAttribute(action,PRESERVEIDSSTR)));
+		m.setPreserveSynonyms(processSynonymSourceAttribute(getAttribute(action,PRESERVESYNONYMSSTR)));
+			
 		m.setSource(sourceFile);
 		m.setTarget(target);
-		if (sourceParentStr != null){   //need to specify the clade within the sourceFile (or null?)
-			if (cladeRootStr != null)
-				m.attach(sourceParentStr,cladeRootStr,sourcePrefixStr);
-			else
-				m.attach(sourceParentStr,sourceParentStr,sourcePrefixStr);
-		}
-		else {
-			if (cladeRootStr != null)
-				m.attach(targetRootStr,cladeRootStr,sourcePrefixStr);
-			else
-				m.attach(targetRootStr,targetRootStr,sourcePrefixStr);
-		}
+		m.attach(targetParentStr,sourceRootStr,sourcePrefixStr);
+	}
+	
+	
+	boolean processBooleanAttribute(String attStr){
+		if (attStr == null)
+			return false;
+		if ("yes".equalsIgnoreCase(attStr))
+			return true;
+		if ("true".equalsIgnoreCase(attStr))
+			return true;
+		return false;
+	}
+	
+	SynonymSource processSynonymSourceAttribute(String synSourceStr){
+		if ("Neither".equalsIgnoreCase(synSourceStr) || "None".equalsIgnoreCase(synSourceStr))
+			return SynonymSource.NEITHER;
+		if ("Target".equalsIgnoreCase(synSourceStr))
+			return SynonymSource.TARGET;
+		if ("Both".equalsIgnoreCase(synSourceStr))
+			return SynonymSource.BOTH;
+		if (synSourceStr == null || "Source".equalsIgnoreCase(synSourceStr))
+			return SynonymSource.SOURCE;
+		throw new RuntimeException("Unrecognized Synonym processing attribute for Merge: " + synSourceStr);
 	}
 
 	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){

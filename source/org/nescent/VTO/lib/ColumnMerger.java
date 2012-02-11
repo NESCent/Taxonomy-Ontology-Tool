@@ -35,7 +35,8 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 	@Override
 	public void setPreserveID(boolean v){
-		throw new RuntimeException("This merger can't preserve IDs because column format does not support ids");
+		if (v)
+			throw new IllegalArgumentException("This merger can't preserve IDs because column format does not support ids");
 	}
 	
 	@Override

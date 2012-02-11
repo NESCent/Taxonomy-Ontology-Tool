@@ -100,57 +100,54 @@ public class OBOMerger implements Merger {
 		logger.info("Finished loading");
 		logger.info("Attach started target size = " + target.getTerms().size());
 		logger.info("               source size = " + sourceUtils.getTerms().size());
-		Term targetParent = target.getTermbyName(targetParentName);  //the node in target that will be the parent of the attached clade
-		if (targetParent == null){   //parent is unknown
-			if (!target.isEmpty()){
-				logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified parent: " + targetParentName + " is unknown to " + target);
-				return;
-			}
-			else { // attachment will be added first to provide a root for an otherwise empty target
-				OBOClass attachmentClass = sourceUtils.lookupTermByName(targetParentName);
-				if (attachmentClass != null){
-					targetParent = target.addTermbyID(attachmentClass.getID(),targetParentName);
-				}
-				else {
-					targetParent = target.addTerm(targetParentName);
-				}
-				logger.info("Assigning " + targetParentName + " as root");
-			}
-		}
-		OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
-		if (sourceRoot == null){
-			logger.warn("source root (" + sourceRootName + ") to copy from was not found");
-			sourceRoot = targetParent.asOBOClass();
-		}
-		// first copy all the descendents of cladeClass into the target
-		logger.info("Checkpoint 1: targetParent = " + targetParent);
-		logger.info("Checkpoint 1: " + targetParentName + " = " + target.getTermbyName(targetParentName));
-		logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-		checkTarget("Temnospondyli");
-		Term targetRoot = copyTerm(sourceRoot,prefix);
-		logger.info("Checkpoint 1b: targetParent = " + targetParent);
-		logger.info("Checkpoint 1b: node named by targetParentName (" + targetParentName + ") = " + target.getTermbyName(targetParentName));
-		logger.info("Checkpoint 1b: targetRoot = " + targetRoot + "; name is " + targetRoot.getLabel());
-	
-		if (targetRoot != null){
-			if (sourceUtils.getRankString(sourceRoot) != null)
-				target.setRankFromName(targetRoot, sourceUtils.getRankString(sourceRoot));
-			if (!targetRoot.getID().equals(targetParent.getID()))
-				target.attachParent(targetRoot, targetParent);
+		if (targetParentName == null)
+			copyRootToTarget(sourceRootName,prefix);
+		else if (targetParentName.equalsIgnoreCase(sourceRootName)){
+			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
+			Term targetParent = target.getTermbyName(targetParentName);
+			Term targetRoot = copyTerm(sourceRoot,prefix);
+			logger.info("Checkpoint 1: targetParent = " + targetParent);
+			logger.info("Checkpoint 1: " + targetParentName + " = " + target.getTermbyName(targetParentName));
+			logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
+			checkTarget("Temnospondyli");
+			logger.info("Checkpoint 1b: targetParent = " + targetParent);
+			logger.info("Checkpoint 1b: node named by targetParentName (" + targetParentName + ") = " + target.getTermbyName(targetParentName));
+			logger.info("Checkpoint 1b: targetRoot = " + targetRoot + "; name is " + targetRoot.getLabel());
+			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
+			logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName("Amphibia"));
+			logger.info("Checkpoint 2: Temnospondyli = " + target.getTermbyName("Temnospondyli"));
+			logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
+			checkTarget("Amphibia");
+			
+			//anything special here?
 		}
-		logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName("Amphibia"));
-		logger.info("Checkpoint 2: Temnospondyli = " + target.getTermbyName("Temnospondyli"));
-		logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
-		checkTarget("Amphibia");
-		//u.setNameSpace(oboNameSpace, fileSpec);
-		//defaultFormat = prefix + idSuffix;
-
-		//targetFile = fileSpec;
-		//fillRankNames();
 
 	}
-	
+
+	private void copyRootToTarget(String sourceRootName, String prefix){
+		OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
+		if (sourceRoot == null){
+			logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified root: " + sourceRootName + " is unknown to " + sourceUtils);
+			return;
+		}
+		if (target.getTermbyName(sourceRootName) != null){
+			logger.error("Can not attach " + sourceFile.getAbsolutePath() + " specified root: " + sourceRootName + " already exists in " + target);
+		}
+		Term targetRoot;
+		// this should be copyTerm
+		if (preserveID){
+			targetRoot = target.addTermbyID(sourceRoot.getID(),sourceRootName);
+		}
+		else {
+			targetRoot = target.addTerm(sourceRootName);
+		}			
+		logger.info("Assigning " + sourceRootName + " as root");
+		if (sourceUtils.getRankString(sourceRoot) != null)
+			target.setRankFromName(targetRoot, sourceUtils.getRankString(sourceRoot));
+		addChildren(sourceRoot,targetRoot,target,prefix);
+	}
+
 	
 	private void checkTarget(String s){
 		for (Term t : target.getTerms()){
@@ -163,9 +160,9 @@ public class OBOMerger implements Merger {
 
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree
 	// so parentTerm.asOBOClass != parentClass
-	private void addChildren(OBOClass parentClass, Term parentTerm, TaxonStore target, String prefix){
+	private void addChildren(OBOClass sourceParent, Term targetParent, TaxonStore target, String prefix){
 		//logger.info("adding children of " + parentClass.getName() + " parentTerm is " + parentTerm.getLabel());
-		final Collection<Link> childLinks = parentClass.getChildren();
+		final Collection<Link> childLinks = sourceParent.getChildren();
 		for(Link l : childLinks){
 			OBOProperty lType = l.getType();
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
@@ -187,25 +184,25 @@ public class OBOMerger implements Merger {
 						childTerm.addSynonym(newSyn);
 					}
 				}
-				target.attachParent(childTerm, parentTerm);
+				target.attachParent(childTerm, targetParent);
 				addChildren(childClass,childTerm,target,prefix);
 			}
 		}
 	}
 
-	private Term copyTerm(OBOClass cladeClass, String prefix){
-		Term cladeTerm = null;
-		String[] idFields = cladeClass.getID().split(":");
+	private Term copyTerm(OBOClass sourceClass, String prefix){
+		Term targetTerm = null;
+		String[] idFields = sourceClass.getID().split(":");
 		if (idFields.length == 2){
 			if (idFields[0].equals(prefix)){
-				cladeTerm = target.addTermbyID(cladeClass.getID(),cladeClass.getName());
-				if (cladeClass.getDbxrefs() != null){
-					for (Dbxref d : cladeClass.getDbxrefs()){
-						target.addXRefToTerm(cladeTerm, d.getDatabase(), d.getDatabaseID());
+				targetTerm = target.addTermbyID(sourceClass.getID(),sourceClass.getName());
+				if (sourceClass.getDbxrefs() != null){
+					for (Dbxref d : sourceClass.getDbxrefs()){
+						target.addXRefToTerm(targetTerm, d.getDatabase(), d.getDatabaseID());
 					}
 				}
-				if (cladeClass.getSynonyms() != null){
-					for (Synonym s : cladeClass.getSynonyms()){
+				if (sourceClass.getSynonyms() != null){
+					for (Synonym s : sourceClass.getSynonyms()){
 						SynonymI newSyn = null; 
 						if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
 							Iterator<Dbxref> xIter = s.getXrefs().iterator();
@@ -218,21 +215,21 @@ public class OBOMerger implements Merger {
 							newSyn = target.makeSynonym(s.getText());
 						}
 						if (newSyn != null)
-							cladeTerm.addSynonym(newSyn);
+							targetTerm.addSynonym(newSyn);
 					}
 				}
-				if (sourceUtils.isExtinct(cladeClass))
-					sourceUtils.setExtinct(cladeTerm.asOBOClass());
+				if (sourceUtils.isExtinct(sourceClass))
+					sourceUtils.setExtinct(targetTerm.asOBOClass());
 			}
 			else{
-				cladeTerm = target.addTerm(cladeClass.getName());
-				target.addXRefToTerm(cladeTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+				targetTerm = target.addTerm(sourceClass.getName());
+				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID?
 			}
 		}
 		else{
-			logger.warn("Could not split OBOID " + cladeClass.getID() + " to generate xref in target term");
+			logger.warn("Could not split OBOID " + sourceClass.getID() + " to generate xref in target term");
 		}
-		return cladeTerm;
+		return targetTerm;
 	}
 
 
