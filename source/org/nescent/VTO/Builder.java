@@ -122,11 +122,14 @@ public class Builder {
 		logger.info("Building taxonomy to save at " + targetStr + " in the " + targetFormatStr + " format\n");
 		NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
+			logger.info("Checkpoint 6a: Actinopterygii = " + target.getTermbyName("Actinopterygii") + "; Chondrichthyes = " + target.getTermbyName("Chondrichthyes"));
 			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
+			logger.info("Checkpoint 6b: Actinopterygii = " + target.getTermbyName("Actinopterygii") + "; Chondrichthyes = " + target.getTermbyName("Chondrichthyes"));
 		}
 		for(String reportStr : target.countTerms()){
 			logger.info(reportStr);
 		}
+
 		saveTarget(targetFormatStr, targetFilterPrefixStr, target);
 	}
 
@@ -191,6 +194,12 @@ public class Builder {
 		if (!m.canPreserveID() && (sourcePrefixStr != null) && (!sourcePrefixStr.equals(targetPrefixStr))){
 			throw new RuntimeException("Error - Merger for format " + formatStr + " can't preserve id prefixes - remove prefix attribute in attach");
 		}
+		if (m.canPreserveID() && null!=preserveIDsStr){
+			if ("true".equalsIgnoreCase(preserveIDsStr) || "yes".equalsIgnoreCase(preserveIDsStr))
+				m.setPreserveID(true);
+			else
+				m.setPreserveID(false);
+		}
 		String sourceStr = action.getAttributes().getNamedItem("source").getNodeValue();
 		File sourceFile = getSourceFile(sourceStr);
 		logger.info("Attaching taxonomy from " + sourceStr);
@@ -198,7 +207,6 @@ public class Builder {
 			logger.warn("No prefix for newly generated ids specified - will default to filename component");
 			targetPrefixStr = sourceFile.getName();
 		}
-		m.setPreserveID(processBooleanAttribute(getAttribute(action,PRESERVEIDSSTR)));
 		m.setPreserveSynonyms(processSynonymSourceAttribute(getAttribute(action,PRESERVESYNONYMSSTR)));
 			
 		m.setSource(sourceFile);

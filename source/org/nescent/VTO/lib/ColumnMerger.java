@@ -113,6 +113,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm);
 		}
+		logger.info("Checkpoint 5: " + target.getTermbyName("Allophrynidae").getID());
 	}
 
 	private void processClassColumn(ItemList items, Term attachTerm){
@@ -160,9 +161,9 @@ public class ColumnMerger implements Merger,ColumnFormat {
 			final boolean isExtinct = daggerPrefix(it.getName(KnownField.FAMILY));
 			if (familyName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(familyName)){
 				if (familyName != null){
-					logger.info("family is " + familyName);
 					if (target.getTermbyName(familyName) == null){
 						final Term familyTerm = target.addTerm(familyName);
+						logger.info("adding family " + familyName + " id is " + familyTerm.getID());
 						target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
 						if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(it.getName(KnownField.ORDER)) != null){
 							final String parentName = it.getName(KnownField.ORDER);

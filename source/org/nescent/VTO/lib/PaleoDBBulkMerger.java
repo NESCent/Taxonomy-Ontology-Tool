@@ -47,6 +47,7 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	@Override
 	public void setPreserveID(boolean v){
+		if (v)
 		throw new RuntimeException("This merger can't preserve IDs because TBD");
 	}
 	

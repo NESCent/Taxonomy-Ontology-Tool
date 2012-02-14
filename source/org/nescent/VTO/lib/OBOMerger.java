@@ -102,26 +102,24 @@ public class OBOMerger implements Merger {
 		logger.info("               source size = " + sourceUtils.getTerms().size());
 		if (targetParentName == null)
 			copyRootToTarget(sourceRootName,prefix);
-		else if (targetParentName.equalsIgnoreCase(sourceRootName)){
+		else if (!targetParentName.equalsIgnoreCase(sourceRootName)){
 			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
 			Term targetParent = target.getTermbyName(targetParentName);
 			Term targetRoot = copyTerm(sourceRoot,prefix);
 			logger.info("Checkpoint 1: targetParent = " + targetParent);
 			logger.info("Checkpoint 1: " + targetParentName + " = " + target.getTermbyName(targetParentName));
 			logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-			checkTarget("Temnospondyli");
 			logger.info("Checkpoint 1b: targetParent = " + targetParent);
 			logger.info("Checkpoint 1b: node named by targetParentName (" + targetParentName + ") = " + target.getTermbyName(targetParentName));
 			logger.info("Checkpoint 1b: targetRoot = " + targetRoot + "; name is " + targetRoot.getLabel());
 			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
-			logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName("Amphibia"));
-			logger.info("Checkpoint 2: Temnospondyli = " + target.getTermbyName("Temnospondyli"));
+			logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
 			logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
-			checkTarget("Amphibia");
 			
 			//anything special here?
 		}
+		
 
 	}
 
@@ -161,15 +159,29 @@ public class OBOMerger implements Merger {
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree
 	// so parentTerm.asOBOClass != parentClass
 	private void addChildren(OBOClass sourceParent, Term targetParent, TaxonStore target, String prefix){
-		//logger.info("adding children of " + parentClass.getName() + " parentTerm is " + parentTerm.getLabel());
+		//logger.info("adding children of " + sourceParent.getName() + " target Term is " + targetParent.getLabel());
 		final Collection<Link> childLinks = sourceParent.getChildren();
 		for(Link l : childLinks){
 			OBOProperty lType = l.getType();
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
 				Term childTerm = copyTerm(childClass,prefix);
+//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Copying Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
+//					System.out.println("Checking Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
+//				}
+				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
+					System.out.println("Copying Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
+					System.out.println("Checking Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
+				}
 				if (sourceUtils.getRankString(childClass) != null)
 					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
+//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check before adding synonyms Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
+//				}
+//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check before adding synonyms Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
+//				}
 				for (Synonym syn : childClass.getSynonyms()){
 					String synText = syn.getText();
 					Collection <Dbxref> xrefs = syn.getXrefs();
@@ -185,52 +197,65 @@ public class OBOMerger implements Merger {
 					}
 				}
 				target.attachParent(childTerm, targetParent);
+//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check before adding children Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
+//				}
+//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check before adding children Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
+//				}
 				addChildren(childClass,childTerm,target,prefix);
+//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check after adding children Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
+//				}
+//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
+//					System.out.println("Check after adding children Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
+//				}
 			}
 		}
 	}
 
 	private Term copyTerm(OBOClass sourceClass, String prefix){
 		Term targetTerm = null;
-		String[] idFields = sourceClass.getID().split(":");
-		if (idFields.length == 2){
-			if (idFields[0].equals(prefix)){
-				targetTerm = target.addTermbyID(sourceClass.getID(),sourceClass.getName());
-				if (sourceClass.getDbxrefs() != null){
-					for (Dbxref d : sourceClass.getDbxrefs()){
-						target.addXRefToTerm(targetTerm, d.getDatabase(), d.getDatabaseID());
-					}
-				}
-				if (sourceClass.getSynonyms() != null){
-					for (Synonym s : sourceClass.getSynonyms()){
-						SynonymI newSyn = null; 
-						if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
-							Iterator<Dbxref> xIter = s.getXrefs().iterator();
-							if (xIter.hasNext()){
-								Dbxref d = xIter.next();
-								newSyn = target.makeSynonymWithXref(s.getText(), d.getDatabase(), d.getDatabaseID());
-							}
-						}
-						else {
-							newSyn = target.makeSynonym(s.getText());
-						}
-						if (newSyn != null)
-							targetTerm.addSynonym(newSyn);
-					}
-				}
-				if (sourceUtils.isExtinct(sourceClass))
-					sourceUtils.setExtinct(targetTerm.asOBOClass());
-			}
-			else{
-				targetTerm = target.addTerm(sourceClass.getName());
-				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID?
-			}
+		if (preserveID){
+			targetTerm = target.addTermbyID(sourceClass.getID(),sourceClass.getName());
 		}
 		else{
-			logger.warn("Could not split OBOID " + sourceClass.getID() + " to generate xref in target term");
+			String[] idFields = sourceClass.getID().split(":");
+			if (idFields.length == 2){
+				targetTerm = target.addTerm(sourceClass.getName());				
+				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+			}
+			else{
+				logger.warn("Could not split OBOID " + sourceClass.getID() + " to generate xref in target term");
+				targetTerm = target.addTerm(sourceClass.getName());				
+			}
 		}
-		return targetTerm;
-	}
+		if (sourceClass.getDbxrefs() != null){
+			for (Dbxref d : sourceClass.getDbxrefs()){
+				target.addXRefToTerm(targetTerm, d.getDatabase(), d.getDatabaseID());
+			}
+		}
+		if (sourceClass.getSynonyms() != null){
+			for (Synonym s : sourceClass.getSynonyms()){
+				SynonymI newSyn = null; 
+				if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
+					Iterator<Dbxref> xIter = s.getXrefs().iterator();
+					if (xIter.hasNext()){
+						Dbxref d = xIter.next();
+						newSyn = target.makeSynonymWithXref(s.getText(), d.getDatabase(), d.getDatabaseID());
+					}
+				}
+				else {
+					newSyn = target.makeSynonym(s.getText());
+				}
+				if (newSyn != null)
+					targetTerm.addSynonym(newSyn);
+			}
+		}
+		if (sourceUtils.isExtinct(sourceClass))
+			sourceUtils.setExtinct(targetTerm.asOBOClass());
+	return targetTerm;
+}
 
 
 

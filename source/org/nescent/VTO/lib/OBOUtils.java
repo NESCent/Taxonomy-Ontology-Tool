@@ -23,6 +23,7 @@ import org.obo.datamodel.OBOProperty;
 import org.obo.datamodel.OBORestriction;
 import org.obo.datamodel.OBOSession;
 import org.obo.datamodel.ObjectFactory;
+import org.obo.datamodel.ObsoletableObject;
 import org.obo.datamodel.PropertyValue;
 import org.obo.datamodel.Synonym;
 import org.obo.datamodel.SynonymType;
@@ -345,6 +346,21 @@ class OBOUtils {
 		if (termName == null){
 			throw new RuntimeException("Item is null");
 		}
+		OBOClass result;
+		result = termNames.get(termName);
+		if (result == null)
+			logger.info("--Link check start--");
+			for (IdentifiedObject io : theSession.getLinkDatabase().getObjects()){
+				if (io.getName().equals(termName)){
+					logger.info("Term names (" + termName +") failed; Found matching object in sessions link database: " + io);
+					logger.info("Matching object is " + io.getType() + " and obsolete: " + ((ObsoletableObject) io).isObsolete());
+					termNames.put(termName, ((OBOClass)io));
+					logger.info("check put " + termNames.get(termName));
+					return ((OBOClass)io);
+				}
+					
+			}
+			logger.info("--Link check End--");
 		return termNames.get(termName);
 	}
 	
@@ -477,7 +493,8 @@ class OBOUtils {
 	}
 
 	protected void removeNode(OBOClass target){
-		theSession.removeObject(target);		
+		theSession.removeObject(target);	
+		dirtyTermSets=true;
 	}
 
 	public List<String> countTerms(){
