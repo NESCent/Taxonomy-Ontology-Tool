@@ -192,6 +192,7 @@ public class OBOStore implements TaxonStore {
 	 */
 	@Override
 	public void saveStore() {
+		logger.info("Checkpoint 7: " + getTermbyName("Chondrichthyes"));
 		u.saveOBOSession(targetFile);
 	}
 
