@@ -118,7 +118,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm);
 		}
-		logger.info("Checkpoint 5: " + target.getTermbyName("Allophrynidae").getID());
+		//logger.info("Checkpoint 5: " + target.getTermbyName("Allophrynidae").getID());
 	}
 
 	private void processClassColumn(ItemList items, Term attachTerm){

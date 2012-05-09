@@ -120,7 +120,7 @@ public class OBOStore implements TaxonStore {
 			final String id = c.getID();
 			if (prefix != null && id.startsWith(prefix)){
 				int colonIndex = id.indexOf(':');
-				String suffix = id.substring(colonIndex);
+				String suffix = id.substring(colonIndex+1);
 				try{
 					int index = Integer.parseInt(suffix);
 					if (index > maxCounter)

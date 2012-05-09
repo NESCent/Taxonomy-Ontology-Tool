@@ -100,6 +100,7 @@ public class OBOMerger implements Merger {
 		logger.info("Finished loading");
 		logger.info("Attach started target size = " + target.getTerms().size());
 		logger.info("               source size = " + sourceUtils.getTerms().size());
+		target.updateIDGenerator(prefix);
 		if (targetParentName == null)
 			copyRootToTarget(sourceRootName,prefix);
 		else if (!targetParentName.equalsIgnoreCase(sourceRootName)){
@@ -166,22 +167,8 @@ public class OBOMerger implements Merger {
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
 				Term childTerm = copyTerm(childClass,prefix);
-//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Copying Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
-//					System.out.println("Checking Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
-//				}
-				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
-					System.out.println("Copying Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
-					System.out.println("Checking Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
-				}
 				if (sourceUtils.getRankString(childClass) != null)
 					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
-//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check before adding synonyms Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
-//				}
-//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check before adding synonyms Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
-//				}
 				for (Synonym syn : childClass.getSynonyms()){
 					String synText = syn.getText();
 					Collection <Dbxref> xrefs = syn.getXrefs();
@@ -197,19 +184,7 @@ public class OBOMerger implements Merger {
 					}
 				}
 				target.attachParent(childTerm, targetParent);
-//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check before adding children Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
-//				}
-//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check before adding children Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
-//				}
 				addChildren(childClass,childTerm,target,prefix);
-//				if ("Actinopterygii".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check after adding children Actinopterygii;  checking lookup: " + target.getTermbyName("Actinopterygii"));
-//				}
-//				if ("Chondrichthyes".equals(childTerm.asOBOClass().getName())){
-//					System.out.println("Check after adding children Chondrichthyes;  checking lookup: " + target.getTermbyName("Chondrichthyes"));
-//				}
 			}
 		}
 	}

@@ -79,11 +79,6 @@ public class TestColumnMerger {
 		//fail("Not yet implemented");
 	}
 
-	@Test
-	public void testMergeCommaFormat() {
-		testMergerCommaFormat = new ColumnMerger(",");
-		fail("Not yet implemented");
-	}
 
 	@Test
 	public void testCanAttach() {
@@ -100,9 +95,5 @@ public class TestColumnMerger {
 		testMergerTabFormat.attach("Amphibia","Amphibia","ATO");
 	}
 
-	@Test
-	public void testAttachCommaFormat() {
-		fail("Not yet implemented");
-	}
 
 }
