@@ -2,7 +2,9 @@ package org.nescent.VTO.lib;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.obo.datamodel.Dbxref;
@@ -101,18 +103,17 @@ public class OBOMerger implements Merger {
 		logger.info("Attach started target size = " + target.getTerms().size());
 		logger.info("               source size = " + sourceUtils.getTerms().size());
 		target.updateIDGenerator(prefix);
-		if (targetParentName == null)
+		if (targetParentName == null || targetParentName.equalsIgnoreCase(sourceRootName))
 			copyRootToTarget(sourceRootName,prefix);
-		else if (!targetParentName.equalsIgnoreCase(sourceRootName)){
+		else{
 			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
 			Term targetParent = target.getTermbyName(targetParentName);
 			Term targetRoot = copyTerm(sourceRoot,prefix);
-			logger.info("Checkpoint 1: targetParent = " + targetParent);
-			logger.info("Checkpoint 1: " + targetParentName + " = " + target.getTermbyName(targetParentName));
+			logger.info("Checkpoint 1: targetRoot = " + targetRoot);
+			Term getRoot = target.getTermbyName(sourceRootName);
+			logger.info("Checkpoint 1: node nam(" + targetParentName + ") = " + getRoot);
 			logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-			logger.info("Checkpoint 1b: targetParent = " + targetParent);
-			logger.info("Checkpoint 1b: node named by targetParentName (" + targetParentName + ") = " + target.getTermbyName(targetParentName));
-			logger.info("Checkpoint 1b: targetRoot = " + targetRoot + "; name is " + targetRoot.getLabel());
+			logger.info("Checkpoint 1: Source size = " + sourceUtils.getTerms().size());
 			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
 			logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
@@ -139,7 +140,7 @@ public class OBOMerger implements Merger {
 			targetRoot = target.addTermbyID(sourceRoot.getID(),sourceRootName);
 		}
 		else {
-			targetRoot = target.addTerm(sourceRootName);
+			targetRoot = target.addTerm(sourceRootName,prefix);
 		}			
 		logger.info("Assigning " + sourceRootName + " as root");
 		if (sourceUtils.getRankString(sourceRoot) != null)
@@ -166,6 +167,7 @@ public class OBOMerger implements Merger {
 			OBOProperty lType = l.getType();
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
+				//logger.info("Child class is " + childClass.getName() + " (" + childClass.getID() + ")");
 				Term childTerm = copyTerm(childClass,prefix);
 				if (sourceUtils.getRankString(childClass) != null)
 					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
@@ -184,7 +186,7 @@ public class OBOMerger implements Merger {
 					}
 				}
 				target.attachParent(childTerm, targetParent);
-				addChildren(childClass,childTerm,target,prefix);
+				addChildren(childClass,childTerm,target,prefix);			
 			}
 		}
 	}
@@ -197,12 +199,12 @@ public class OBOMerger implements Merger {
 		else{
 			String[] idFields = sourceClass.getID().split(":");
 			if (idFields.length == 2){
-				targetTerm = target.addTerm(sourceClass.getName());				
-				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID?
+				targetTerm = target.addTerm(sourceClass.getName(),prefix);				
+				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID, no, not best practice according to Allan
 			}
 			else{
 				logger.warn("Could not split OBOID " + sourceClass.getID() + " to generate xref in target term");
-				targetTerm = target.addTerm(sourceClass.getName());				
+				targetTerm = target.addTerm(sourceClass.getName(),prefix);				
 			}
 		}
 		if (sourceClass.getDbxrefs() != null){

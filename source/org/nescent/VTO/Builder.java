@@ -177,9 +177,9 @@ public class Builder {
 		@SuppressWarnings("unchecked")
 		List<String> columns = (List<String>)Collections.EMPTY_LIST;
 		Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
-		final String formatStr = getAttribute(action,ATTACHFORMATSTR);
-		final String sourceRootStr = getAttribute(action,ATTACHROOTSTR);
-		final String targetParentStr = getAttribute(action,ATTACHPARENTSTR);
+		final String formatStr = getAttribute(action,ATTACHFORMATSTR);  //specifies format and storage model of the attached file
+		final String sourceRootStr = getAttribute(action,ATTACHROOTSTR);  //specifies the root of the clade in this tree, which will be assigned a new parent
+		final String targetParentStr = getAttribute(action,ATTACHPARENTSTR);  //specifies a node in the target tree, which will receive sourceRoot as a child
 		final String sourcePrefixStr = getAttribute(action,ATTACHPREFIXSTR);
 		final String preserveIDsStr = getAttribute(action,PRESERVEIDSSTR);
 		final String preserveSynonymsStr = getAttribute(action,PRESERVESYNONYMSSTR);

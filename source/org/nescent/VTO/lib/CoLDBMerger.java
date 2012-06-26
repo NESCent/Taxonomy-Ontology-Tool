@@ -217,7 +217,7 @@ public class CoLDBMerger implements Merger {
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
-					parentTerm = target.addTerm(parent);
+					parentTerm = target.addTerm(parent,prefix);
 					logger.info("Assigning " + parent + " as root");
 				}
 			}

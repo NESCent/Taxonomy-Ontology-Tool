@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<taxonomy target = "/Users/pmidford/Projects/OBOworkspace/VTOTool/output/exto_copy.obo" format="OBO" filterprefix= "EXTO" root="Chordata" prefix="EXTO"> 
-    <attach source = "/Users/pmidford/Projects/OBOworkspace/VTOTool/src/Ontologies/exto.obo" format="OBO" prefix="EXTO">
-    </attach>  
-</taxonomy>
-

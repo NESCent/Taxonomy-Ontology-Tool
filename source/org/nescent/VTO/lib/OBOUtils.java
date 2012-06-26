@@ -337,18 +337,29 @@ class OBOUtils {
 	}
 
 	public OBOClass lookupTermByName(String termName) {
+		if (termName == null){
+			throw new RuntimeException("termName is null");
+		}
 		if (dirtyTermSets){
 			terms = TermUtil.getTerms(theSession);
+//			for (OBOClass t : terms){
+//				logger.info("name check: " + t.getName());
+//			}
 			termNames = getAllTermNamesHash(terms);
+//			for (String name : termNames.keySet()){
+//				logger.info("directoryCheck: " + name + " " + termNames.get(name));
+//			}
 			termIDs = getAllTermIDsHash(terms);
 			dirtyTermSets = false;
 		}
-		if (termName == null){
-			throw new RuntimeException("Item is null");
-		}
 		OBOClass result;
+//		for (String name : termNames.keySet()){
+//			if (name.equals(termName))
+//				logger.info("name Match");
+//			logger.info("reCheck: " + name + " " + termNames.get(name));
+//		}
 		result = termNames.get(termName);
-		if (result == null)
+		if (result == null){
 			logger.info("--Link check start--");
 			for (IdentifiedObject io : theSession.getLinkDatabase().getObjects()){
 				if (io.getName().equals(termName)){
@@ -362,6 +373,10 @@ class OBOUtils {
 			}
 			logger.info("--Link check End--");
 		return termNames.get(termName);
+		}
+		else {
+			return result;
+		}
 	}
 	
 	public OBOClass lookupTermByXRef(String dbName, String dbID) {

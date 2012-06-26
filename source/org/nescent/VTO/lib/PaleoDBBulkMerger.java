@@ -120,10 +120,6 @@ public class PaleoDBBulkMerger implements Merger{
 				
 		logger.info("Taxontree contains " + taxonTree.keySet().size() + " entries and " + orphans.size() + " orphans");
 		
-//		final Map<String,Term> termDictionary = new HashMap<String,Term>();
-//		for (Term t : target.getTerms()){
-//			termDictionary.put(t.getLabel(),t);
-//		}
 
 		final int startingSize = target.getTerms().size();
 		logger.info("Checkpoint 0; target contains " + startingSize);
@@ -132,7 +128,7 @@ public class PaleoDBBulkMerger implements Merger{
 //			if (!termDictionary.containsKey(tName)){
 			if (!target.hasTermbyName(tName)){
 				final PBDBItem item = validTaxa.get(tName);
-				final Term newTerm = target.addTerm(tName);
+				final Term newTerm = target.addTerm(tName, prefix);
 				target.addXRefToTerm(newTerm, PALEODBTAXONPREFIX, Integer.toString(item.getId()));
 				if (item.isExtinct()){
 					target.setExtinct(newTerm);

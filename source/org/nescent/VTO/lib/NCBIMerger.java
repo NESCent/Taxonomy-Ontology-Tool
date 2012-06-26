@@ -235,14 +235,14 @@ public class NCBIMerger implements Merger {
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
-					parentTerm = target.addTerm(attachment);
+					parentTerm = target.addTerm(attachment, prefix);
 					logger.info("Assigning " + attachment + " as root");
 				}
 			}
 		}
         final Integer parentNode = namesInScope.get(parentTerm.getLabel());
         logger.info("Building tree");
-        addChildren(parentNode, target,nodeChildren, termToName, nodeRanks);
+        addChildren(parentNode, target,nodeChildren, termToName, nodeRanks, prefix);
         logger.info("Finished building tree" + parentNode);
         for(Integer termid : synonymsInScope.keySet()){
         	String primaryName = termToName.get(termid);
@@ -263,7 +263,7 @@ public class NCBIMerger implements Merger {
         logger.info("Done; count = " + count);		
 	}
 
-	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks) {
+	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks, String prefix) {
 		Set<Integer> children = nodeChildren.get(parent);
 		if (children != null){
 			String parentName = termToName.get(parent);
@@ -288,7 +288,7 @@ public class NCBIMerger implements Merger {
 						}
 						else {
 							//standard case - make a child term and attach
-							childTerm = target.addTerm(childName);
+							childTerm = target.addTerm(childName, prefix);
 							target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 							target.setRankFromName(childTerm,rankStr);
 							target.attachParent(childTerm, parentTerm);
@@ -302,7 +302,7 @@ public class NCBIMerger implements Merger {
 					}
 					else {  
 						// for now, we'll go ahead and add other rankless terms
-						childTerm = target.addTerm(childName);
+						childTerm = target.addTerm(childName, prefix);
 						target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 						target.setRankFromName(childTerm,rankStr);
 						target.attachParent(childTerm, parentTerm);
@@ -314,7 +314,7 @@ public class NCBIMerger implements Merger {
 					if (target.getTermbyName(newChildName) != null){
 						throw new RuntimeException("Unresolvable duplication " + childName + " " + newChildName);
 					}
-					childTerm = target.addTerm(newChildName);
+					childTerm = target.addTerm(newChildName, prefix);
 					target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 					String rankStr = nodeRanks.get(childID);
 					if (rankStr != null && !"no rank".equals(rankStr)){
@@ -330,7 +330,7 @@ public class NCBIMerger implements Merger {
 
 	        	if (count % 1000 == 0)
 	        		logger.info("Count = " + count + " term = " + childName);
-				addChildren(childID,target,nodeChildren,termToName, nodeRanks);
+				addChildren(childID,target,nodeChildren,termToName, nodeRanks, prefix);
 			}
 		}
 	}

@@ -73,7 +73,10 @@ public class OBOStore implements TaxonStore {
 		targetFile = fileSpec;
 	}
 
-
+	public String getDefaultPrefix(){
+		return defaultPrefix;
+	}
+	
 	/**
 	 * Initially this will build a fresh set of translated terms everytime - need to fix
 	 * @return a copy of the set of terms in the session underlying this OBOStore
@@ -115,7 +118,7 @@ public class OBOStore implements TaxonStore {
 	 */
 	@Override
 	public void updateIDGenerator(final String prefix){
-		int maxCounter = 0;
+		int maxCounter = -1;
 		for (OBOClass c : u.getTerms()){
 			final String id = c.getID();
 			if (prefix != null && id.startsWith(prefix)){
@@ -138,16 +141,17 @@ public class OBOStore implements TaxonStore {
 	 * This will either reuse an id (from a trimmed tree) that matches a name or generate a fresh it using the default id prefix
 	 */
 	@Override
-	public Term addTerm(final String name) {
+	public Term addTerm(final String name, String prefix) {
 		OBOClass addedClass;
 		if (trimmedNames.containsKey(name)){
 			final OBOClass oldClass = trimmedNames.get(name);
 			String[] oldComponents = oldClass.getID().split(":");
-			if ((oldComponents.length > 1) && defaultPrefix.equals(oldComponents[0])){
+			if ((oldComponents.length > 1) && prefix.equals(oldComponents[0])){
 				addedClass = u.makeTerm(oldClass.getID(), name);
 			}
 			else { //wrong prefix, need new id
-				String newID = String.format(defaultFormat,idCounter++);
+				updateIDGenerator(prefix);
+				String newID = String.format(prefix+idSuffix,idCounter++);
 				addedClass = u.makeTerm(newID, name);
 			}
 			if (u.isExtinct(oldClass)){
@@ -158,9 +162,11 @@ public class OBOStore implements TaxonStore {
 			}
 		}
 		else { 		// need to generate the ID
-			String newID = String.format(defaultFormat,idCounter++);
+			updateIDGenerator(prefix);
+			String newID = String.format(prefix+idSuffix,idCounter++);
 			addedClass = u.makeTerm(newID, name);
 		}
+		logger.info("add Term: " + addedClass.getName() +" " + addedClass.getID());
 		return new OBOTerm(addedClass);
 	}
 
@@ -210,6 +216,7 @@ public class OBOStore implements TaxonStore {
 			return null;
 	}
 
+
 	/**
 	 * @param termName name to search the taxonomy for.
 	 * @return true if a term exists in the taxonomy with the specified name
@@ -243,22 +250,18 @@ public class OBOStore implements TaxonStore {
 	
 	
 	private void removeClade(OBOClass node){
-		if (isTip(node)){
-			trimmedNames.put(node.getName(),node);
-			u.removeNode(node);
-		}
-		else {
-			Set<Link> links = new HashSet<Link>();
+		if (!isTip(node)){
+			final Set<Link> links = new HashSet<Link>();
 			links.addAll(node.getChildren());
 			for (Link l : links){
-				OBOClass childNode = (OBOClass) l.getChild();
+				final OBOClass childNode = (OBOClass) l.getChild();
 				node.removeChild(l);
 				childNode.removeParent(l);
 				removeClade(childNode);
 			}
-			trimmedNames.put(node.getName(), node);
-			u.removeNode(node);
 		}
+		trimmedNames.put(node.getName(), node);
+		u.removeNode(node);
 	}
 	
 	public Term getTrimmed(String nodeName){

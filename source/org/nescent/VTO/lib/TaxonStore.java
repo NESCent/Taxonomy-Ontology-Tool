@@ -30,9 +30,10 @@ public interface TaxonStore {
 	/**
 	 * 
 	 * @param name the taxonomic name of the term
+	 * @param a prefix for the generated id
 	 * @return the ID of the new term
 	 */
-	public Term addTerm(String name);
+	public Term addTerm(String name, String prefix);
 	
 	/**
 	 * Attaches subsumption relation (is_a) between a child term and a parent term
@@ -40,6 +41,12 @@ public interface TaxonStore {
 	 * @param parent term subsuming child
 	 */
 	public void attachParent(Term child, Term parent);
+	
+	/**
+	 * 
+	 * @return default prefix string assigned when this was created
+	 */
+	public String getDefaultPrefix();
 	
 	/**
 	 * 

@@ -34,6 +34,10 @@ public class OWLStore implements TaxonStore {
 		prefixStr = prefix;
 		defaultFormat = prefixStr + idSuffix;
 	}
+	
+	public String getDefaultPrefix(){
+		return prefixStr;
+	}
 
 	@Override
 	public void saveStore() {
@@ -58,7 +62,7 @@ public class OWLStore implements TaxonStore {
 	}
 
 	@Override
-	public Term addTerm(String name) {
+	public Term addTerm(String name, String prefix) {
 		String newID = String.format(defaultFormat,idCounter++);
 		OWLIndividual owlTaxon = u.makeTerm(newID, name);
 		return new OWLTerm(owlTaxon);

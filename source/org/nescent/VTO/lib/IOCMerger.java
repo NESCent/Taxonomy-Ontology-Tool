@@ -97,13 +97,13 @@ public class IOCMerger implements Merger {
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
-					parentTerm = target.addTerm(attachment);
+					parentTerm = target.addTerm(attachment, prefix);
 					logger.info("Assigning " + attachment + " as root");
 				}
 			}
 		}
 		if (!cladeRoot.equals(attachment)){
-			Term cladeTerm = target.addTerm(cladeRoot);
+			Term cladeTerm = target.addTerm(cladeRoot, prefix);
 			target.attachParent(cladeTerm, parentTerm);
 			if (cladeRoot.equals("Aves")){
 				target.setRankFromName(cladeTerm, KnownField.CLASS.getCannonicalName());
@@ -116,7 +116,7 @@ public class IOCMerger implements Merger {
 				final String orderName = it.getName(KnownField.ORDER);
 				Term orderTerm = target.getTermbyName(orderName);
 				if (orderTerm == null){
-					orderTerm = target.addTerm(orderName);
+					orderTerm = target.addTerm(orderName, prefix);
 					target.addXRefToTerm(orderTerm,"IOC",orderName);  // could be an alternate ID?					
 					target.setRankFromName(orderTerm,KnownField.ORDER.getCannonicalName());
 					target.attachParent(orderTerm,parentTerm);
@@ -130,7 +130,7 @@ public class IOCMerger implements Merger {
 				final String familyName = it.getName(KnownField.FAMILY);
 				Term familyTerm = target.getTermbyName(familyName);
 				if (familyTerm == null){
-					familyTerm = target.addTerm(familyName);
+					familyTerm = target.addTerm(familyName, prefix);
 					target.addXRefToTerm(familyTerm,"IOC",familyName);  // could be an alternate ID?					
 					target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
 					if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(it.getName(KnownField.ORDER)) != null){
@@ -147,7 +147,7 @@ public class IOCMerger implements Merger {
 				final String subFamilyName = it.getName(KnownField.SUBFAMILY);
 				Term subFamilyTerm = target.getTermbyName(subFamilyName);
 				if (subFamilyTerm == null){
-					subFamilyTerm = target.addTerm(subFamilyName);
+					subFamilyTerm = target.addTerm(subFamilyName, prefix);
 					target.setRankFromName(subFamilyTerm, KnownField.SUBFAMILY.getCannonicalName());
 					if (it.hasColumn(KnownField.FAMILY) && target.getTermbyName(it.getName(KnownField.FAMILY)) != null){
 						final String parentName = it.getName(KnownField.FAMILY);
@@ -163,7 +163,7 @@ public class IOCMerger implements Merger {
 				final String genusName = it.getName(KnownField.GENUS);
 				Term genusTerm = target.getTermbyName(genusName);
 				if (genusTerm == null){
-					genusTerm = target.addTerm(genusName);
+					genusTerm = target.addTerm(genusName, prefix);
 					target.addXRefToTerm(genusTerm,"IOC",genusName);  // could be an alternate ID?
 					target.setRankFromName(genusTerm, KnownField.GENUS.getCannonicalName());
 					if (it.hasColumn(KnownField.SUBFAMILY) && target.getTermbyName(it.getName(KnownField.SUBFAMILY)) != null){
@@ -186,7 +186,7 @@ public class IOCMerger implements Merger {
 				final String speciesName = capGenusName + " " + it.getName(KnownField.SPECIES);
 				Term speciesTerm = target.getTermbyName(speciesName); 
 				if (speciesTerm == null){
-					speciesTerm = target.addTerm(speciesName);
+					speciesTerm = target.addTerm(speciesName, prefix);
 					target.addXRefToTerm(speciesTerm,"IOC",speciesName);  // could be an alternate ID?
 					target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
 				}

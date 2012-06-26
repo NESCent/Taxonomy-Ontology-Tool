@@ -95,39 +95,39 @@ public class ColumnMerger implements Merger,ColumnFormat {
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
-					attachTerm = target.addTerm(targetParentName);
+					attachTerm = target.addTerm(targetParentName,prefix);
 					logger.info("Assigning " + targetParentName + " as root");
 				}
 			}
 		}
 		if (items.hasColumn(KnownField.CLASS)){
-			processClassColumn(items, attachTerm);
+			processClassColumn(items, attachTerm, prefix);
 		}
 		if (items.hasColumn(KnownField.ORDER)){
-			processOrderColumn(items, attachTerm);
+			processOrderColumn(items, attachTerm, prefix);
 		}
 		if (items.hasColumn(KnownField.FAMILY)){
-			processFamilyColumn(items, attachTerm);
+			processFamilyColumn(items, attachTerm, prefix);
 		}
 		if (items.hasColumn(KnownField.SUBFAMILY)){
-			processSubFamilyColumn(items, attachTerm);
+			processSubFamilyColumn(items, attachTerm, prefix);
 		}	
 		if (items.hasColumn(KnownField.GENUS)){
-			processGenusColumn(items,attachTerm);
+			processGenusColumn(items,attachTerm, prefix);
 		}	
 		if (items.hasColumn(KnownField.SPECIES)){
-			processSpeciesColumn(items,attachTerm);
+			processSpeciesColumn(items,attachTerm, prefix);
 		}
 		//logger.info("Checkpoint 5: " + target.getTermbyName("Allophrynidae").getID());
 	}
 
-	private void processClassColumn(ItemList items, Term attachTerm){
+	private void processClassColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
 			final String className = it.getName(KnownField.CLASS);
 			if (className.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(className)){
 				Term classTerm = target.getTermbyName(className);
 				if (classTerm == null){
-					classTerm = target.addTerm(className);
+					classTerm = target.addTerm(className, prefix);
 					target.setRankFromName(classTerm,KnownField.CLASS.getCannonicalName());   //string from knownColumn?
 					if (attachTerm != null)  // this is weak, but allows construction of an ontology with multiple roots (so obviously wrong)
 						target.attachParent(classTerm, attachTerm);
@@ -136,14 +136,14 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		}
 	}
 
-	private void processOrderColumn(ItemList items, Term attachTerm){
+	private void processOrderColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
 			final String orderName = stripDagger(it.getName(KnownField.ORDER));
 			final boolean isExtinct = daggerPrefix(it.getName(KnownField.FAMILY));
 			if (orderName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(orderName)){
 				Term orderTerm = target.getTermbyName(orderName);
 				if (orderTerm == null){
-					orderTerm = target.addTerm(orderName);
+					orderTerm = target.addTerm(orderName, prefix);
 					target.setRankFromName(orderTerm,KnownField.ORDER.getCannonicalName());
 					if (it.hasColumn(KnownField.CLASS) && target.getTermbyName(stripDagger(it.getName(KnownField.CLASS))) != null){
 						final String parentName = stripDagger(it.getName(KnownField.CLASS));
@@ -160,14 +160,14 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 
-	private void processFamilyColumn(ItemList items, Term attachTerm){
+	private void processFamilyColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
 			final String familyName = stripDagger(it.getName(KnownField.FAMILY));
 			final boolean isExtinct = daggerPrefix(it.getName(KnownField.FAMILY));
 			if (familyName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(familyName)){
 				if (familyName != null){
 					if (target.getTermbyName(familyName) == null){
-						final Term familyTerm = target.addTerm(familyName);
+						final Term familyTerm = target.addTerm(familyName, prefix);
 						logger.info("adding family " + familyName + " id is " + familyTerm.getID());
 						target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
 						if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(stripDagger(it.getName(KnownField.ORDER))) != null){
@@ -186,13 +186,13 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 
-	private void processSubFamilyColumn(ItemList items, Term attachTerm){
+	private void processSubFamilyColumn(ItemList items, Term attachTerm, String prefix){
 		for (Item it : items.getContents()){
 			final String subFamilyName = stripDagger(it.getName(KnownField.SUBFAMILY));
 			final boolean isExtinct = daggerPrefix(it.getName(KnownField.SUBFAMILY));
 			if (subFamilyName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(subFamilyName)){
 				if (target.getTermbyName(subFamilyName) == null){
-					final Term subFamilyTerm = target.addTerm(subFamilyName);
+					final Term subFamilyTerm = target.addTerm(subFamilyName, prefix);
 					target.setRankFromName(subFamilyTerm, KnownField.SUBFAMILY.getCannonicalName());
 					if (it.hasColumn(KnownField.FAMILY) && target.getTermbyName(stripDagger(it.getName(KnownField.FAMILY))) != null){
 						final String parentName = stripDagger(it.getName(KnownField.FAMILY));
@@ -212,13 +212,13 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		}
 	}
 
-	private void processGenusColumn(ItemList items, Term attachTerm){
+	private void processGenusColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
 			final String genusName = stripDagger(it.getName(KnownField.GENUS));
 			final boolean isExtinct = daggerPrefix(it.getName(KnownField.GENUS));
 			if (genusName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(genusName)){
 				if (genusName != null && target.getTermbyName(genusName) == null){
-					final Term genusTerm = target.addTerm(genusName);
+					final Term genusTerm = target.addTerm(genusName, prefix);
 					target.setRankFromName(genusTerm, KnownField.GENUS.getCannonicalName());
 					if (it.hasColumn(KnownField.SUBFAMILY) && target.getTermbyName(stripDagger(it.getName(KnownField.SUBFAMILY))) != null){
 						final String parentName = stripDagger(it.getName(KnownField.SUBFAMILY));
@@ -243,7 +243,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	}
 
 
-	private void processSpeciesColumn(ItemList items, Term attachTerm){
+	private void processSpeciesColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
 			if (it.getName(KnownField.SPECIES) != null){
 				if (it.hasColumn(KnownField.GENUS) && target.getTermbyName(stripDagger(it.getName(KnownField.GENUS))) != null){
@@ -253,7 +253,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 					final String speciesName = parentName + " " + childName;
 					Term speciesTerm;
 					if (target.getTermbyName(speciesName) == null){
-						speciesTerm = target.addTerm(speciesName);
+						speciesTerm = target.addTerm(speciesName, prefix);
 						target.setRankFromName(speciesTerm,KnownField.SPECIES.getCannonicalName());
 						target.attachParent(speciesTerm,target.getTermbyName(parentName));
 					}
