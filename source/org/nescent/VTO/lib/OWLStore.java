@@ -137,6 +137,11 @@ public class OWLStore implements TaxonStore {
 	}
 
 	@Override
+	public void obsoleteTerm(Term t){
+		//TODO don't know how to do this yet
+	}
+	
+	@Override
 	public void saveXref(String targetFilterPrefixStr) {
 		throw new RuntimeException("Not Implemented");
 		// TODO Auto-generated method stub

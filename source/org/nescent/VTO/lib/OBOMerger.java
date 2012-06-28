@@ -109,15 +109,15 @@ public class OBOMerger implements Merger {
 			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
 			Term targetParent = target.getTermbyName(targetParentName);
 			Term targetRoot = copyTerm(sourceRoot,prefix);
-			logger.info("Checkpoint 1: targetRoot = " + targetRoot);
+			//logger.info("Checkpoint 1: targetRoot = " + targetRoot);
 			Term getRoot = target.getTermbyName(sourceRootName);
-			logger.info("Checkpoint 1: node nam(" + targetParentName + ") = " + getRoot);
-			logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-			logger.info("Checkpoint 1: Source size = " + sourceUtils.getTerms().size());
+			//logger.info("Checkpoint 1: node nam(" + targetParentName + ") = " + getRoot);
+			//logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
+			//logger.info("Checkpoint 1: Source size = " + sourceUtils.getTerms().size());
 			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
-			logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
-			logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
+			//logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
+			//logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
 			
 			//anything special here?
 		}

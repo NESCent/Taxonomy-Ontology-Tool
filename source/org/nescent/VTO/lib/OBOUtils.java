@@ -342,25 +342,13 @@ class OBOUtils {
 		}
 		if (dirtyTermSets){
 			terms = TermUtil.getTerms(theSession);
-//			for (OBOClass t : terms){
-//				logger.info("name check: " + t.getName());
-//			}
 			termNames = getAllTermNamesHash(terms);
-//			for (String name : termNames.keySet()){
-//				logger.info("directoryCheck: " + name + " " + termNames.get(name));
-//			}
 			termIDs = getAllTermIDsHash(terms);
 			dirtyTermSets = false;
 		}
 		OBOClass result;
-//		for (String name : termNames.keySet()){
-//			if (name.equals(termName))
-//				logger.info("name Match");
-//			logger.info("reCheck: " + name + " " + termNames.get(name));
-//		}
 		result = termNames.get(termName);
 		if (result == null){
-			logger.info("--Link check start--");
 			for (IdentifiedObject io : theSession.getLinkDatabase().getObjects()){
 				if (io.getName().equals(termName)){
 					logger.info("Term names (" + termName +") failed; Found matching object in sessions link database: " + io);
@@ -371,7 +359,6 @@ class OBOUtils {
 				}
 					
 			}
-			logger.info("--Link check End--");
 		return termNames.get(termName);
 		}
 		else {
@@ -598,6 +585,12 @@ class OBOUtils {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public void obsoleteTerm(Term term) {
+		OBOClass c = term.asOBOClass();
+		c.setObsolete(true);
+		
 	}
 
 

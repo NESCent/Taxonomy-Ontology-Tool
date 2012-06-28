@@ -31,6 +31,7 @@ import org.nescent.VTO.lib.OBOMerger;
 import org.nescent.VTO.lib.OBOStore;
 import org.nescent.VTO.lib.OWLMerger;
 import org.nescent.VTO.lib.OWLStore;
+import org.nescent.VTO.lib.PBDBPostProcess;
 import org.nescent.VTO.lib.PaleoDBBulkMerger;
 import org.nescent.VTO.lib.SynonymSource;
 import org.nescent.VTO.lib.TaxonStore;
@@ -56,6 +57,8 @@ public class Builder {
 	final static String COLDBFORMATSTR = "COLDB";  //Catalogue of Life via MySQL
 	final static String PBDBBULKFORMATSTR = "PBDBbulk";  //Paleobiology Database bulk taxon downloads
 	final static String PBDBUPDATEFORMATSTR = "PBDBupdate";  //Paleobiology Database update (list of names to add from PBDB)
+	final static String PBDBPOSTPROCESSSTR = "PBDBPostProcess"; //Paleobiology postprocess file (corrections to apply after a PBDBbulk merge operation) 
+	
 	final static String JOINEDNAMETABBEDCOLUMNS = "JOINEDNAMETAB";
 	final static String XREFFORMATSTR = "XREF";    //This isn't a store format, but is a target
 	final static String COLUMNFORMATSTR = "COLUMN";  //This isn't (necessary) a store format, but is a target
@@ -122,9 +125,7 @@ public class Builder {
 		logger.info("Building taxonomy to save at " + targetStr + " in the " + targetFormatStr + " format\n");
 		NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
-			logger.info("Checkpoint 6a: Actinopterygii = " + target.getTermbyName("Actinopterygii") + "; Chondrichthyes = " + target.getTermbyName("Chondrichthyes"));
 			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
-			logger.info("Checkpoint 6b: Actinopterygii = " + target.getTermbyName("Actinopterygii") + "; Chondrichthyes = " + target.getTermbyName("Chondrichthyes"));
 		}
 		for(String reportStr : target.countTerms()){
 			logger.info(reportStr);
@@ -358,6 +359,10 @@ public class Builder {
 		}
 		if (PBDBBULKFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new PaleoDBBulkMerger();
+		}
+		if (PBDBPOSTPROCESSSTR.equalsIgnoreCase(formatStr)){
+			return new PBDBPostProcess();
+			
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;

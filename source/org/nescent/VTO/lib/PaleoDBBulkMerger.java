@@ -123,7 +123,7 @@ public class PaleoDBBulkMerger implements Merger{
 
 		final int startingSize = target.getTerms().size();
 		logger.info("Checkpoint 0; target contains " + startingSize);
-		final Set <Term>newTerms = new HashSet<Term>();
+		final Set <String>newTerms = new HashSet<String>();
 		for(String tName : taxonTree.keySet()){
 //			if (!termDictionary.containsKey(tName)){
 			if (!target.hasTermbyName(tName)){
@@ -134,9 +134,9 @@ public class PaleoDBBulkMerger implements Merger{
 					target.setExtinct(newTerm);
 				}
 				processRank(item.getRankName(),newTerm,target);
-				newTerms.add(newTerm);
+				newTerms.add(tName);
 				//termDictionary.put(tName, newTerm);
-				System.out.println("Adding taxon: " + tName);
+				System.out.println("Adding taxon: " + tName + " term: " + newTerm);
 			}
 			else{
 				System.out.println("Skipping term: " + tName);
@@ -151,7 +151,10 @@ public class PaleoDBBulkMerger implements Merger{
 			if (parent == null){
 				parent = defaultParentTaxon;
 			}
-			if (newTerms.contains(child) && !parent.getChildren().contains(child)){
+			if (!newTerms.contains(tName)){
+				logger.info("For name tName " + tName + "newTerms does not contain " + tName);
+			}
+			if (newTerms.contains(tName) && !parent.getChildren().contains(child)){
 				target.attachParent(child, parent);
 			}
 		}

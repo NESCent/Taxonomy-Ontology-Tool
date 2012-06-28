@@ -114,7 +114,7 @@ class PBDBItem{
 	
 	static PBDBItem getValidInstance(String line, Map<String,Integer> columns){
 		final String[] digest = pipePattern.split(line);
-		if (digest.length != 30){
+		if (digest.length <29 || digest.length > 31){
 			throw new RuntimeException("Line had wrong number of elements: " + digest.length);
 		}
 		final int taxon_id = columns.get("taxon_no");

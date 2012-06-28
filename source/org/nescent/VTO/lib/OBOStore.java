@@ -143,6 +143,9 @@ public class OBOStore implements TaxonStore {
 	@Override
 	public Term addTerm(final String name, String prefix) {
 		OBOClass addedClass;
+		if (prefix == null){
+			throw new RuntimeException("Prefix supplied to addTerm was null");
+		}
 		if (trimmedNames.containsKey(name)){
 			final OBOClass oldClass = trimmedNames.get(name);
 			String[] oldComponents = oldClass.getID().split(":");
@@ -166,7 +169,7 @@ public class OBOStore implements TaxonStore {
 			String newID = String.format(prefix+idSuffix,idCounter++);
 			addedClass = u.makeTerm(newID, name);
 		}
-		logger.info("add Term: " + addedClass.getName() +" " + addedClass.getID());
+		//logger.info("add Term: " + addedClass.getName() +" " + addedClass.getID());
 		return new OBOTerm(addedClass);
 	}
 
@@ -192,13 +195,15 @@ public class OBOStore implements TaxonStore {
 		return new OBOTerm(u.makeTerm(ID, name));
 	}
 
+	public void obsoleteTerm(Term term){
+		u.obsoleteTerm(term);
+	}
 
 	/**
 	 * wrapper to call save the OBOSession to the Store's targetFile
 	 */
 	@Override
 	public void saveStore() {
-		logger.info("Checkpoint 7: " + getTermbyName("Chondrichthyes"));
 		u.saveOBOSession(targetFile);
 	}
 

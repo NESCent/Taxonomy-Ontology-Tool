@@ -111,4 +111,10 @@ public interface TaxonStore {
 	 * @param prefix 
 	 */
 	public void updateIDGenerator(String prefix);
+
+	/**
+	 * This provides a way to remove a term from the store - in stores that support it (e.g., OBO and OBOinOWL?) terms will be obsoleted
+	 * @param taxonTerm
+	 */
+	public void obsoleteTerm(Term taxonTerm);
 }
