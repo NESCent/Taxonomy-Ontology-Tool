@@ -106,8 +106,10 @@ public class OBOStore implements TaxonStore {
 	 * @param child
 	 * @param parent
 	 */
-	public void attachParent(final Term child,final  Term parent){
-		u.attachParent(child.asOBOClass(), parent.asOBOClass());
+	public void attachParent(final Term child,final Term parent){
+		final OBOClass childClass = child.asOBOClass();
+		final OBOClass parentClass = parent.asOBOClass();
+		u.attachParent(childClass, parentClass);
 	}
 
 

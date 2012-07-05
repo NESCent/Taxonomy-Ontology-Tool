@@ -147,12 +147,16 @@ public class PaleoDBBulkMerger implements Merger{
 //			Term child = termDictionary.get(tName);
 //			Term parent = termDictionary.get(taxonTree.get(tName));
 			Term child = target.getTermbyName(tName);
+			if (child == null || child.asOBOClass() == null){
+				logger.warn("For name: " + tName + " term not found in target store");
+				continue;
+			}
 			Term parent = target.getTermbyName(taxonTree.get(tName));
 			if (parent == null){
 				parent = defaultParentTaxon;
 			}
 			if (!newTerms.contains(tName)){
-				logger.info("For name tName " + tName + "newTerms does not contain " + tName);
+				logger.info("For name tName " + tName + " newTerms does not contain " + tName);
 			}
 			if (newTerms.contains(tName) && !parent.getChildren().contains(child)){
 				target.attachParent(child, parent);
