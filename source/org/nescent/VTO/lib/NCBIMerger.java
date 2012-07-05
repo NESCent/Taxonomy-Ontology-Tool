@@ -73,6 +73,11 @@ public class NCBIMerger implements Merger {
     private boolean preserveID;
     private SynonymSource preserveSynonyms;
     
+	private final Map <String,Integer> namesInScope = new HashMap<String,Integer>(50000);
+	private final Map <Integer,String> termToName = new HashMap<Integer,String>(50000);
+	private final Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(50000);
+
+    
 	static Logger logger = Logger.getLogger(NCBIMerger.class.getName());
 
     /* Metadata methods */
@@ -149,7 +154,7 @@ public class NCBIMerger implements Merger {
             while (raw != null){
                 final String[] digest = tabPattern.split(raw);
                 final String scope = digest[8];
-                if (NCBIVERTEBRATE.equals(scope) || NCBIMAMMAL.equals(scope) || NCBIRODENT.equals(scope) || NCBIPRIMATE.equals(scope)){
+                if (NCBIVERTEBRATE.equals(scope) || NCBIMAMMAL.equals(scope) || NCBIRODENT.equals(scope) || NCBIPRIMATE.equals(scope) || NCBIINVERTEBRATE.equals(scope)){
                     final Integer nodeVal = Integer.parseInt(digest[0]);
                 	nodes.add(nodeVal);                	
                     Integer parentVal = Integer.parseInt(digest[2]);
@@ -219,9 +224,6 @@ public class NCBIMerger implements Merger {
 		final Map<Integer,String> nodeRanks = new HashMap<Integer,String>(10000);
 		final Map<Integer,Set<Integer>> nodeChildren = new HashMap<Integer,Set<Integer>>(10000);
 		buildScopedNodesList(nodesFile,nodesInScope,nodeRanks,nodeChildren);
-		Map <String,Integer> namesInScope = new HashMap<String,Integer>(nodesInScope.size());
-		Map <Integer,String> termToName = new HashMap<Integer,String>(nodesInScope.size());
-		Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(nodesInScope.size());
 		buildScopedNamesList(namesFile,nodesInScope,namesInScope, termToName,synonymsInScope);
 		logger.info("Node count = " + nodesInScope.size());
 		logger.info("Name count = " + namesInScope.size());
@@ -235,7 +237,7 @@ public class NCBIMerger implements Merger {
 					return;
 				}
 				else { // attachment will be added first to provide a root for an otherwise empty target
-					parentTerm = target.addTerm(attachment, prefix);
+					parentTerm = addTermWithPreservingIDcheck(prefix,attachment);
 					logger.info("Assigning " + attachment + " as root");
 				}
 			}
@@ -288,7 +290,7 @@ public class NCBIMerger implements Merger {
 						}
 						else {
 							//standard case - make a child term and attach
-							childTerm = target.addTerm(childName, prefix);
+							childTerm = addTermWithPreservingIDcheck(prefix,childName);
 							target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 							target.setRankFromName(childTerm,rankStr);
 							target.attachParent(childTerm, parentTerm);
@@ -302,7 +304,7 @@ public class NCBIMerger implements Merger {
 					}
 					else {  
 						// for now, we'll go ahead and add other rankless terms
-						childTerm = target.addTerm(childName, prefix);
+						childTerm = addTermWithPreservingIDcheck(prefix,childName);
 						target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 						target.setRankFromName(childTerm,rankStr);
 						target.attachParent(childTerm, parentTerm);
@@ -314,7 +316,7 @@ public class NCBIMerger implements Merger {
 					if (target.getTermbyName(newChildName) != null){
 						throw new RuntimeException("Unresolvable duplication " + childName + " " + newChildName);
 					}
-					childTerm = target.addTerm(newChildName, prefix);
+					childTerm = addTermWithPreservingIDcheck(prefix,childName);
 					target.addXRefToTerm(childTerm,NCBIDBNAME,childID.toString());  // could be an alternate ID?
 					String rankStr = nodeRanks.get(childID);
 					if (rankStr != null && !"no rank".equals(rankStr)){
@@ -335,6 +337,16 @@ public class NCBIMerger implements Merger {
 		}
 	}
 
-
+	private Term addTermWithPreservingIDcheck(String prefix, String attachment){
+		Term parentTerm;
+		if (preserveID){
+			final String newid = prefix + ":" + namesInScope.get(attachment).toString();
+			parentTerm=target.addTermbyID(newid, attachment);
+		}
+		else{
+			parentTerm = target.addTerm(attachment, prefix);
+		}
+		return parentTerm;
+	}
 	
 }
