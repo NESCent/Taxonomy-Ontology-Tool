@@ -12,7 +12,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private final String columnSeparator; 
 	private final ColumnReader reader;
 
-	private Map<Integer,String> synPrefixMap;
 
 	private File source;
 	private TaxonStore target;
@@ -63,9 +62,8 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 
 	@Override
-	public void setColumns(List<String> columns, Map<Integer,String> synPrefixes) {
-		reader.setColumns(columns,synPrefixes);  // and what else?
-		synPrefixMap = synPrefixes;
+	public void setColumns(List<ColumnType> columns) {
+		reader.setColumns(columns);  // and what else?
 	}
 
 	@Override
@@ -118,7 +116,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm, prefix);
 		}
-		//logger.info("Checkpoint 5: " + target.getTermbyName("Allophrynidae").getID());
 	}
 
 	private void processClassColumn(ItemList items, Term attachTerm, String prefix){
@@ -138,8 +135,11 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 	private void processOrderColumn(ItemList items, Term attachTerm, String prefix){
 		for (final Item it : items.getContents()){
+			final String orderField = it.getName(KnownField.ORDER);
+			if (orderField == null)
+				throw new RuntimeException("Empty order field in line: " + it);
 			final String orderName = stripDagger(it.getName(KnownField.ORDER));
-			final boolean isExtinct = daggerPrefix(it.getName(KnownField.FAMILY));
+			final boolean isExtinct = daggerPrefix(it.getName(KnownField.ORDER));
 			if (orderName.length()>0 && !INCERTAESEDIS.equalsIgnoreCase(orderName)){
 				Term orderTerm = target.getTermbyName(orderName);
 				if (orderTerm == null){

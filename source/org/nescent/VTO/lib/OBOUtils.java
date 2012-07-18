@@ -304,6 +304,10 @@ class OBOUtils {
 		Namespace n = oboFactory.createNamespace(namespace, filepath);
 		theSession.setDefaultNamespace(n);
 	}
+	
+	public void setOntologyTag(String ontologyStr){
+		theSession.set
+	}
 
 	public OBOProperty getISAproperty() {
 		return isaProperty;

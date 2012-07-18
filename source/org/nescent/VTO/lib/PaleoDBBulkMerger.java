@@ -29,6 +29,7 @@ public class PaleoDBBulkMerger implements Merger{
 	private TaxonStore target = null;
 	
 	private SynonymSource preserveSynonyms;
+	private boolean preserveIDs = false;
 	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
 	
@@ -37,18 +38,19 @@ public class PaleoDBBulkMerger implements Merger{
 	public boolean canAttach() {
 		return true;
 	}
-
+	
+	/**
+	 * Returns true 
+	 */
 	@Override
 	public boolean canPreserveID() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	
 	@Override
 	public void setPreserveID(boolean v){
-		if (v)
-		throw new RuntimeException("This merger can't preserve IDs because TBD");
+		preserveIDs = v;
 	}
 	
 	@Override
@@ -128,8 +130,7 @@ public class PaleoDBBulkMerger implements Merger{
 //			if (!termDictionary.containsKey(tName)){
 			if (!target.hasTermbyName(tName)){
 				final PBDBItem item = validTaxa.get(tName);
-				final Term newTerm = target.addTerm(tName, prefix);
-				target.addXRefToTerm(newTerm, PALEODBTAXONPREFIX, Integer.toString(item.getId()));
+				final Term newTerm = addTermWithPreservingIDcheck(prefix,tName,item.getId());
 				if (item.isExtinct()){
 					target.setExtinct(newTerm);
 				}
@@ -307,5 +308,18 @@ public class PaleoDBBulkMerger implements Merger{
 		
 	}
 
+	private Term addTermWithPreservingIDcheck(String prefix, String attachment, int id){
+		Term newTerm;
+		final String idStr = Integer.toString(id);
+		if (preserveIDs){
+			final String newid = prefix + ":" + idStr;
+			newTerm=target.addTermbyID(newid, attachment);
+		}
+		else{
+			newTerm = target.addTerm(attachment, prefix);
+			target.addXRefToTerm(newTerm, PALEODBTAXONPREFIX,idStr);
+		}
+		return newTerm;
+	}
 
 }

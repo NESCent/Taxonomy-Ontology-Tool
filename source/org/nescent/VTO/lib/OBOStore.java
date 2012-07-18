@@ -68,6 +68,7 @@ public class OBOStore implements TaxonStore {
 	public OBOStore(final String fileSpec, final String prefix, final String oboNameSpace) {
 		u = new OBOUtils();
 		u.setNameSpace(oboNameSpace, fileSpec);
+		u.setOntologyTag(oboNameSpace.substring(0, oboNameSpace.indexOf('-')));
 		defaultPrefix = prefix;
 		defaultFormat = defaultPrefix + idSuffix;		
 		targetFile = fileSpec;
@@ -116,28 +117,40 @@ public class OBOStore implements TaxonStore {
 	/**
 	 * @param prefix specifies the prefix this store will be generating from, so only terms with that prefix are checked
 	 * side-effect: the class field idCounter is set to one more than the largest count found in any term id with the 
-	 * specified prefix
+	 * specified prefix.  Note that this needs to skip over the ids that are currently used and the ids that have been trimmed
+	 * but might be reused.
 	 */
 	@Override
 	public void updateIDGenerator(final String prefix){
+		if (prefix == null)
+			throw new RuntimeException("ID generator received a null prefix");
 		int maxCounter = -1;
-		for (OBOClass c : u.getTerms()){
+		maxCounter = classSweep(u.getTerms(), prefix,maxCounter);
+		maxCounter = classSweep(trimmedNames.values(),prefix,maxCounter);
+		idCounter = maxCounter+1;
+	}
+	
+	
+	private int classSweep(final Collection<OBOClass> classCl, final String prefix, final int counter){
+		int result = counter;
+		for (OBOClass c : classCl){
 			final String id = c.getID();
-			if (prefix != null && id.startsWith(prefix)){
+			if (id.startsWith(prefix)){
 				int colonIndex = id.indexOf(':');
 				String suffix = id.substring(colonIndex+1);
 				try{
 					int index = Integer.parseInt(suffix);
-					if (index > maxCounter)
-						maxCounter = index;
+					if (index > result)
+						result = index;
 				}
 				catch (NumberFormatException e){
-				//this really is safe to silently ignore...
+					//this really is safe to silently ignore...
 				}
 			}
 		}
-		idCounter = maxCounter+1;
+		return result;
 	}
+	
 	
 	/**
 	 * This will either reuse an id (from a trimmed tree) that matches a name or generate a fresh it using the default id prefix
@@ -247,11 +260,13 @@ public class OBOStore implements TaxonStore {
 	@Override
 	public void trim(String targetNode){
 		final OBOClass cladeRoot = u.lookupTermByName(targetNode);
+		int initialsize = trimmedNames.size();
 		if (cladeRoot == null){
 			logger.error("Clade root to trim " + targetNode + " not found");
 		}
 		else{
 			removeClade(cladeRoot);
+			logger.info("Removed " + (trimmedNames.size()-initialsize) + " net nodes");
 		}
 	}
 	

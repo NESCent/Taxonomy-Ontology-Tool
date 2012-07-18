@@ -5,10 +5,12 @@
  */
 package org.nescent.VTO.lib;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -23,13 +25,15 @@ public class Item {
 	// This list ought to be constructed from TAXRANK  - perhaps need to add 'clade' to TAXRANK appears in ATO and NCBI taxonomy not sure
 	// its position between genus and species is consistent across authorities
 	
-	private Map<KnownField,String> names;  //maps a rank term to a taxon name
-	private Map<String,Set<String>> synonyms;  //maps a synonym source (xref) to a synonym    
+	private final Map<KnownField,String> names;  //maps a rank term to a taxon name
+	private final Map<String,Set<String>> synonyms;  //maps a synonym source (xref) to a synonym  
+	private final List<String> xrefs;
     private boolean is_extinct;  // may not use this
     
     public Item(){
         names = new HashMap<KnownField,String>();
         synonyms = new HashMap<String,Set<String>>();
+        xrefs = new ArrayList<String>();
         is_extinct = false;
     }
     
@@ -85,6 +89,10 @@ public class Item {
     		return Collections.emptySet();
     }
     
+    public void addXref(String db, String identifier){
+    	xrefs.add(db + ":" + identifier);
+    }
+    
     public String toString(){
     	StringBuilder b = new StringBuilder(200);
     	for (KnownField field : KnownField.values()){
@@ -105,7 +113,17 @@ public class Item {
     			}
     		}
     	}
-    	return b.toString();
+    	if (!xrefs.isEmpty()){
+    		b.append("; xrefs: ");
+    		for(String x : xrefs){
+    			b.append(x);
+    			b.append("; ");
+    		}
+    	}
+    	if (b.toString().length() < 2)
+    		return "Item is empty";
+    	else
+    		return b.toString();
     }
 
 

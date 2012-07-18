@@ -65,7 +65,8 @@ public class ColumnReader {
     
 
     private List<KnownField> fields = new ArrayList<KnownField>();
-    private List<Integer> synonymFields = new ArrayList<Integer>(); 
+    private List<Integer> synonymFields = new ArrayList<Integer>();
+    private List<ColumnType> headers;
     
 	static final Logger logger = Logger.getLogger(ColumnReader.class.getName());
     
@@ -85,11 +86,12 @@ public class ColumnReader {
      * @param columns
      * @param synonymRefs
      */
-    public void setColumns(List<String> columns, Map<Integer,String>synonymRefs){
-        for(String column : columns){
+    public void setColumns(final List<ColumnType> columns){
+    	headers = columns;
+        for(ColumnType column : columns){
         	boolean matched = false;
         	for(KnownField k : KnownField.values()){
-        		if (k.toString().equalsIgnoreCase(column)){
+        		if (k.toString().equalsIgnoreCase(column.getName())){
         			fields.add(k);
         			matched = true;
         		}
@@ -146,7 +148,9 @@ public class ColumnReader {
 
     // what checks are needed?
     private boolean checkEntry(String[] line){
-        return true; 
+    	if (line.length < 3)
+        return false;
+    	return true;
     }
     
 

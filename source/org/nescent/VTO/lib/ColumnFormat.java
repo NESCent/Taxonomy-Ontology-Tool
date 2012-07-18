@@ -5,6 +5,6 @@ import java.util.Map;
 
 public interface ColumnFormat {
 
-	public void setColumns(List<String> columns, Map<Integer,String> synPrefixes); 
+	public void setColumns(List<ColumnType> columns); 
 
 }

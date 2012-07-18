@@ -19,6 +19,8 @@ public class ItemList {
 	private final List<Item> contents;
 	private final Set<KnownField> columnNames;
     private Map<String,String> synonymSources;  //maps a synonym column to an attributed source URL (these ought to be in the source sheet)
+    private Map<String,String> dbxRefSources;  //maps a column name to a database prefix
+    private List<String> uriList;
 
     //TODO these don't belong here - these aren't general or reusable
     private final static String ITISCOLUMNTAG = "itis_names";

@@ -23,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
 import org.nescent.VTO.lib.CoLMerger;
 import org.nescent.VTO.lib.ColumnMerger;
+import org.nescent.VTO.lib.ColumnType;
 import org.nescent.VTO.lib.IOCMerger;
 import org.nescent.VTO.lib.ITISMerger;
 import org.nescent.VTO.lib.Merger;
@@ -84,6 +85,8 @@ public class Builder {
 
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
+	
+	final static String NAMESPACESUFFIX = "-namespace";
 
 	final private File optionsFile;
 
@@ -175,8 +178,6 @@ public class Builder {
 	 * @param targetPrefixStr prefix for new nodes in target - if this prefix equals the prefix of a term's ID, don't generate a new ID for the term copy
 	 */
 	private void processAttachAction(Node action, TaxonStore target, String targetRootStr, String targetPrefixStr){
-		@SuppressWarnings("unchecked")
-		List<String> columns = (List<String>)Collections.EMPTY_LIST;
 		Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
 		final String formatStr = getAttribute(action,ATTACHFORMATSTR);  //specifies format and storage model of the attached file
 		final String sourceRootStr = getAttribute(action,ATTACHROOTSTR);  //specifies the root of the clade in this tree, which will be assigned a new parent
@@ -184,10 +185,7 @@ public class Builder {
 		final String sourcePrefixStr = getAttribute(action,ATTACHPREFIXSTR);
 		final String preserveIDsStr = getAttribute(action,PRESERVEIDSSTR);
 		final String preserveSynonymsStr = getAttribute(action,PRESERVESYNONYMSSTR);
-		NodeList childNodes = action.getChildNodes();
-		if (childNodes.getLength()>0){
-			columns = processChildNodesOfAttach(childNodes,synPrefixes);
-		}
+		final List<ColumnType> columns = processAttachElement(action,synPrefixes);
 		Merger m = getMerger(formatStr,columns,synPrefixes);
 		if (!m.canAttach()){
 			throw new RuntimeException("Error - Merger for format " + formatStr + " can't attach branches to the tree");
@@ -239,22 +237,18 @@ public class Builder {
 	}
 
 	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){
-		@SuppressWarnings("unchecked")
-		List<String> columns = (List<String>)Collections.EMPTY_LIST;
-		final Map<Integer,String> synPrefixes = new HashMap<Integer,String>();  
-		NodeList childNodes = action.getChildNodes();
-		if (childNodes.getLength()>0){
-			columns = processChildNodesOfAttach(childNodes,synPrefixes);
-		}
+		final Map<Integer,String> synPrefixes = new HashMap<Integer,String>(); 
+		final List<ColumnType>columns = processAttachElement(action,synPrefixes);
 		String formatStr = getAttribute(action,"format");
 		Merger m = getMerger(formatStr,columns,synPrefixes);
 		String sourceStr = getAttribute(action,"source");
 		String mergePrefix = getAttribute(action,PREFIXITEMSTR);
-		File sourceFile = null;  //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
-		if (!"".equals(sourceStr))
-			sourceFile = getSourceFile(sourceStr);
-		logger.info("Merging names from " + sourceStr);
-		m.setSource(sourceFile);
+		if (!"".equals(sourceStr)){
+			m.setSource(getSourceFile(sourceStr));
+			logger.info("Merging names from " + sourceStr);
+		}
+		else
+			m.setSource(null); //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
 		m.setTarget(target);
 		if (mergePrefix == null){
 			m.merge(targetPrefixStr);
@@ -266,49 +260,75 @@ public class Builder {
 	}
 
 
-	private List<String> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
-		List<String> result = new ArrayList<String>();
+	@SuppressWarnings("unchecked")
+	final List<ColumnType> emptyColumns = (List<ColumnType>)Collections.EMPTY_LIST;
+	
+	private List<ColumnType> processAttachElement(Node action,Map<Integer,String> synPrefixes){
+		final NodeList childNodes = action.getChildNodes();
+		if (childNodes.getLength()>0){
+			return processChildNodesOfAttach(childNodes,synPrefixes);
+		}
+		else {
+			return emptyColumns;
+		}
+	}
+
+	private List<ColumnType> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
+		List<ColumnType> result = new ArrayList<ColumnType>();
 		for(int i = 0; i<childNodes.getLength();i++){
 			Node child = childNodes.item(i);
 			String childName = child.getNodeName();
 			if (COLUMNSYNTAXSTR.equals(childName)){
-				NodeList columnNames = child.getChildNodes();
-				for(int j = 0; j<columnNames.getLength();j++){
-					Node column = columnNames.item(j);
+				NodeList columnElements = child.getChildNodes();
+				for(int j = 0; j<columnElements.getLength();j++){
+					final Node column = columnElements.item(j);
 					if (column.getNodeType() == Node.ELEMENT_NODE){
-						if (column.getAttributes().getLength()>0){
-							if (column.getAttributes().getNamedItem("name") != null)
-								result.add(column.getAttributes().getNamedItem("name").getNodeValue());
-							else
-								result.add("Column " + Integer.toString(j));
-							if (column.getAttributes().getNamedItem(PREFIXITEMSTR) != null){
-								String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
-								synPrefixes.put(j, synPrefix);
-							}
-						}
+						result.add(processColumnElement(column,j,synPrefixes));
 					}
 				}
 			}
-			else if (child.getNodeType() == Node.TEXT_NODE){
-				//ignore
-			}
-			else{
+			else if (Node.TEXT_NODE != child.getNodeType()){
 				logger.warn("Unknown subelement" + child);
 			}
 		}
 		return result;
 	}
+	
+	
+	
+	private ColumnType processColumnElement(Node column, int index, Map<Integer, String> synPrefixes){
+		if (column.getAttributes().getLength()>0){
+			String newName;
+			if (column.getAttributes().getNamedItem("name") != null)
+				newName = column.getAttributes().getNamedItem("name").getNodeValue();
+			else
+				newName = "Column " + Integer.toString(index);
+			ColumnType col = new ColumnType(newName);
+			if (column.getAttributes().getNamedItem(PREFIXITEMSTR) != null){
+				String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
+				synPrefixes.put(index, synPrefix);
+			}
+			if (column.getAttributes().getNamedItem("type") != null){
+				col.setType(column.getAttributes().getNamedItem("type").getNodeValue());
+			}
+			return col;
+			
+		}
+		else
+			throw new RuntimeException("Column " + index + " has no header name specified");
+	}
 
+	
 	private TaxonStore getStore(String targetStr, String prefixStr, String formatStr) {
 		File targetFile = getSourceFile(targetStr);
 		if (targetFile.exists())
 			targetFile.delete();
 		if (OBOFORMATSTR.equals(formatStr)){
-			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + NAMESPACESUFFIX);
 		}
 		if (OWLFORMATSTR.equals(formatStr)){
 			try{
-				return new OWLStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+				return new OWLStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + NAMESPACESUFFIX);
 			} catch (OWLOntologyCreationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -319,14 +339,14 @@ public class Builder {
 				COLUMNFORMATSTR.equals(formatStr) ||
 				SYNONYMFORMATSTR.equals(formatStr) ||
 				ALLCOLUMNSFORMATSTR.equals(formatStr)){      
-			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + "-namespace");
+			return new OBOStore(targetFile.getAbsolutePath(), prefixStr, prefixStr.toLowerCase() + NAMESPACESUFFIX);
 		}
 		logger.error("Format " + formatStr + " not supported for merging");
 		return null;
 	}
 
 
-	private Merger getMerger(String formatStr, List<String> columns, Map<Integer, String> synPrefixes){
+	private Merger getMerger(String formatStr, List<ColumnType> columns, Map<Integer, String> synPrefixes){
 		if (OBOFORMATSTR.equalsIgnoreCase(formatStr))
 			return new OBOMerger();
 		if (ITISFORMATSTR.equalsIgnoreCase(formatStr))
@@ -335,17 +355,17 @@ public class Builder {
 			return new NCBIMerger();
 		if (CSVFORMATSTR.equalsIgnoreCase(formatStr)){
 			ColumnMerger result = new ColumnMerger(",");
-			result.setColumns(columns, synPrefixes);
+			result.setColumns(columns);
 			return (Merger)result;
 		}
 		if (TSVFORMATSTR.equalsIgnoreCase(formatStr)){
 			ColumnMerger result = new ColumnMerger("\t");
-			result.setColumns(columns, synPrefixes);
+			result.setColumns(columns);
 			return (Merger)result;
 		}
 		if (JOINEDNAMETABBEDCOLUMNS.equalsIgnoreCase(formatStr)){
 			UnderscoreJoinedNamesMerger result = new UnderscoreJoinedNamesMerger("\t");
-			result.setColumns(columns, synPrefixes);
+			result.setColumns(columns);
 			return (Merger)result;
 		}
 		if (OWLFORMATSTR.equalsIgnoreCase(formatStr)){

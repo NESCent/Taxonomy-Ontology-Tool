@@ -17,10 +17,9 @@ import org.junit.Test;
 public class TestColumnReader {
 	
 	private ColumnReader testReader;
-	final static private Map<Integer,String> emptySynPrefixes = new HashMap<Integer,String>();
 	
 	final static String AMPHIBIASTR = "AmphibiaWeb.txt";
-	final static List<String>amphibiaColumns = new ArrayList<String>();
+	final static List<ColumnType>amphibiaColumns = new ArrayList<ColumnType>();
 
 	private static String testImportsPath;
 
@@ -41,11 +40,11 @@ public class TestColumnReader {
             cutPoint = headPath.lastIndexOf('/',cutPoint-2);  // cut twice
         }
         testImportsPath = headPath.substring(0,cutPoint+1) + "src/imports/";
-        amphibiaColumns.add("order");
-        amphibiaColumns.add("family");
-        amphibiaColumns.add("subfamily");
-        amphibiaColumns.add("genus");
-        amphibiaColumns.add("species");
+        amphibiaColumns.add(new ColumnType("order"));
+        amphibiaColumns.add(new ColumnType("family"));
+        amphibiaColumns.add(new ColumnType("subfamily"));
+        amphibiaColumns.add(new ColumnType("genus"));
+        amphibiaColumns.add(new ColumnType("species"));
 	}
 
 
@@ -61,7 +60,7 @@ public class TestColumnReader {
 	@Test
 	public void testSetColumns() {		
 		ColumnReader dummyReader = new ColumnReader("\t");
-		dummyReader.setColumns(amphibiaColumns, emptySynPrefixes);
+		dummyReader.setColumns(amphibiaColumns);
 	}
 
 
@@ -70,7 +69,7 @@ public class TestColumnReader {
 	public void testProcessCatalog() {
 		testReader = new ColumnReader("\t");
 		File test1 = new File (testImportsPath + AMPHIBIASTR);
-		testReader.setColumns(amphibiaColumns, emptySynPrefixes);
+		testReader.setColumns(amphibiaColumns);
 		ItemList items = testReader.processCatalog(test1, true);
 		assertNotNull(items);
 		assertEquals(items.size(),7046);

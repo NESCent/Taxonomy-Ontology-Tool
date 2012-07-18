@@ -71,9 +71,8 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	}
 	
 	@Override
-	public void setColumns(List<String> columns,Map<Integer, String> synPrefixes) {
-		reader.setColumns(columns,synPrefixes);  // and what else?
-		// at the moment, this reader can ignore synonym columns
+	public void setColumns(List<ColumnType> columns) {
+		reader.setColumns(columns);  // and what else?
 	}
 
 	@Override
