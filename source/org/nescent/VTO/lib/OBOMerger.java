@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 import org.obo.datamodel.Dbxref;
 import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
@@ -26,6 +27,7 @@ public class OBOMerger implements Merger {
 	
 	private boolean preserveID = false;
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
 
@@ -59,6 +61,17 @@ public class OBOMerger implements Merger {
 		target = targetStore;
 	}
 	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		if (Builder.XREFSUBACTION.equals(sa)){
+			throw new IllegalArgumentException("Xref merging not currently supported by OBOMerger");
+		}
+		subAction = sa;
+	}
+
 
 	@Override
 	public void merge(String prefix) {

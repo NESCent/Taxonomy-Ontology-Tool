@@ -12,10 +12,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 
 /**
- * This class merges names from the Catalogue of Life, using JDBC to connect directly to a (presumibly local) MySQL
+ * This class merges names from the Catalogue of Life, using JDBC to connect directly to a (presumably local) MySQL
  * installation of the CoL database.
  * 
  * This version supports attaching.
@@ -31,6 +32,7 @@ public class CoLDBMerger implements Merger {
 	private TaxonStore target;
 	
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(CoLDBMerger.class.getName());
 
@@ -71,6 +73,14 @@ public class CoLDBMerger implements Merger {
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
+	}
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
 	}
 	
 	/**
@@ -263,7 +273,7 @@ public class CoLDBMerger implements Merger {
 		final String host = properties.getProperty("host");
 		final String db = properties.getProperty("db");
 		final String user = properties.getProperty("user");
-		final String password = properties.getProperty("pw");
+		final String password = properties.getProperty("pass");
 		return DriverManager.getConnection(String.format("jdbc:mysql://%s/%s",host,db),user,password);
 
 	}

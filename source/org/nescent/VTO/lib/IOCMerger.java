@@ -26,6 +26,7 @@ public class IOCMerger implements Merger {
 	private File source;
 	private TaxonStore target;
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
 
@@ -57,6 +58,17 @@ public class IOCMerger implements Merger {
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
+	}
+
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		if (Builder.XREFSUBACTION.equals(sa)){
+			throw new IllegalArgumentException("Xref merging not currently supported by IOCMerger");
+		}
+		subAction = sa;
 	}
 
 

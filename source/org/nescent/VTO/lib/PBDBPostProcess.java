@@ -16,6 +16,7 @@ public class PBDBPostProcess implements Merger{
 
 	private static final String TARGETNOTSETMESSAGE = "Target ontology for PBDB post process not set";
 	private static final String SOURCENOTSETMESSAGE = "Source file for PBDB post process not set";
+	private static final String NOSUBACTIONMESSAGE = "PBDB postprocessor merger does not accept subAction attributes";
 
 	private final Logger logger = Logger.getLogger(PBDBPostProcess.class.getName());
 	
@@ -45,6 +46,14 @@ public class PBDBPostProcess implements Merger{
 	@Override
 	public void setTarget(TaxonStore target) {
 		this.target = target;
+	}
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		throw new IllegalArgumentException(NOSUBACTIONMESSAGE);
 	}
 
 	private void checkInitialization(){

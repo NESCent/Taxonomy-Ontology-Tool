@@ -29,4 +29,7 @@ public interface Merger {
 	// If the prefix of a term's ID equals the passed prefix, don't generate a new id for the term
 	void attach(String parent, String cladeRoot, String prefix);
 
+	// This will allows specifying whether this merge adds synonyms or xrefs to existing terms
+	void setSubAction(String subAction);
+
 }

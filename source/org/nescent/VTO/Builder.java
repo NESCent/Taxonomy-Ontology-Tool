@@ -21,6 +21,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.lib.CoLDBMerger;
 import org.nescent.VTO.lib.CoLMerger;
 import org.nescent.VTO.lib.ColumnMerger;
 import org.nescent.VTO.lib.ColumnType;
@@ -52,6 +53,7 @@ public class Builder {
 	final static String NCBIFORMATSTR = "NCBI";		//NCBI dump format (merge, attach)	
 	final static String CSVFORMATSTR = "CSV";	  //Comma separated text	
 	final static String TSVFORMATSTR = "TSV";	  //Tab separated text
+	final static String PIPESEPARATEDSTR = "Pipe";  //Pipe (|) separated columns
 	final static String OWLFORMATSTR = "OWL";     //W3C OWL via OWLAPI
 	final static String IOCFORMATSTR = "IOC";     //XML format used by IOC checklist (birds)
 	final static String COLFORMATSTR = "COL";     //Catalogue of Life website
@@ -87,6 +89,12 @@ public class Builder {
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
 	
 	final static String NAMESPACESUFFIX = "-namespace";
+	
+	//These are additions to merge for column formats
+	final static String SUBACTIONSTR = "action";
+	final public static String XREFSUBACTION = "ADDXREFS";
+	final public static String SYNSUBACTION = "ADDSYNONYMS";
+	
 
 	final private File optionsFile;
 
@@ -126,14 +134,13 @@ public class Builder {
 		final String targetFilterPrefixStr = getAttribute(taxonomyRoot,FILTERPREFIXITEMSTR);
 		final TaxonStore target = getStore(targetStr, targetPrefixStr, targetFormatStr);
 		logger.info("Building taxonomy to save at " + targetStr + " in the " + targetFormatStr + " format\n");
-		NodeList actions = taxonomyRoot.getChildNodes();
+		final NodeList actions = taxonomyRoot.getChildNodes();
 		for(int i=0;i<actions.getLength();i++){
 			processChildNode(actions.item(i),target,targetRootStr,targetFormatStr,targetPrefixStr);
 		}
 		for(String reportStr : target.countTerms()){
 			logger.info(reportStr);
 		}
-
 		saveTarget(targetFormatStr, targetFilterPrefixStr, target);
 	}
 
@@ -239,10 +246,11 @@ public class Builder {
 	private void processMergeAction(Node action, TaxonStore target, String targetPrefixStr){
 		final Map<Integer,String> synPrefixes = new HashMap<Integer,String>(); 
 		final List<ColumnType>columns = processAttachElement(action,synPrefixes);
-		String formatStr = getAttribute(action,"format");
-		Merger m = getMerger(formatStr,columns,synPrefixes);
-		String sourceStr = getAttribute(action,"source");
-		String mergePrefix = getAttribute(action,PREFIXITEMSTR);
+		final String formatStr = getAttribute(action,"format");
+		final Merger m = getMerger(formatStr,columns,synPrefixes);
+		final String sourceStr = getAttribute(action,"source");
+		final String mergePrefix = getAttribute(action,PREFIXITEMSTR);
+		final String subAction = getAttribute(action,SUBACTIONSTR);
 		if (!"".equals(sourceStr)){
 			m.setSource(getSourceFile(sourceStr));
 			logger.info("Merging names from " + sourceStr);
@@ -250,13 +258,18 @@ public class Builder {
 		else
 			m.setSource(null); //CoL doesn't specify a fixed URL, we're not loading from one source - maybe this is too much of a special case
 		m.setTarget(target);
+		if (subAction == null){
+			m.setSubAction("SYNSUBACTION");
+		}
+		else {
+			m.setSubAction(subAction.toUpperCase());
+		}
 		if (mergePrefix == null){
 			m.merge(targetPrefixStr);
 		}
 		else {
 			m.merge(mergePrefix);
 		}
-
 	}
 
 
@@ -363,6 +376,11 @@ public class Builder {
 			result.setColumns(columns);
 			return (Merger)result;
 		}
+		if (PIPESEPARATEDSTR.equalsIgnoreCase(formatStr)){
+			ColumnMerger result = new ColumnMerger("|");
+			result.setColumns(columns);
+			return (Merger)result;
+		}
 		if (JOINEDNAMETABBEDCOLUMNS.equalsIgnoreCase(formatStr)){
 			UnderscoreJoinedNamesMerger result = new UnderscoreJoinedNamesMerger("\t");
 			result.setColumns(columns);
@@ -376,6 +394,9 @@ public class Builder {
 		}
 		if (COLFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new CoLMerger();
+		}
+		if (COLDBFORMATSTR.equalsIgnoreCase(formatStr)){
+			return new CoLDBMerger();
 		}
 		if (PBDBBULKFORMATSTR.equalsIgnoreCase(formatStr)){
 			return new PaleoDBBulkMerger();

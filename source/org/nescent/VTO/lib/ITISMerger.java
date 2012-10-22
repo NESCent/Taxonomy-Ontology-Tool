@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 /**
  * 
@@ -24,6 +25,7 @@ public class ITISMerger implements Merger{
 	private TaxonStore target;
     
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 	
 	static final Logger logger = Logger.getLogger(ITISMerger.class.getName());
 	
@@ -58,6 +60,15 @@ public class ITISMerger implements Merger{
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
 	}
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
+	}
+
 
     @Override
     public void merge(String prefix) {

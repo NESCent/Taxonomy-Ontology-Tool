@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 public class PaleoDBBulkMerger implements Merger{
 	
@@ -30,6 +31,7 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	private SynonymSource preserveSynonyms;
 	private boolean preserveIDs = false;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
 	
@@ -75,6 +77,14 @@ public class PaleoDBBulkMerger implements Merger{
 		if (source == null){
 			throw new IllegalStateException(SOURCENOTSETMESSAGE);
 		}		
+	}
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
 	}
 
 	@Override

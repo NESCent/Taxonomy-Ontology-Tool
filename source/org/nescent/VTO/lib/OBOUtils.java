@@ -306,7 +306,6 @@ class OBOUtils {
 	}
 	
 	public void setOntologyTag(String ontologyStr){
-		theSession.set
 	}
 
 	public OBOProperty getISAproperty() {

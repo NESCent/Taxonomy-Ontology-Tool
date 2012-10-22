@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 /**
  * 
@@ -72,6 +73,7 @@ public class NCBIMerger implements Merger {
     
     private boolean preserveID;
     private SynonymSource preserveSynonyms;
+    private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
     
 	private final Map <String,Integer> namesInScope = new HashMap<String,Integer>(50000);
 	private final Map <Integer,String> termToName = new HashMap<Integer,String>(50000);
@@ -105,16 +107,26 @@ public class NCBIMerger implements Merger {
 
 
 	/**
-	 * @arg sourceDirectory until most mergers, the NCBI dump is a set of files in a common directory
+	 * @param sourceDirectory until most mergers, the NCBI dump is a set of files in a common directory
 	 */
+	@Override
 	public void setSource(File sourceDirectory){
 		source = sourceDirectory;
 	}
 	
+	@Override
 	public void setTarget(TaxonStore targetStore){
 		target = targetStore;
 	}
 	
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
+	}
 
     /**
      * This collects NCBI IDs as synonyms

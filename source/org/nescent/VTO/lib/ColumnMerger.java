@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 public class ColumnMerger implements Merger,ColumnFormat {
 
@@ -12,7 +13,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private final String columnSeparator; 
 	private final ColumnReader reader;
 
-
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms;
 	private File source;
 	private TaxonStore target;
 	
@@ -66,15 +67,42 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		reader.setColumns(columns);  // and what else?
 	}
 
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
+	}
+
 	@Override
 	public void merge(String prefix) {
 		ItemList items = reader.processCatalog(source, true);
+		if (Builder.SYNSUBACTION.equals(subAction)){
+			mergeSynonyms(items);
+		}
+		else {
+			mergeXrefs(items);
+		}
+	}
+	
+	
+	private void mergeSynonyms(ItemList items){
 		for(Item item : items.getContents()){
 
-		}
-		// TODO finish
 
+		}
+		
 	}
+	
+	private void mergeXrefs(ItemList items){
+		for(Item item : items.getContents()){
+
+
+		}
+		
+	}
+	
 
 	/**
 	 * @param targetParentName name of parent node for attached clade

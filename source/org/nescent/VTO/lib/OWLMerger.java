@@ -3,6 +3,7 @@ package org.nescent.VTO.lib;
 import java.io.File;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 public class OWLMerger implements Merger {
 
@@ -11,6 +12,7 @@ public class OWLMerger implements Merger {
 	private TaxonStore target;
 
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(OWLMerger.class.getName());
 
@@ -46,7 +48,16 @@ public class OWLMerger implements Merger {
 		target = targetStore;
 	}
 	
-
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		if (Builder.XREFSUBACTION.equals(sa)){
+			throw new IllegalArgumentException("Xref merging not currently supported by OWLMerger");
+		}
+		subAction = sa;
+	}
 
 	@Override
 	public void merge(String prefix) {

@@ -43,9 +43,10 @@ public class PaleoDBMerger implements Merger {
 	private File source;
 	private TaxonStore target;
 	private SynonymSource preserveSynonyms;
+	private String subAction;
 	
-	final private static String PBDBURL = "http://www.catalogueoflife.org";
-	final private static String PBDBSUFFIX = "/annual-checklist/";
+	final private static String PBDBURL = "http://PaleoDB.org";
+	final private static String PBDBSUFFIX = "";
 
 	
 	static final Logger logger = Logger.getLogger(PaleoDBMerger.class.getName());
@@ -82,7 +83,13 @@ public class PaleoDBMerger implements Merger {
 		preserveSynonyms = s;
 	}
 
-
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		subAction = sa;
+	}
 	
 	@Override
 	public void merge(String prefix) {

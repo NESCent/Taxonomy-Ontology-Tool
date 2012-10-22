@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.nescent.VTO.Builder;
 
 /**
  * This merger handles files with names joined by underscore in one column (e.g., Homo_sapiens or Homo_sapiens_sapiens).  It currently
@@ -36,6 +37,7 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	private File source;
 	private TaxonStore target;
 	private SynonymSource preserveSynonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 	
 	static Logger logger = Logger.getLogger(OBOStore.class.getName());
 
@@ -84,6 +86,18 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
 	}
+	
+	/**
+	 * @param sa specifies whether this merges synonyms or cross references
+	 */
+	@Override
+	public void setSubAction(String sa){
+		if (Builder.XREFSUBACTION.equals(sa)){
+			throw new IllegalArgumentException("Xref merging not currently supported by UnderscoreJoinedNameMerger");
+		}
+		subAction = sa;
+	}
+
 
 	@Override
 	public void merge(String prefix) {
