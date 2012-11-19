@@ -89,6 +89,7 @@ public class Builder {
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
 	
 	final static String NAMESPACESUFFIX = "-namespace";
+	final static String URITEMPLATESTR = "uritemplate";
 	
 	//These are additions to merge for column formats
 	final static String SUBACTIONSTR = "action";
@@ -251,6 +252,8 @@ public class Builder {
 		final String sourceStr = getAttribute(action,"source");
 		final String mergePrefix = getAttribute(action,PREFIXITEMSTR);
 		final String subAction = getAttribute(action,SUBACTIONSTR);
+		final String uriTemplate = getAttribute(action,URITEMPLATESTR);
+
 		if (!"".equals(sourceStr)){
 			m.setSource(getSourceFile(sourceStr));
 			logger.info("Merging names from " + sourceStr);
@@ -263,6 +266,9 @@ public class Builder {
 		}
 		else {
 			m.setSubAction(subAction.toUpperCase());
+		}
+		if (uriTemplate != null){
+			m.setURITemplate(uriTemplate);
 		}
 		if (mergePrefix == null){
 			m.merge(targetPrefixStr);
@@ -292,11 +298,13 @@ public class Builder {
 			Node child = childNodes.item(i);
 			String childName = child.getNodeName();
 			if (COLUMNSYNTAXSTR.equals(childName)){
+				int columnCount = 0;  //because not all children are column elements
 				NodeList columnElements = child.getChildNodes();
 				for(int j = 0; j<columnElements.getLength();j++){
 					final Node column = columnElements.item(j);
 					if (column.getNodeType() == Node.ELEMENT_NODE){
-						result.add(processColumnElement(column,j,synPrefixes));
+						result.add(processColumnElement(column,columnCount,synPrefixes));
+						columnCount++;
 					}
 				}
 			}
@@ -310,25 +318,20 @@ public class Builder {
 	
 	
 	private ColumnType processColumnElement(Node column, int index, Map<Integer, String> synPrefixes){
-		if (column.getAttributes().getLength()>0){
-			String newName;
+		if (column.getAttributes().getNamedItem("type") != null){
+			final ColumnType col = new ColumnType(column.getAttributes().getNamedItem("type").getNodeValue());
 			if (column.getAttributes().getNamedItem("name") != null)
-				newName = column.getAttributes().getNamedItem("name").getNodeValue();
+				col.setName(column.getAttributes().getNamedItem("name").getNodeValue());
 			else
-				newName = "Column " + Integer.toString(index);
-			ColumnType col = new ColumnType(newName);
+				col.setName("Column " + Integer.toString(index));
 			if (column.getAttributes().getNamedItem(PREFIXITEMSTR) != null){
 				String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
 				synPrefixes.put(index, synPrefix);
 			}
-			if (column.getAttributes().getNamedItem("type") != null){
-				col.setType(column.getAttributes().getNamedItem("type").getNodeValue());
-			}
 			return col;
-			
 		}
 		else
-			throw new RuntimeException("Column " + index + " has no header name specified");
+			throw new RuntimeException("Column " + index + " has no type specified");
 	}
 
 	

@@ -88,6 +88,12 @@ public class PaleoDBBulkMerger implements Merger{
 	}
 
 	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public void merge(String prefix) {
 		checkInitialization();
 		// TODO Auto-generated method stub
@@ -331,5 +337,6 @@ public class PaleoDBBulkMerger implements Merger{
 		}
 		return newTerm;
 	}
+
 
 }

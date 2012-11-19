@@ -1,5 +1,6 @@
 package org.nescent.VTO.lib;
 
+import java.util.List;
 import java.util.Set;
 
 import org.obo.datamodel.OBOClass;
@@ -21,8 +22,6 @@ public interface Term {
 	
 	public String getID();
 	
-	public void addRank(String rank);
-
 	public Set<Term> getChildren();
 	
 	public Set<String> getCrossReferences();
@@ -31,6 +30,15 @@ public interface Term {
 	
 	public boolean isExtinct();
 
+	public void removeProperties();
+	
 	void createAltID(String id);
+
+	public List<Term> getAncestors();
+	
+	public boolean isObsolete();
+	
+	public void removeParent(Term parent);
+
 
 }

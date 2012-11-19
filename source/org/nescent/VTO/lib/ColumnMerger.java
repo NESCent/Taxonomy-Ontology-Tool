@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.nescent.VTO.Builder;
+import org.nescent.VTO.lib.ITISMerger.ITISElement;
 
 public class ColumnMerger implements Merger,ColumnFormat {
 
@@ -16,6 +17,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms;
 	private File source;
 	private TaxonStore target;
+	private String uriTemplate;
 	
 	private SynonymSource preserveSynonyms;
 
@@ -75,6 +77,13 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		subAction = sa;
 	}
 
+	
+	@Override
+	public void setURITemplate(String template) {
+		uriTemplate = template;
+		
+	}
+
 	@Override
 	public void merge(String prefix) {
 		ItemList items = reader.processCatalog(source, true);
@@ -90,17 +99,48 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private void mergeSynonyms(ItemList items){
 		for(Item item : items.getContents()){
 
-
+		}
+	}
+	
+	private void mergeXrefs(ItemList items){
+		int termCount = 0;
+		final ColumnType c = reader.getColumn(KnownField.SPECIES);
+		if (c == null)
+			return;
+		for(Item item : items.getContents()){
+			
+			final String genus = item.getFieldValue(KnownField.GENUS);
+			String species = item.getFieldValue(KnownField.SPECIES);
+			if (species.indexOf(' ') != -1){
+				species = species.substring(0,species.indexOf(' '));
+			}
+			final Term matchingTerm = target.getTermbyName(genus + " " + species);
+        	if (matchingTerm != null){
+        		termCount++;
+    			String finalURI = expandURI(item);
+        	    logger.info("result uri = " + finalURI);
+        		int colonpos = finalURI.indexOf(':');  //TODO remove this - the split echoes the OBO library interface, but not necessary here
+        		String rest = finalURI.substring(colonpos+1);
+        	    target.addXRefToTerm(matchingTerm, "http", rest);
+        	}
 		}
 		
 	}
 	
-	private void mergeXrefs(ItemList items){
-		for(Item item : items.getContents()){
-
-
+	
+	String expandURI(Item item){
+		String rawURI = uriTemplate;
+		while(rawURI.indexOf('*') != -1){
+			final int p = rawURI.indexOf('*');
+			final String rulehead = rawURI.substring(p);
+			if (rulehead.startsWith("*xref")){
+				rawURI = rawURI.substring(0,p) + item.getFieldValue(KnownField.XREF) + rawURI.substring(p+5);
+			}
+			else{
+				throw new RuntimeException("Unknown rule type: " + rulehead);
+			}
 		}
-		
+		return rawURI;
 	}
 	
 
@@ -324,4 +364,5 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		else
 			return name;
 	}
+
 }

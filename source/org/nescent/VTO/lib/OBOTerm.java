@@ -1,7 +1,10 @@
 package org.nescent.VTO.lib;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.obo.datamodel.Dbxref;
@@ -67,11 +70,6 @@ public class OBOTerm implements Term {
 		return term.getID();
 	}
 
-	@Override
-	public void addRank(String rank) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public Set<Term> getChildren() {
@@ -86,8 +84,52 @@ public class OBOTerm implements Term {
 		}
 		return results;
 	}
+	
+	
+	public void removeParent(Term parent){
+		final Collection<Link> childLinks = parent.asOBOClass().getChildren();
+		Link targetLink = null;
+		for(Link l : childLinks){
+			OBOProperty lType = l.getType();
+			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
+				OBOClass childClass = (OBOClass)l.getChild();
+				if (asOBOClass().equals(childClass)){
+					targetLink = l;
+				}
+			}
+		}
+		if (targetLink != null){
+			parent.asOBOClass().removeChild(targetLink);
+		}
+	}
+	
+	
 
-
+	public List<Term> getAncestors(){
+		List<Term> results = new ArrayList<Term>();
+		OBOClass parent = asOBOClass();
+		while (parent != null ){
+			boolean found = false;
+			Iterator<Link> linkIter = parent.getParents().iterator();
+			while(linkIter.hasNext() && !found){
+				Link nextLink = linkIter.next();
+				OBOProperty lType = nextLink.getType();
+				if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
+					parent = (OBOClass)nextLink.getParent();
+					found = true;
+					break;
+				}
+			}
+			if (!found){
+				parent = null;
+			}
+			else{
+				results.add(new OBOTerm(parent));
+			}
+		}
+		return results;
+	}
+	
 	@Override
 	public Set<String> getCrossReferences() {
 		// TODO Auto-generated method stub
@@ -104,7 +146,7 @@ public class OBOTerm implements Term {
 
 	@Override
 	public boolean isExtinct() {
-		for (PropertyValue v : term.getPropertyValues()){
+		for (PropertyValue v : asOBOClass().getPropertyValues()){
 			String[] pair = v.getValue().split(" ");
 			if ("is_extinct".equals(pair[0])){
 				return true;
@@ -117,6 +159,21 @@ public class OBOTerm implements Term {
 	public void createAltID(String id){
 		term.addSecondaryID(id);
 	}
+
+
+	@Override
+	public boolean isObsolete() {
+		return asOBOClass().isObsolete();
+	}
+
+	public void removeProperties(){
+		Set <PropertyValue> copy = new HashSet<PropertyValue>();
+		copy.addAll(asOBOClass().getPropertyValues());
+		for (PropertyValue v : copy){
+			asOBOClass().removePropertyValue(v);
+		}
+	}
+
 
 	
 }

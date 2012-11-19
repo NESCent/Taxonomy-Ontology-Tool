@@ -216,6 +216,12 @@ public class OWLStore implements TaxonStore {
 		
 	}
 
+	@Override
+	public void resetExtinct(Term term) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 	
 }

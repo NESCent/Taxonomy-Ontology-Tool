@@ -100,6 +100,8 @@ public interface TaxonStore {
 	
 	public void setExtinct(Term term);
 	
+	public void resetExtinct(Term term);
+	
 	/**
 	 * This generates a report of counts of terms, synonyms, breakdown by rank, etc.
 	 * @return

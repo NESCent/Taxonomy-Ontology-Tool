@@ -13,13 +13,13 @@ public enum KnownField {
 	SUBFAMILY("subfamily",true),
 	GENUS("genus",true),
 	SPECIES("species",true),
-	SYNONYM("",false),
-	SYNONYMS("",false),
-	DESCRIPTION("",false),
-	STATUS("",false),
-	XREF("",false),
-	DELIMITEDNAME("",false),
-	IGNORE("",false);
+	SYNONYM("synonym",false),
+	SYNONYMS("synonyms",false),
+	DESCRIPTION("description",false),
+	STATUS("status",false),
+	XREF("xref",false),
+	DELIMITEDNAME("delimitedname",false),
+	IGNORE("ignore",false);
 	
 	private final String cannonicalName;
 	private final boolean isTaxon;

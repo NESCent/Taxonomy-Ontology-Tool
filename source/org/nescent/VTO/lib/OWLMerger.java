@@ -73,4 +73,10 @@ public class OWLMerger implements Merger {
 
 	}
 
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

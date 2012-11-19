@@ -36,8 +36,10 @@ package org.nescent.VTO.lib;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -54,6 +56,8 @@ public class NCBIMerger implements Merger {
 
 	static final private String NAMESFILENAME = "names.dmp";
 	static final private String NODESFILENAME = "nodes.dmp";
+	
+	//These codes are defined in division.dmp, which should accompany the other dump files
 	static final private String NCBIVERTEBRATE = "10";
 	static final private String NCBIMAMMAL = "2";
 	static final private String NCBIPRIMATE = "5";
@@ -65,7 +69,7 @@ public class NCBIMerger implements Merger {
 	
 	static final private String NCBIDBNAME = "NCBITaxon";
 	
-    static final Pattern tabPattern = Pattern.compile("\t|\t");   //try this pattern as it matches the documentation
+    static final Pattern tabpipetabPattern = Pattern.compile("\t|\t");   //try this pattern as it matches the documentation
 
     private int count = 0;
     private File source;
@@ -73,11 +77,13 @@ public class NCBIMerger implements Merger {
     
     private boolean preserveID;
     private SynonymSource preserveSynonyms;
-    private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
+    private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) merging behavior is to merge synonyms
     
 	private final Map <String,Integer> namesInScope = new HashMap<String,Integer>(50000);
 	private final Map <Integer,String> termToName = new HashMap<Integer,String>(50000);
 	private final Map <Integer,Set<String>> synonymsInScope = new HashMap<Integer,Set<String>>(50000);
+	
+	private final Map<Integer,Integer> homonyms = new HashMap<Integer,Integer>();
 
     
 	static Logger logger = Logger.getLogger(NCBIMerger.class.getName());
@@ -128,6 +134,13 @@ public class NCBIMerger implements Merger {
 		subAction = sa;
 	}
 
+	
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+		
+	}
+
     /**
      * This collects NCBI IDs as synonyms
      * @param prefix
@@ -164,12 +177,12 @@ public class NCBIMerger implements Merger {
             final BufferedReader br = new BufferedReader(new FileReader(nf));
             String raw = br.readLine();
             while (raw != null){
-                final String[] digest = tabPattern.split(raw);
-                final String scope = digest[8];
-                if (NCBIVERTEBRATE.equals(scope) || NCBIMAMMAL.equals(scope) || NCBIRODENT.equals(scope) || NCBIPRIMATE.equals(scope) || NCBIINVERTEBRATE.equals(scope)){
+                final String[] digest = tabpipetabPattern.split(raw);
+                final String divisionCode = digest[8];
+                if (withinScope(divisionCode)){
                     final Integer nodeVal = Integer.parseInt(digest[0]);
                 	nodes.add(nodeVal);                	
-                    Integer parentVal = Integer.parseInt(digest[2]);
+                    final Integer parentVal = Integer.parseInt(digest[2]);
                     if (children.containsKey(parentVal)){
                     	children.get(parentVal).add(nodeVal);
                     }
@@ -191,15 +204,24 @@ public class NCBIMerger implements Merger {
         return;
 	}
 	
+	//The division code, read as a string is checked here; ignore any node not in a taxonomy division of interest
+	private static boolean withinScope(String code){
+		return NCBIVERTEBRATE.equals(code) || 
+		       NCBIMAMMAL.equals(code) || 
+		       NCBIRODENT.equals(code) || 
+		       NCBIPRIMATE.equals(code) || 
+		       NCBIINVERTEBRATE.equals(code);
+	}
+	
 	private void buildScopedNamesList(File nf, Set<Integer> nodes, Map<String,Integer> names, Map<Integer,String> termToName, Map<Integer,Set<String>> synonyms) {
 		try{
             final BufferedReader br = new BufferedReader(new FileReader(nf));
             String raw = br.readLine();
             while (raw != null){
-                final String[] digest = tabPattern.split(raw);
-                Integer nodeNum = Integer.parseInt(digest[0]);
-                String name = digest[2].trim();  //Unfortunately, there are some names with leading spaces in NCBI...
-                String nameType = digest[6];
+                final String[] digest = tabpipetabPattern.split(raw);
+                final Integer nodeNum = Integer.parseInt(digest[0]);
+                final String name = digest[2].trim();  //Unfortunately, there are some names with leading spaces in NCBI...
+                final String nameType = digest[6];
                 if (nodes.contains(nodeNum) && SCIENTIFICNAMETYPE.equalsIgnoreCase(nameType)){
                 	names.put(name,nodeNum);
                 	termToName.put(nodeNum,name);
@@ -280,9 +302,27 @@ public class NCBIMerger implements Merger {
 	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks, String prefix) {
 		Set<Integer> children = nodeChildren.get(parent);
 		if (children != null){
-			String parentName = termToName.get(parent);
+			final String parentName = termToName.get(parent);
 			if (parentName == null)
 				throw new RuntimeException("parent name is null");
+			
+			//this checks for a common source of homonymy - child of genus node has same name as parent of genus rank
+			Integer homonymChild = null;
+			for (Integer childID : children){
+				String childName = termToName.get(childID);
+				if (parentName.equals(childName)){
+					String parentRank = nodeRanks.get(parent);
+					if ("genus".equals(parentRank)){
+						homonymChild = childID;
+					}
+				}
+			}
+			if (homonymChild != null){
+				Set<Integer> subgenusChildren = nodeChildren.get(homonymChild);
+				children.addAll(subgenusChildren);
+				children.remove(homonymChild);
+			}
+			
 			Term parentTerm = target.getTermByXRef(NCBIDBNAME,parent.toString());
 			if (parentTerm == null)
 				parentTerm = target.getTermbyName(parentName);
@@ -291,10 +331,9 @@ public class NCBIMerger implements Merger {
 			for (Integer childID : children){
 				String childName = termToName.get(childID);
 				Term childTerm = target.getTermbyName(childName);
-				
 				if (childTerm == null){
-					String rankStr = nodeRanks.get(childID);
-					if (rankStr != null && !"no rank".equals(rankStr)){
+					final String rankStr = nodeRanks.get(childID);
+					if (!"no rank".equals(rankStr)){
 						if ("subspecies".equals(rankStr)){
 							//merge subspecies as synonyms of their parent species (following CoF/TTO practice)
 							SynonymI subSyn = target.makeSynonymWithXref(childName, NCBIDBNAME, childID.toString());
@@ -360,5 +399,7 @@ public class NCBIMerger implements Merger {
 		}
 		return parentTerm;
 	}
+
+
 	
 }

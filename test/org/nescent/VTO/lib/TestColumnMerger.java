@@ -20,8 +20,13 @@ public class TestColumnMerger {
 	
 	final static String AMPHIBIASTR = "AmphibiaWeb.txt";
 	final static List<ColumnType>amphibiaColumns = new ArrayList<ColumnType>();
+	private final String baseTaxonomy = "src/Ontologies/exto.obo";
+	private final File baseTaxonomyFile = new File(baseTaxonomy);
 
 	private static String testImportsPath;
+	
+	final static String testURI = "http://www.fishbase.org/Summary/SpeciesSummary.php?id=*xref";
+	private ColumnMerger testMerger;
 	
 	static final Logger logger = Logger.getLogger(TestColumnMerger.class.getName());
 
@@ -53,7 +58,16 @@ public class TestColumnMerger {
 	@Before
 	public void setUp() throws Exception {
 		BasicConfigurator.configure();
-		testStore = new OBOStore(null,null,null);
+		testMerger = new ColumnMerger("\t");
+	}
+
+	
+	//don't need to load the base taxonomy for every test
+	private void initBaseTaxonomy(){
+		Merger initMerger = new OBOMerger();
+		initMerger.setSource(baseTaxonomyFile);
+		initMerger.setTarget(testStore);
+		initMerger.attach("Chordata", "Chordata", "EXTO");
 	}
 
 
@@ -71,6 +85,15 @@ public class TestColumnMerger {
 		testMergerTabFormat.setColumns(amphibiaColumns);
 		testMergerTabFormat.merge("ATO");
 		//fail("Not yet implemented");
+	}
+
+	@Test
+	public void testExpandURI(){
+		testMerger.setURITemplate(testURI);
+		Item testItem = new Item();
+		testItem.putName(KnownField.XREF,"33");
+		String result = testMerger.expandURI(testItem);
+		logger.info(result);
 	}
 
 

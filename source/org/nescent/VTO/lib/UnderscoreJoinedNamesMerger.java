@@ -98,6 +98,11 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 		subAction = sa;
 	}
 
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+	}
+
 
 	@Override
 	public void merge(String prefix) {
@@ -266,5 +271,6 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 		throw new RuntimeException("UnderscoreJoinedName does not support attach");
 		// TODO Auto-generated method stub
 	}
+
 
 }

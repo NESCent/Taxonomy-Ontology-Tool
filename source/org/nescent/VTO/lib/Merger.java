@@ -31,5 +31,9 @@ public interface Merger {
 
 	// This will allows specifying whether this merge adds synonyms or xrefs to existing terms
 	void setSubAction(String subAction);
+	
+	//These next three allow the construction of uri's based on taxonomy from the source (mostly useful for columns)
+	void setURITemplate(String template);
+	
 
 }

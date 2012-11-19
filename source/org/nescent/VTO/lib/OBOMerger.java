@@ -21,10 +21,10 @@ public class OBOMerger implements Merger {
 
 	//String defaultPrefix;
 	private final String idSuffix = ":%07d";
-	
+
 	private File sourceFile;
 	private TaxonStore target;
-	
+
 	private boolean preserveID = false;
 	private SynonymSource preserveSynonyms;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
@@ -45,22 +45,22 @@ public class OBOMerger implements Merger {
 	public void setPreserveID(boolean v){
 		preserveID = v;
 	}
-	
+
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
 	}
-	
+
 	@Override
 	public void setSource(File source){
 		sourceFile = source;
 	}
-	
+
 	@Override
 	public void setTarget(TaxonStore targetStore){
 		target = targetStore;
 	}
-	
+
 	/**
 	 * @param sa specifies whether this merges synonyms or cross references
 	 */
@@ -71,6 +71,13 @@ public class OBOMerger implements Merger {
 		}
 		subAction = sa;
 	}
+
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+
+	}
+
 
 
 	@Override
@@ -131,10 +138,10 @@ public class OBOMerger implements Merger {
 			addChildren(sourceRoot,targetRoot,target,prefix);
 			//logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
 			//logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
-			
+
 			//anything special here?
 		}
-		
+
 
 	}
 
@@ -161,14 +168,14 @@ public class OBOMerger implements Merger {
 		addChildren(sourceRoot,targetRoot,target,prefix);
 	}
 
-	
+
 	private void checkTarget(String s){
 		for (Term t : target.getTerms()){
 			if (s.equals(t.getLabel())){
 				logger.info("Found " + s + " on through search on load check");
 			}
 		}
-		
+
 	}
 
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree
@@ -244,8 +251,8 @@ public class OBOMerger implements Merger {
 		}
 		if (sourceUtils.isExtinct(sourceClass))
 			sourceUtils.setExtinct(targetTerm.asOBOClass());
-	return targetTerm;
-}
+		return targetTerm;
+	}
 
 
 

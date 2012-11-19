@@ -1,13 +1,12 @@
 package org.nescent.VTO.lib;
 
 public class ColumnType {
-	private final String name;
-	private String type;
+	private String name;
+	private final String type;
 	private String xrefPrefix;
-	private String uri;
 
-	public ColumnType(String colName){
-		name = colName;
+	public ColumnType(String colType){
+		type = colType;
 	}
 	
 	public String getName(){
@@ -19,9 +18,10 @@ public class ColumnType {
 		return type;
 	}
 
-	public void setType(String t){
-		type = t;
+	public void setName(String n){
+		name = n;
 	}
+	
 	public String getXrefPrefix(){
 		return xrefPrefix;
 	}
@@ -30,14 +30,6 @@ public class ColumnType {
 		xrefPrefix = p;
 	}
 	
-	public String getURI(){
-		return uri;
-	}
-
-	public void setURI(String u){
-		uri = u;
-	}
-
 
 }
 

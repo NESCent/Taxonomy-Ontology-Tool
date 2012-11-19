@@ -83,6 +83,12 @@ public class CoLDBMerger implements Merger {
 		subAction = sa;
 	}
 	
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub		
+	}
+
+	
 	/**
 	 * 
 	 * @param source specifies a properties file that specifies the host,db,user,password (will default if not specified)
@@ -277,5 +283,6 @@ public class CoLDBMerger implements Merger {
 		return DriverManager.getConnection(String.format("jdbc:mysql://%s/%s",host,db),user,password);
 
 	}
+
 
 }

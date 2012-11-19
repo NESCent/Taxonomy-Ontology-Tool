@@ -5,9 +5,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.obo.datamodel.Dbxref;
+import org.obo.datamodel.Link;
+import org.obo.datamodel.OBOClass;
+import org.obo.datamodel.OBOProperty;
+import org.obo.datamodel.Synonym;
 
 public class PBDBPostProcess implements Merger{
 	
@@ -16,7 +23,7 @@ public class PBDBPostProcess implements Merger{
 
 	private static final String TARGETNOTSETMESSAGE = "Target ontology for PBDB post process not set";
 	private static final String SOURCENOTSETMESSAGE = "Source file for PBDB post process not set";
-	private static final String NOSUBACTIONMESSAGE = "PBDB postprocessor merger does not accept subAction attributes";
+	private static final String NOURITEMPLATEMESSAGE = "PBDB postprocessor merger does not accept URITemplate attributes";
 
 	private final Logger logger = Logger.getLogger(PBDBPostProcess.class.getName());
 	
@@ -53,9 +60,14 @@ public class PBDBPostProcess implements Merger{
 	 */
 	@Override
 	public void setSubAction(String sa){
-		throw new IllegalArgumentException(NOSUBACTIONMESSAGE);
+		//throw new IllegalArgumentException(NOSUBACTIONMESSAGE);  //no real need to fail here
 	}
 
+	@Override
+	public void setURITemplate(String template) {
+		throw new IllegalArgumentException(NOURITEMPLATEMESSAGE);
+	}
+	
 	private void checkInitialization(){
 		if (target == null){
 			throw new IllegalStateException(TARGETNOTSETMESSAGE);
@@ -81,7 +93,6 @@ public class PBDBPostProcess implements Merger{
 		}
 	}
 	
-
 	@Override
 	public void attach(String parent, String cladeRoot, String prefix) {
 		throw new RuntimeException("PBDBPostProcess doesn't support attach");		
@@ -109,6 +120,17 @@ public class PBDBPostProcess implements Merger{
 		int badModifyCount = 0;
 		int badDeleteCount = 0;
 		
+		//run the modifications first - this may prevent orphans from getting created in the first place
+		for(Action a : alist){
+			String taxonName = a.taxa.get(0);
+			Term taxonTerm = target.getTermbyName(taxonName);	
+			if ("modified".equalsIgnoreCase(a.command)){
+				modifyCount++;
+				if (taxonTerm == null)
+					badModifyCount++;
+			}
+		}
+		// now run the delete actions - and if an obsoleted node has children, attach them to the nearest ancestor node
 		for(Action a : alist){
 			String taxonName = a.taxa.get(0);
 			Term taxonTerm = target.getTermbyName(taxonName);	
@@ -117,19 +139,31 @@ public class PBDBPostProcess implements Merger{
 				if (taxonTerm == null)
 					badDeleteCount++;
 				else {
+					Set <Term> children = taxonTerm.getChildren();
+					List <Term> ancestors = taxonTerm.getAncestors();
+					final Term termParent = ancestors.get(0);  //save this for disconnection
+					for (Term anc : ancestors){
+						if (!anc.isObsolete()){
+							for (Term child : children){
+								child.removeParent(taxonTerm);
+								target.attachParent(child, anc);
+							}
+							break;
+						}
+					}
+					taxonTerm.removeParent(termParent);
+					taxonTerm.removeProperties();
 					target.obsoleteTerm(taxonTerm);
 				}
-			}
-			if ("modified".equalsIgnoreCase(a.command)){
-				modifyCount++;
-				if (taxonTerm == null)
-					badModifyCount++;
 			}
 		}
 		logger.info("Processed " + modifyCount + " modify actions, of which " + badModifyCount + " had unresolvable key taxa");
 		logger.info("Processed " + deleteCount + " delete actions, of which " + badDeleteCount + " had unresolvable key taxa");
 		
 	}
+	
+
+
 	
 	static class Action{
 		final List<String> taxa = new ArrayList<String>();
@@ -154,5 +188,5 @@ public class PBDBPostProcess implements Merger{
 			return result;
 		}
 	}
-	
+
 }

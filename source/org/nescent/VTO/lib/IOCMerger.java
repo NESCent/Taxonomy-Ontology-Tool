@@ -71,6 +71,13 @@ public class IOCMerger implements Merger {
 		subAction = sa;
 	}
 
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 
 	@Override
 	public void merge(String prefix) {

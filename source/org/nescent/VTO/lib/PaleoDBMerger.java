@@ -92,6 +92,12 @@ public class PaleoDBMerger implements Merger {
 	}
 	
 	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+	}
+
+
+	@Override
 	public void merge(String prefix) {
 		DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 		f.setNamespaceAware(true);

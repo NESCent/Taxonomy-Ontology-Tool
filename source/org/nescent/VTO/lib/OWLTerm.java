@@ -1,5 +1,7 @@
 package org.nescent.VTO.lib;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.obo.datamodel.OBOClass;
@@ -54,11 +56,6 @@ public class OWLTerm implements Term {
 		return null;
 	}
 
-	@Override
-	public void addRank(String rank) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	public Set<Term> getChildren() {
@@ -85,11 +82,35 @@ public class OWLTerm implements Term {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+
+	@Override
+	public void removeProperties() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 	@Override
 	public void createAltID(String id) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Term> getAncestors() {
+		return new ArrayList<Term>();
+		// TODO stub
+	}
+
+	@Override
+	public boolean isObsolete() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void removeParent(Term parent){
 	}
 
 }

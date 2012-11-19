@@ -44,7 +44,7 @@ class OBOUtils {
 	static final public String RANK_PROPERTY = "has_rank";
 	static final public String EXTINCT_PROPERTY = "is_extinct";
 	
-	static final public String TRUE_VALUE = "true";   //this should probably be some sort of XST:boolean expression
+	static final public String TRUE_VALUE = "\"true\" xsd:boolean";   //this should probably be some sort of XST:boolean expression
 
 
 	final private OBOSession theSession;
@@ -76,7 +76,7 @@ class OBOUtils {
 		isaProperty = lookupProperty(ISA_PROPERTY);		
 		hasRankProperty = (OBOProperty)theSession.getObjectFactory().createObject(RANK_PROPERTY, OBOClass.OBO_PROPERTY, false);
 		hasRankProperty.setName("has taxonomic rank");
-		theSession.addObject(hasRankProperty);
+		//theSession.addObject(hasRankProperty);
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
 		termIDs = getAllTermIDsHash(terms);
@@ -109,7 +109,7 @@ class OBOUtils {
 			logger.warn("Ontology loaded from " + path + " has no has_rank property");
 			hasRankProperty = (OBOProperty)theSession.getObjectFactory().createObject(RANK_PROPERTY, OBOClass.OBO_PROPERTY, false);
 			hasRankProperty.setName("has taxonomic rank");
-			theSession.addObject(hasRankProperty);
+			//theSession.addObject(hasRankProperty);
 		}
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
@@ -299,6 +299,15 @@ class OBOUtils {
 		return false;
 	}
 	
+	public void resetExtinct(OBOClass c) {
+		final PropertyValue extinctProperty = 
+		      oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
+		    		                         EXTINCT_PROPERTY + 
+		    		                         " " + 
+		    		                         TRUE_VALUE); 
+		c.removePropertyValue(extinctProperty);
+		
+	}
 
 	public void setNameSpace(String namespace, String filepath){
 		Namespace n = oboFactory.createNamespace(namespace, filepath);
@@ -480,6 +489,24 @@ class OBOUtils {
 		return null;
 	}
 
+	
+	public void removeRank(OBOClass cl){
+		PropertyValue rankPropertyValue = null;
+		for (PropertyValue pv : cl.getPropertyValues()){
+			if (PROPERTYVALUE_TAG.equals(pv.getProperty())){  // more checking
+				String propVal = pv.getValue();
+				int spacePos = propVal.indexOf(' ');
+				String propertyName = propVal.substring(0, spacePos);
+				if (RANK_PROPERTY.equals(propertyName)){
+					rankPropertyValue = pv;
+					break;
+				}
+			}
+		}
+		if (rankPropertyValue != null){
+			cl.removePropertyValue(rankPropertyValue);
+		}
+	}	
 
 	public String makeUnderScoreJoinedName(String rawString){
 		String[] components = rawString.split(" ");
@@ -595,6 +622,17 @@ class OBOUtils {
 		c.setObsolete(true);
 		
 	}
+
+	public OBOClass lookupTermByID(String termID) {
+		if (dirtyTermSets){
+			terms = TermUtil.getTerms(theSession);
+			termNames = getAllTermNamesHash(terms);
+			termIDs = getAllTermIDsHash(terms);
+			dirtyTermSets = false;
+		}
+		return (OBOClass)termIDs.get(termID);
+	}
+
 
 
 

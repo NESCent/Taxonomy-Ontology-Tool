@@ -98,8 +98,13 @@ public class OBOStore implements TaxonStore {
 
 	@Override
 	public Term getTerm(String termID) {
-		// TODO Auto-generated method stub
-		return null;
+		final OBOClass cl = u.lookupTermByID(termID);
+		if (cl == null){
+			return null;
+		}
+		else {	
+			return new OBOTerm(u.lookupTermByID(termID));
+		}
 	}
 
 	/**
@@ -630,7 +635,6 @@ public class OBOStore implements TaxonStore {
 	@Override
 	public void setRankFromName(Term term, String rank) {
 		u.setRankFromName(term.asOBOClass(), rank);
-		
 	}
 
 
@@ -852,6 +856,11 @@ public class OBOStore implements TaxonStore {
 	@Override
 	public void setExtinct(Term term) {
 		u.setExtinct(term.asOBOClass());		
+	}
+
+	@Override
+	public void resetExtinct(Term term) {
+		u.resetExtinct(term.asOBOClass());
 	}
 
 

@@ -94,6 +94,11 @@ public class CoLMerger implements Merger {
 		subAction = sa;
 	}
 
+	@Override
+	public void setURITemplate(String template) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	/**
 	 * 
@@ -250,4 +255,6 @@ public class CoLMerger implements Merger {
 			return id;
 		}
 	}
+
+
 }
