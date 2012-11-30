@@ -26,14 +26,17 @@ public class Item {
 	// its position between genus and species is consistent across authorities
 	
 	private final Map<KnownField,String> names;  //maps a rank term to a taxon name
-	private final Map<String,Set<String>> synonyms;  //maps a synonym source (xref) to a synonym  
-	private final List<String> xrefs;
+	private final Set<String> synonyms;  //synonyms w/o xrefs
+	private final Map<String,Set<String>> synonyms_xref;  //maps a synonym source (xref) to a synonym  
+	private final Set<String> xrefs; //xrefs and uris for the term
+	private String comment = null;  //Maybe this should be a set (OWL can handle multiple comments, OBO?)
     private boolean is_extinct;  // may not use this
     
     public Item(){
         names = new HashMap<KnownField,String>();
-        synonyms = new HashMap<String,Set<String>>();
-        xrefs = new ArrayList<String>();
+        synonyms = new HashSet<String>();
+        synonyms_xref = new HashMap<String,Set<String>>();
+        xrefs = new HashSet<String>();
         is_extinct = false;
     }
     
@@ -58,7 +61,7 @@ public class Item {
     }
     
     
-    public void addSynonym(String source, String name, String identifier, ItemList container){
+    public void addSynonymWithXref(String source, String name, String identifier, ItemList container){
     	String dbSource;
     	if ("".equals(identifier)){
     		if (container.hasSynonymSourcecontainsKey(source))
@@ -69,22 +72,22 @@ public class Item {
     	else
     		dbSource = source + ":" + identifier;
     	Set<String> contents;
-    	if (synonyms.containsKey(dbSource))
-    		contents = synonyms.get(dbSource);
+    	if (synonyms_xref.containsKey(dbSource))
+    		contents = synonyms_xref.get(dbSource);
     	else{
     		contents = new HashSet<String>();
-    		synonyms.put(dbSource, contents);
+    		synonyms_xref.put(dbSource, contents);
     	}
     	contents.add(name);
     }
     
-    public Collection<String> getSynonymSources(){
-    	return synonyms.keySet();
+    public Collection<String> getSynonym_xrefs(){
+    	return synonyms_xref.keySet();
     }
     
     public Collection <String> getSynonymsForSource(String source){
-    	if (synonyms.containsKey(source))
-    		return synonyms.get(source);
+    	if (synonyms_xref.containsKey(source))
+    		return synonyms_xref.get(source);
     	else
     		return Collections.emptySet();
     }
@@ -104,13 +107,16 @@ public class Item {
     			}
     		}
     	}
-    	if (!synonyms.isEmpty()){
+    	if (!synonyms_xref.isEmpty()  || !synonyms.isEmpty()){
     		b.append("; Synonyms: ");
-    		for(Entry<String, Set<String>> e : synonyms.entrySet()){
+    		for(Entry<String, Set<String>> e : synonyms_xref.entrySet()){
     			b.append( e.getKey()+ ": ");
     			for(String syn : e.getValue()){
     				b.append(syn + ", ");
     			}
+    		}
+    		for(String syn : synonyms){
+    			b.append(":" + syn + ", ");
     		}
     	}
     	if (!xrefs.isEmpty()){

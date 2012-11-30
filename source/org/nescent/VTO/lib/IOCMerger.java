@@ -217,7 +217,7 @@ public class IOCMerger implements Merger {
 				else {
 					throw new RuntimeException(speciesName + " has no parent");
 				}
-				Collection<String> synSources = it.getSynonymSources();
+				Collection<String> synSources = it.getSynonym_xrefs();
 				for (String synSource : synSources){
 					for(String syn : it.getSynonymsForSource(synSource))
 						if (true) { //!syn.equals(speciesName)){

@@ -17,7 +17,7 @@ import java.util.Set;
 public class ItemList {
 
 	private final List<Item> contents;
-	private final Set<KnownField> columnNames;
+	private List<ColumnType> columnNames;
     private Map<String,String> synonymSources;  //maps a synonym column to an attributed source URL (these ought to be in the source sheet)
     private Map<String,String> dbxRefSources;  //maps a column name to a database prefix
     private List<String> uriList;
@@ -30,7 +30,6 @@ public class ItemList {
 
 	public ItemList(){
 		contents = new ArrayList<Item>();
-		columnNames = new HashSet<KnownField>();
 		synonymSources = new HashMap<String,String>();
         synonymSources.put(ITISCOLUMNTAG, ITISURL);
         synonymSources.put(GAACOLUMNTAG, GAAURL);
@@ -48,12 +47,16 @@ public class ItemList {
 		return contents;
 	}
 
-	public void addColumns(List<KnownField> fields) {
-		columnNames.addAll(fields);
+	public void addColumns(List<ColumnType> fields) {
+		columnNames = fields;
 	}
 	
 	public boolean hasColumn(KnownField column){
-		return columnNames.contains(column);
+		for (ColumnType tc : columnNames){
+			if (tc.getFieldType() == column)
+				return true;
+		}
+		return false;
 	}
 
 	public String getSynonymSource(String source) {

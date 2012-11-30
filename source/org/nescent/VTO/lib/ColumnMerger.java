@@ -184,6 +184,29 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm, prefix);
 		}
+		if (items.hasColumn(KnownField.SYNONYM_LIST)){
+		}
+		if (items.hasColumn(KnownField.VERNACULAR)){
+			
+		}
+		if (items.hasColumn(KnownField.DESCRIPTION)){
+		}
+		
+		if (items.hasColumn(KnownField.COMMENT)){
+			
+		}
+		if (items.hasColumn(KnownField.STATUS)){
+		}
+		if (items.hasColumn(KnownField.URI)){
+			
+		}
+		else if (items.hasColumn(KnownField.XREF)){
+
+		}
+		else if (items.hasColumn(KnownField.DELIMITEDNAME)){
+							
+		}	
+
 	}
 
 	private void processClassColumn(ItemList items, Term attachTerm, String prefix){
@@ -342,9 +365,9 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 
 	private void addSpeciesSynonyms(Item it, Term speciesTerm){
-		for (final String synSource : it.getSynonymSources()){
-			final String[] sourceComps = synSource.split(":",2);
-			for(String syn : it.getSynonymsForSource(synSource))
+		for (final String synXref : it.getSynonym_xrefs()){
+			final String[] sourceComps = synXref.split(":",2);
+			for(String syn : it.getSynonymsForSource(synXref))
 				if (true) { //!syn.equals(speciesName)){
 					SynonymI s = target.makeSynonymWithXref(syn, sourceComps[0], sourceComps[1]);
 					speciesTerm.addSynonym(s);

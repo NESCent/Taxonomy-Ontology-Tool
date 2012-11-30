@@ -1,8 +1,6 @@
 package org.nescent.VTO.lib;
 
 
-//Ideally this should be derived in some fashion from the taxrank ontology.  This would probably require tricky class design
-
 /**
  * @author pmidford
  */
@@ -12,11 +10,15 @@ public enum KnownField {
 	FAMILY("family",true),
 	SUBFAMILY("subfamily",true),
 	GENUS("genus",true),
+	SUBGENUS("subgenus",true),
 	SPECIES("species",true),
 	SYNONYM("synonym",false),
-	SYNONYMS("synonyms",false),
+	SYNONYM_LIST("synonym-list",false),
+	VERNACULAR("vernacular",false),
 	DESCRIPTION("description",false),
+	COMMENT("comment",false),
 	STATUS("status",false),
+	URI("uri",false),
 	XREF("xref",false),
 	DELIMITEDNAME("delimitedname",false),
 	IGNORE("ignore",false);

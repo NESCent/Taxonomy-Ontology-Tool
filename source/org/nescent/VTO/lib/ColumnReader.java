@@ -64,7 +64,6 @@ public class ColumnReader {
 	final Pattern splitPattern;
 
 
-	private List<KnownField> fields = new ArrayList<KnownField>();
 	private List<Integer> synonymFields = new ArrayList<Integer>();
 	private List<ColumnType> headers;
 
@@ -88,19 +87,6 @@ public class ColumnReader {
 	 */
 	public void setColumns(final List<ColumnType> columns){
 		headers = columns;
-		for(ColumnType column : columns){
-			boolean matched = false;
-			for(KnownField k : KnownField.values()){
-				if (k.toString().equalsIgnoreCase(column.getType())){
-					fields.add(k);
-					matched = true;
-				}
-			}
-			if (!matched){
-				logger.error("Unknown column type specified");
-				fields.add(KnownField.IGNORE);
-			}
-		}
 	}
 
 
@@ -112,7 +98,7 @@ public class ColumnReader {
 	 */
 	public ItemList processCatalog(File f,boolean headersFirst) {
 		final ItemList result = new ItemList();
-		result.addColumns(fields);
+		result.addColumns(headers);
 		String raw = "";
 		if (f != null){
 			try {
@@ -152,13 +138,49 @@ public class ColumnReader {
 
 	private Item processLine(String[] digest, ItemList resultList){
 		final Item result = new Item(); 
-		for(int i = 0;i<fields.size();i++){   //this allows ignoring trailing fields that are undefined in the xml columns element
+		for(int i = 0;i<headers.size();i++){   //this allows ignoring trailing fields that are undefined in the xml columns element
 			if (digest.length>i){ //this allows files that are (unfortunately) missing trailing empty fields (Excel can write tab files like this)
 				String rawColumn = digest[i]; 
 				if (rawColumn.length() > 2 && rawColumn.charAt(0) == '"' && rawColumn.charAt(rawColumn.length()-1) == '"')
 					rawColumn = rawColumn.substring(1,rawColumn.length()-1);
 				final String curColumn = rawColumn.trim();  //At least some sources have extra trailing white space in names 
-				result.putName(fields.get(i),curColumn);
+				KnownField f = headers.get(i).getFieldType();
+				switch(f){
+				case SYNONYM: {
+					//result.addSynonym(source, name, identifier, container)
+					break;
+				}
+				case SYNONYM_LIST: {
+					break;
+				}
+				case VERNACULAR: {
+					break;
+				}
+				case DESCRIPTION: {
+					break;
+				}
+				case COMMENT: {
+					break;
+				}
+				case STATUS: {
+					break;
+				}
+				case URI: {
+					break;
+				}
+				case XREF: {
+					break;
+				}
+				case DELIMITEDNAME: {
+					break;
+				}
+				default: {
+					if (f.isTaxon()){
+						result.putName(f,curColumn);
+					}
+				}
+
+				}
 			}
 		}
 		return result;
