@@ -147,13 +147,38 @@ public class ColumnReader {
 				KnownField f = headers.get(i).getFieldType();
 				switch(f){
 				case SYNONYM: {
-					//result.addSynonym(source, name, identifier, container)
+					if (!rawColumn.isEmpty()){
+						if (headers.get(i).getXrefPrefix() != ""){
+							result.addPlainSynonym(rawColumn.trim());
+						}
+						else {
+						}
+					}
 					break;
 				}
 				case SYNONYM_LIST: {
+					if (!rawColumn.isEmpty()){
+						if (headers.get(i).getXrefPrefix() != ""){
+							String syns[] = rawColumn.split(",");
+							for(String syn : syns){
+								String trimmedSyn = syn.trim();
+								result.addPlainSynonym(trimmedSyn);
+							}
+						}
+						else {
+						}
+					}
+
 					break;
 				}
 				case VERNACULAR: {
+					if (!rawColumn.isEmpty()){
+						if (headers.get(i).getXrefPrefix() != ""){
+							result.addVernacular(rawColumn.trim());
+						}
+						else {
+						}
+					}
 					break;
 				}
 				case DESCRIPTION: {

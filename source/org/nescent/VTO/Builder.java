@@ -278,27 +278,18 @@ public class Builder {
 		}
 	}
 
-
-	@SuppressWarnings("unchecked")
-	final List<ColumnType> emptyColumns = (List<ColumnType>)Collections.EMPTY_LIST;
 	
 	private List<ColumnType> processAttachElement(Node action,Map<Integer,String> synPrefixes){
-		final NodeList childNodes = action.getChildNodes();
-		if (childNodes.getLength()>0){
-			return processChildNodesOfAttach(childNodes,synPrefixes);
-		}
-		else {
-			return emptyColumns;
-		}
+		return processChildNodesOfAttach(action.getChildNodes(),synPrefixes);
 	}
 
 	private List<ColumnType> processChildNodesOfAttach(NodeList childNodes, Map<Integer, String> synPrefixes) {
 		List<ColumnType> result = new ArrayList<ColumnType>();
+		int columnCount = 0;  //because not all children are column elements
 		for(int i = 0; i<childNodes.getLength();i++){
 			Node child = childNodes.item(i);
 			String childName = child.getNodeName();
 			if (COLUMNSYNTAXSTR.equals(childName)){
-				int columnCount = 0;  //because not all children are column elements
 				NodeList columnElements = child.getChildNodes();
 				for(int j = 0; j<columnElements.getLength();j++){
 					final Node column = columnElements.item(j);

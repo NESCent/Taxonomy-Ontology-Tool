@@ -166,6 +166,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 				}
 			}
 		}
+		//does a "breadth first" traversal of the columns so smaller id values are assigned to higher level taxa
 		if (items.hasColumn(KnownField.CLASS)){
 			processClassColumn(items, attachTerm, prefix);
 		}
@@ -184,26 +185,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm, prefix);
 		}
-		if (items.hasColumn(KnownField.SYNONYM_LIST)){
-		}
-		if (items.hasColumn(KnownField.VERNACULAR)){
-			
-		}
-		if (items.hasColumn(KnownField.DESCRIPTION)){
-		}
-		
-		if (items.hasColumn(KnownField.COMMENT)){
-			
-		}
-		if (items.hasColumn(KnownField.STATUS)){
-		}
-		if (items.hasColumn(KnownField.URI)){
-			
-		}
-		else if (items.hasColumn(KnownField.XREF)){
-
-		}
-		else if (items.hasColumn(KnownField.DELIMITEDNAME)){
+			else if (items.hasColumn(KnownField.DELIMITEDNAME)){
 							
 		}	
 
@@ -354,17 +336,33 @@ public class ColumnMerger implements Merger,ColumnFormat {
 					if (isExtinct){
 						target.setExtinct(speciesTerm);
 					}
-					if (items.hasColumn(KnownField.XREF)){
-						//TODO make sure xrefs are handled
-					}
-					addSpeciesSynonyms(it,speciesTerm);
+					decorateSpeciesTerm(it,speciesTerm);
 				}
 			}
 		}
 	}
 
 
-	private void addSpeciesSynonyms(Item it, Term speciesTerm){
+	private void decorateSpeciesTerm(Item it, Term speciesTerm){
+		if (!it.getSynonym_xrefs().isEmpty()){
+		}
+		if (!it.getPlainSynonyms().isEmpty()){
+		}
+		if (!it.getVernacularNames().isEmpty()){
+			
+		}
+		if (it.getFieldValue(KnownField.DESCRIPTION) != null){
+		}
+		
+		if (it.getFieldValue(KnownField.COMMENT) != null){
+			
+		}
+		if (it.getFieldValue(KnownField.STATUS) != null){
+		}
+		if (!it.getTermXRefs().isEmpty()){
+			
+		}
+
 		for (final String synXref : it.getSynonym_xrefs()){
 			final String[] sourceComps = synXref.split(":",2);
 			for(String syn : it.getSynonymsForSource(synXref))

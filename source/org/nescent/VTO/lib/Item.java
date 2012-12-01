@@ -29,6 +29,8 @@ public class Item {
 	private final Set<String> synonyms;  //synonyms w/o xrefs
 	private final Map<String,Set<String>> synonyms_xref;  //maps a synonym source (xref) to a synonym  
 	private final Set<String> xrefs; //xrefs and uris for the term
+	private final Set<String> commonNames;
+	private String description = null;
 	private String comment = null;  //Maybe this should be a set (OWL can handle multiple comments, OBO?)
     private boolean is_extinct;  // may not use this
     
@@ -36,6 +38,7 @@ public class Item {
         names = new HashMap<KnownField,String>();
         synonyms = new HashSet<String>();
         synonyms_xref = new HashMap<String,Set<String>>();
+        commonNames = new HashSet<String>();
         xrefs = new HashSet<String>();
         is_extinct = false;
     }
@@ -85,6 +88,26 @@ public class Item {
     	return synonyms_xref.keySet();
     }
     
+    public Set<String> getPlainSynonyms(){
+    	return synonyms;
+    }
+
+    public void addPlainSynonym(String rawColumn) {
+    	synonyms.add(rawColumn);
+	}
+    
+    public void addVernacular(String name){
+    	commonNames.add(name);
+    }
+    
+    public Set<String> getVernacularNames(){
+    	return commonNames;
+    }
+    
+    public Set<String> getTermXRefs(){
+    	return xrefs;
+    }
+    
     public Collection <String> getSynonymsForSource(String source){
     	if (synonyms_xref.containsKey(source))
     		return synonyms_xref.get(source);
@@ -131,6 +154,7 @@ public class Item {
     	else
     		return b.toString();
     }
+
 
 
 }
