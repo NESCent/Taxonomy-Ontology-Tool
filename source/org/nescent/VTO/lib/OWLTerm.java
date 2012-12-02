@@ -113,4 +113,9 @@ public class OWLTerm implements Term {
 	public void removeParent(Term parent){
 	}
 
+	@Override
+	public void setComment(String s){
+	}
+
+	
 }

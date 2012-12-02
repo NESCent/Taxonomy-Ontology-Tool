@@ -181,22 +181,27 @@ public class ColumnReader {
 					}
 					break;
 				}
-				case DESCRIPTION: {
-					break;
-				}
 				case COMMENT: {
+					if (!rawColumn.isEmpty()){
+						result.setComment(rawColumn.trim());
+					}
 					break;
 				}
 				case STATUS: {
 					break;
 				}
 				case URI: {
+					if (!rawColumn.isEmpty()){
+						String [] components = rawColumn.trim().split(":");
+						result.addXref(components[0], components[1]);
+					}
 					break;
 				}
 				case XREF: {
 					break;
 				}
 				case DELIMITEDNAME: {
+					
 					break;
 				}
 				default: {

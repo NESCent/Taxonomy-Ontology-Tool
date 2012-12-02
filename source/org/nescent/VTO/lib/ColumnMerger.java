@@ -351,11 +351,11 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (!it.getVernacularNames().isEmpty()){
 			
 		}
-		if (it.getFieldValue(KnownField.DESCRIPTION) != null){
+		if (it.getDescription() != null){
 		}
 		
-		if (it.getFieldValue(KnownField.COMMENT) != null){
-			
+		if (it.getComment() != null){
+			speciesTerm.setComment(it.getComment());
 		}
 		if (it.getFieldValue(KnownField.STATUS) != null){
 		}

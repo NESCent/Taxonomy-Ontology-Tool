@@ -16,6 +16,8 @@ public interface Term {
 	
 	public void addSynonym(SynonymI s);
 	
+	public void setComment(String comment);
+	
 	public String getLabel();
 
 	public Set<SynonymI> getSynonyms();

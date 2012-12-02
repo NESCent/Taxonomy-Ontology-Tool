@@ -119,6 +119,22 @@ public class Item {
     	xrefs.add(db + ":" + identifier);
     }
     
+    public void setComment(String c){
+    	comment = c;
+    }
+    
+    public String getComment(){
+    	return comment;
+    }
+    
+    public void setDescription(String d){
+    	description = d;
+    }
+    
+    public String getDescription(){
+    	return description;
+    }
+    
     public String toString(){
     	StringBuilder b = new StringBuilder(200);
     	for (KnownField field : KnownField.values()){

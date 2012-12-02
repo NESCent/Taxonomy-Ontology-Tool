@@ -174,6 +174,8 @@ public class OBOTerm implements Term {
 		}
 	}
 
-
+	public void setComment(String s){
+		term.setComment(s);
+	}
 	
 }

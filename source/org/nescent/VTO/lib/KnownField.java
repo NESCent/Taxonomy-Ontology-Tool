@@ -15,7 +15,6 @@ public enum KnownField {
 	SYNONYM("synonym",false),
 	SYNONYM_LIST("synonym-list",false),
 	VERNACULAR("vernacular",false),
-	DESCRIPTION("description",false),
 	COMMENT("comment",false),
 	STATUS("status",false),
 	URI("uri",false),
