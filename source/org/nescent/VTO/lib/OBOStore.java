@@ -20,6 +20,7 @@ import org.obo.datamodel.Link;
 import org.obo.datamodel.OBOClass;
 import org.obo.datamodel.OBOProperty;
 import org.obo.datamodel.Synonym;
+import org.obo.datamodel.SynonymType;
 
 public class OBOStore implements TaxonStore {
 
@@ -58,6 +59,10 @@ public class OBOStore implements TaxonStore {
 	
 	//When taxa are trimmed, we want to preserve the id in case the name is reintroduced with a subsequent attach
 	private final Map<String,OBOClass> trimmedNames = new HashMap<String,OBOClass>();    //taxon name -> id
+	
+	//If the name of a trimmed taxon is submitted as a synonym, go head and record the synonym, but save it here
+	//A final pass over these may generate obsoleted terms with consider links to the bearer of the synonym
+	private final Set<String> trimmedTaxonNameAsSynonym = new HashSet<String>();
 
 	/**
 	 * 
@@ -252,16 +257,33 @@ public class OBOStore implements TaxonStore {
 
 	
 	public SynonymI makeSynonym(final String synString){
+		trimmedNameCheck(synString);
 		Synonym s = u.makeSynonym(synString);
 		return new OBOSynonym(s);
 	}
 
 	public SynonymI makeSynonymWithXref(String synString, String dbxprefix, String entryID ){
+		trimmedNameCheck(synString);
 		final Synonym s = u.makeSynonymWithXref(synString, dbxprefix, entryID);
 		return new OBOSynonym(s);
 	}
-
 	
+	private void trimmedNameCheck(String synString){
+		if (trimmedNames.containsKey(synString)){
+			trimmedTaxonNameAsSynonym.add(synString);
+		}
+	}
+
+	public SynonymI makeCommonName(final String commonName){
+		final Synonym cn = u.makeSynonymWithType(commonName,u.getCommonNameType());
+		return new OBOSynonym(cn);
+	}
+
+	public SynonymI makeCommonNameWithXref(final String commonName, String dbxprefix, String entryID ){
+		final Synonym cn = u.makeSynonymWithTypeAndXref(commonName,u.getCommonNameType(), dbxprefix, entryID);
+		return new OBOSynonym(cn);
+	}
+
 	@Override
 	public void trim(String targetNode){
 		final OBOClass cladeRoot = u.lookupTermByName(targetNode);
@@ -564,10 +586,6 @@ public class OBOStore implements TaxonStore {
 		for(OBOClass term : tipList){
 			tipCount++;
         	Map<String,OBOClass> parentTable = getParents(term);        		
-    		//the following is included to support matching applications that want ranks filled in
-    		//Ideally these should be specified in the XML configuration 
-    		//TODO add syntax to the XML configuration to do this
-    		addIntermediateRanks(term,parentTable);
 			Set<String> mySynonyms = new HashSet<String>();
 			Map<String,String> tipSynonyms = u.getSynonyms(term);
 			if (!term.getName().contains(":") && "species".equals(u.getRankString(term))){   //avoid writing tips that are not species
@@ -671,144 +689,40 @@ public class OBOStore implements TaxonStore {
 		return u.countTerms();
 	}
 
-	
-
-	//the following is included to support matching applications that want ranks filled in
-	//Ideally these should be specified in the XML configuration 
-	//TODO add syntax to the XML configuration to do this
-
-	private OBOClass reptiliaFiller = null;
-	private OBOClass crocodiliaFiller = null; 
-	private OBOClass artiodactylaFiller = null;
-	private OBOClass afrosoricidaFiller = null;
-	private OBOClass chondrichthyesFiller = null;
-	private OBOClass sarcopterygiiFiller = null;
-	private OBOClass cephalaspidomorphiFiller = null;
-	
-	private void addIntermediateRanks(OBOClass term, Map<String,OBOClass> parentTable){
-		if (reptiliaFiller == null){
-			reptiliaFiller = u.makeTerm("TEMP:0000001","Reptilia");
+	public void processObsoletes(){
+		for(String oldName : trimmedTaxonNameAsSynonym){
+			OBOClass oldTerm = trimmedNames.get(oldName);
+			if (u.lookupTermByID(oldTerm.getID()) == null){
+				OBOClass addedClass = u.makeTerm(oldTerm.getID(), oldName);
+				addedClass.setObsolete(true);
+				List<OBOClass> considerTerms = findSynonymOccurances(oldName);
+				for(OBOClass candidate : considerTerms){
+					addedClass.addConsiderReplacement(candidate);					
+				}
+			}
 		}
-		if (crocodiliaFiller == null){
-			crocodiliaFiller = u.makeTerm("TEMP:0000002","Crocodilia");
-		}
-		if (artiodactylaFiller == null){
-			artiodactylaFiller = u.makeTerm("TEMP:0000003","Artiodactyla");
-		}
-		if (afrosoricidaFiller == null){
-			afrosoricidaFiller = u.makeTerm("TEMP:0000004", "Afrosoricida");
-		}
-		if (chondrichthyesFiller == null){
-			chondrichthyesFiller = u.lookupTermByName("Chondrichthyes");
-		}
-		if (sarcopterygiiFiller == null){
-			sarcopterygiiFiller = u.lookupTermByName("Sarcopterygii");
-		}
-		if (cephalaspidomorphiFiller == null){
-			cephalaspidomorphiFiller = u.makeTerm("TEMP:0000005", "Cephalaspidomorphi");
-		}
-		
-		final OBOClass orderClass = parentTable.get("order");
-		final OBOClass familyClass = parentTable.get("family");
-		if (orderClass != null && "Sphenodontia".equals(orderClass.getName())){
-			parentTable.put("class", reptiliaFiller);
-		}
-		if (orderClass != null && "Squamata".equals(orderClass.getName())){
-			parentTable.put("class", reptiliaFiller);
-		}
-		if (orderClass != null && "Testudines".equals(orderClass.getName())){
-			parentTable.put("class", reptiliaFiller);
-		}
-		if (familyClass != null && "Crocodylidae".equals(familyClass.getName())){
-			parentTable.put("class", reptiliaFiller);
-			parentTable.put("order", crocodiliaFiller);
-		}
-		if (familyClass != null && "Bovidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Camelidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Giraffidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Cervidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Antilocapridae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Moschidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Tragulidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Suidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Tayassuidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Hippopotamidae".equals(familyClass.getName())){
-			parentTable.put("order", artiodactylaFiller);
-		}
-		if (familyClass != null && "Tenrecidae".equals(familyClass.getName())){
-			parentTable.put("order", afrosoricidaFiller);
-		}
-		if (familyClass != null && "Chrysochloridae".equals(familyClass.getName())){
-			parentTable.put("order", afrosoricidaFiller);
-		}
-		if (orderClass != null && "Carcharhiniformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Chimaeriformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Heterodontiformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Hexanchiformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Lamniformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Pristiformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Pristiophoriformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Rajiformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Orectolobiformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Squaliformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Squatiniformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-		if (orderClass != null && "Torpediniformes".equals(orderClass.getName())){
-			parentTable.put("class", chondrichthyesFiller);
-		}
-
-		if (orderClass != null && "Ceratodontiformes".equals(orderClass.getName())){
-			parentTable.put("class", sarcopterygiiFiller);
-		}
-		if (orderClass != null && "Coelacanthiformes".equals(orderClass.getName())){
-			parentTable.put("class", sarcopterygiiFiller);
-		}
-		if (orderClass != null && "Lepidosireniformes".equals(orderClass.getName())){
-			parentTable.put("class", sarcopterygiiFiller);
-		}
-		if (orderClass != null && "Petromyzontiformes".equals(orderClass.getName())){
-			parentTable.put("class", cephalaspidomorphiFiller);
-		}
+		trimmedTaxonNameAsSynonym.clear();
 	}
+
+	
+	//sadly, brute force since the current interface doesn't capture the term with the matching synonym
+	private List<OBOClass> findSynonymOccurances(String oldName){
+		final List<OBOClass> result = new ArrayList<OBOClass>();
+		if (oldName == null){ //should never happen, but harmless here
+			return result;
+		}
+		for (OBOClass c : u.getTerms()){
+			Set <Synonym> synonyms = c.getSynonyms();
+			for (Synonym s : synonyms){
+				if (oldName.equals(s.getText())){
+					result.add(c);
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
 	
 	@Override
 	public void saveAllColumnFormat(String targetFilterPrefixStr) {

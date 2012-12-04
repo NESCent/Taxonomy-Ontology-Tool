@@ -3,6 +3,8 @@ package org.nescent.VTO.lib;
 import java.util.Collection;
 import java.util.List;
 
+import org.obo.datamodel.Synonym;
+
 public interface TaxonStore {	
 	
 	
@@ -72,6 +74,10 @@ public interface TaxonStore {
 	
 	public SynonymI makeSynonymWithXref(String syn, String prefix, String xref);
 	
+	public SynonymI makeCommonName(String commonName);
+
+	public SynonymI makeCommonNameWithXref(String commonName, String dbxprefix, String entryID);
+	
 	public boolean isEmpty();
 
 	public Term addTermbyID(String ID, String name);
@@ -119,4 +125,11 @@ public interface TaxonStore {
 	 * @param taxonTerm
 	 */
 	public void obsoleteTerm(Term taxonTerm);
+	
+	
+	/**
+	 * If the store supports obsoletes and captures nodes on trimmed clades, this allows the nodes that were not re-introduced as taxa to be 
+	 * added back as obsoletes.
+	 */
+	public void processObsoletes();
 }

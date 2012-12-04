@@ -84,6 +84,7 @@ public class Builder {
 	final static String ATTACHPREFIXSTR = "prefix";
 	final static String PRESERVEIDSSTR = "preserveIds";
 	final static String PRESERVESYNONYMSSTR = "preserveSynonyms";
+	final static String UPDATEOBSOLETESSTR = "updateObsoletes";
 
 	final static String PREFIXITEMSTR = "prefix";
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
@@ -193,6 +194,7 @@ public class Builder {
 		final String sourcePrefixStr = getAttribute(action,ATTACHPREFIXSTR);
 		final String preserveIDsStr = getAttribute(action,PRESERVEIDSSTR);
 		final String preserveSynonymsStr = getAttribute(action,PRESERVESYNONYMSSTR);
+		final String updateObsoletesStr = getAttribute(action,UPDATEOBSOLETESSTR);
 		final List<ColumnType> columns = processAttachElement(action,synPrefixes);
 		Merger m = getMerger(formatStr,columns,synPrefixes);
 		if (!m.canAttach()){
@@ -206,6 +208,9 @@ public class Builder {
 				m.setPreserveID(true);
 			else
 				m.setPreserveID(false);
+		}
+		if ("true".equalsIgnoreCase(updateObsoletesStr) || "yes".equalsIgnoreCase(updateObsoletesStr)){
+			m.setUpdateObsoletes(true);
 		}
 		String sourceStr = action.getAttributes().getNamedItem("source").getNodeValue();
 		File sourceFile = getSourceFile(sourceStr);

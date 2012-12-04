@@ -27,6 +27,7 @@ public class OBOMerger implements Merger {
 
 	private boolean preserveID = false;
 	private SynonymSource preserveSynonyms;
+	private boolean updateObsoletes = false;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(OBOMerger.class.getName());
@@ -51,6 +52,10 @@ public class OBOMerger implements Merger {
 		preserveSynonyms = s;
 	}
 
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
+	}
 	@Override
 	public void setSource(File source){
 		sourceFile = source;
@@ -129,19 +134,13 @@ public class OBOMerger implements Merger {
 			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
 			Term targetParent = target.getTermbyName(targetParentName);
 			Term targetRoot = copyTerm(sourceRoot,prefix);
-			//logger.info("Checkpoint 1: targetRoot = " + targetRoot);
 			Term getRoot = target.getTermbyName(sourceRootName);
-			//logger.info("Checkpoint 1: node nam(" + targetParentName + ") = " + getRoot);
-			//logger.info("Checkpoint 1: Target size = " + target.getTerms().size());
-			//logger.info("Checkpoint 1: Source size = " + sourceUtils.getTerms().size());
 			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
-			//logger.info("Checkpoint 2: " + targetParentName + " = " + target.getTermbyName(targetParentName));
-			//logger.info("Checkpoint 2: Target size = " + target.getTerms().size());
-
-			//anything special here?
 		}
-
+		if (updateObsoletes){
+			target.processObsoletes();
+		}
 
 	}
 

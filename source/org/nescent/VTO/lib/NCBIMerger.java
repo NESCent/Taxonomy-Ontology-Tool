@@ -78,6 +78,7 @@ public class NCBIMerger implements Merger {
     private boolean preserveID;
     private SynonymSource preserveSynonyms;
     private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) merging behavior is to merge synonyms
+    private boolean updateObsoletes = false;
     
 	private final Map <String,Integer> namesInScope = new HashMap<String,Integer>(50000);
 	private final Map <Integer,String> termToName = new HashMap<Integer,String>(50000);
@@ -111,6 +112,10 @@ public class NCBIMerger implements Merger {
 		preserveSynonyms = s;
 	}
 
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
+	}
 
 	/**
 	 * @param sourceDirectory until most mergers, the NCBI dump is a set of files in a common directory
@@ -296,6 +301,9 @@ public class NCBIMerger implements Merger {
         		primaryTerm.addSynonym(newSyn);
         	}
         }
+		if (updateObsoletes){
+			target.processObsoletes();
+		}
         logger.info("Done; count = " + count);		
 	}
 

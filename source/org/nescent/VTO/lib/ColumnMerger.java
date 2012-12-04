@@ -1,6 +1,7 @@
 package org.nescent.VTO.lib;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +15,12 @@ public class ColumnMerger implements Merger,ColumnFormat {
 	private final String columnSeparator; 
 	private final ColumnReader reader;
 
-	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms;
+	private String subAction = Builder.SYNSUBACTION;  // default; currently only implemented behaviors are to attach or to merge synonyms;
 	private File source;
 	private TaxonStore target;
 	private String uriTemplate;
-	
+
+	private boolean updateObsoletes = false;
 	private SynonymSource preserveSynonyms;
 
 	static Logger logger = Logger.getLogger(ColumnMerger.class.getName());
@@ -40,10 +42,15 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (v)
 			throw new IllegalArgumentException("This merger can't preserve IDs because column format does not support ids");
 	}
-	
+
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
+	}
+	
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
 	}
 
 
@@ -77,11 +84,11 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		subAction = sa;
 	}
 
-	
+
 	@Override
 	public void setURITemplate(String template) {
 		uriTemplate = template;
-		
+
 	}
 
 	@Override
@@ -94,40 +101,40 @@ public class ColumnMerger implements Merger,ColumnFormat {
 			mergeXrefs(items);
 		}
 	}
-	
-	
+
+
 	private void mergeSynonyms(ItemList items){
 		for(Item item : items.getContents()){
 
 		}
 	}
-	
+
 	private void mergeXrefs(ItemList items){
 		int termCount = 0;
 		final ColumnType c = reader.getColumn(KnownField.SPECIES);
 		if (c == null)
 			return;
 		for(Item item : items.getContents()){
-			
+
 			final String genus = item.getFieldValue(KnownField.GENUS);
 			String species = item.getFieldValue(KnownField.SPECIES);
 			if (species.indexOf(' ') != -1){
 				species = species.substring(0,species.indexOf(' '));
 			}
 			final Term matchingTerm = target.getTermbyName(genus + " " + species);
-        	if (matchingTerm != null){
-        		termCount++;
-    			String finalURI = expandURI(item);
-        	    logger.info("result uri = " + finalURI);
-        		int colonpos = finalURI.indexOf(':');  //TODO remove this - the split echoes the OBO library interface, but not necessary here
-        		String rest = finalURI.substring(colonpos+1);
-        	    target.addXRefToTerm(matchingTerm, "http", rest);
-        	}
+			if (matchingTerm != null){
+				termCount++;
+				String finalURI = expandURI(item);
+				logger.info("result uri = " + finalURI);
+				int colonpos = finalURI.indexOf(':');  //TODO remove this - the split echoes the OBO library interface, but not necessary here
+				String rest = finalURI.substring(colonpos+1);
+				target.addXRefToTerm(matchingTerm, "http", rest);
+			}
 		}
-		
+
 	}
-	
-	
+
+
 	String expandURI(Item item){
 		String rawURI = uriTemplate;
 		while(rawURI.indexOf('*') != -1){
@@ -142,7 +149,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		}
 		return rawURI;
 	}
-	
+
 
 	/**
 	 * @param targetParentName name of parent node for attached clade
@@ -185,10 +192,11 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		if (items.hasColumn(KnownField.SPECIES)){
 			processSpeciesColumn(items,attachTerm, prefix);
 		}
-			else if (items.hasColumn(KnownField.DELIMITEDNAME)){
-							
+		else if (items.hasColumn(KnownField.DELIMITEDNAME)){
 		}	
-
+		if (updateObsoletes){
+			target.processObsoletes();
+		}
 	}
 
 	private void processClassColumn(ItemList items, Term attachTerm, String prefix){
@@ -344,41 +352,48 @@ public class ColumnMerger implements Merger,ColumnFormat {
 
 
 	private void decorateSpeciesTerm(Item it, Term speciesTerm){
-		if (!it.getSynonym_xrefs().isEmpty()){
+		for (String xRef : it.getSynonym_xrefs()){
+			String[] components = xRef.split(":");
+			if (components.length == 2){
+				Collection <String> synonymsForXRef = it.getSynonymsForSource(xRef);
+				for (String syn : synonymsForXRef){
+					SynonymI newSyn = target.makeSynonymWithXref(syn, components[0], components[1]);	
+					speciesTerm.addSynonym(newSyn);
+				}
+			}
+			else {
+				throw new RuntimeException("While processing term " + speciesTerm.getLabel() + " encountered a mal-formed xref: " + xRef + " associated with synonyms");
+			}
 		}
-		if (!it.getPlainSynonyms().isEmpty()){
+		for (String syn : it.getPlainSynonyms()){
+			speciesTerm.addSynonym(target.makeSynonym(syn));
 		}
-		if (!it.getVernacularNames().isEmpty()){
-			
+		for (String commonName : it.getVernacularNames()){
+			speciesTerm.addSynonym(target.makeCommonName(commonName));   //TODO should be tagging these with appropriate synonym type
 		}
-		if (it.getDescription() != null){
-		}
-		
+
 		if (it.getComment() != null){
 			speciesTerm.setComment(it.getComment());
 		}
 		if (it.getFieldValue(KnownField.STATUS) != null){
 		}
-		if (!it.getTermXRefs().isEmpty()){
-			
-		}
-
-		for (final String synXref : it.getSynonym_xrefs()){
-			final String[] sourceComps = synXref.split(":",2);
-			for(String syn : it.getSynonymsForSource(synXref))
-				if (true) { //!syn.equals(speciesName)){
-					SynonymI s = target.makeSynonymWithXref(syn, sourceComps[0], sourceComps[1]);
-					speciesTerm.addSynonym(s);
-				}
+		for (String xref : it.getTermXRefs()){
+			String[] components = xref.split(":");
+			if (components.length == 2){
+				target.addXRefToTerm(speciesTerm,components[0],components[1]);
+			}
+			else {
+				throw new RuntimeException("While processing term " + speciesTerm.getLabel() + " encountered a mal-formed xref: " + xref);
+			}
 		}
 
 	}
-	
-	
+
+
 	private boolean daggerPrefix(String name){
 		return (name.length()>0 && name.charAt(0) == ' ');
 	}
-	
+
 	private String stripDagger(String name){
 		if (daggerPrefix(name))
 			return name.substring(1);

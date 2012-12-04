@@ -50,6 +50,7 @@ class OBOUtils {
 	final private OBOSession theSession;
 	final private OBOProperty isaProperty;
 	private OBOProperty hasRankProperty;
+	final private SynonymType commonNameType;
 	static final Logger logger = Logger.getLogger(OBOUtils.class.getName());
 	private ObjectFactory oboFactory = null; 
 
@@ -76,7 +77,8 @@ class OBOUtils {
 		isaProperty = lookupProperty(ISA_PROPERTY);		
 		hasRankProperty = (OBOProperty)theSession.getObjectFactory().createObject(RANK_PROPERTY, OBOClass.OBO_PROPERTY, false);
 		hasRankProperty.setName("has taxonomic rank");
-		//theSession.addObject(hasRankProperty);
+		commonNameType = theSession.getObjectFactory().createSynonymType("COMMONNAME", "common name", Synonym.RELATED_SYNONYM);
+		theSession.addSynonymType(commonNameType);
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
 		termIDs = getAllTermIDsHash(terms);
@@ -111,6 +113,8 @@ class OBOUtils {
 			hasRankProperty.setName("has taxonomic rank");
 			//theSession.addObject(hasRankProperty);
 		}
+		commonNameType = theSession.getObjectFactory().createSynonymType("COMMONNAME", "common name", Synonym.RELATED_SYNONYM);
+		theSession.addSynonymType(commonNameType);
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
 		termIDs = getAllTermIDsHash(terms);
@@ -165,84 +169,37 @@ class OBOUtils {
 	}
 
 	public Synonym makeSynonym(String synString){
-		String cleanSyn = cleanIllegalCharacters(synString);
-		Synonym s = oboFactory.createSynonym(cleanSyn, Synonym.RELATED_SYNONYM);
+		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
+		return s;
+	}
+	
+	public Synonym makeSynonymWithType(String synString,SynonymType st){
+		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
+		s.setSynonymType(st);
 		return s;
 	}
 
 	public Synonym makeSynonymWithXref(String synString, String dbxprefix, String entryID){
-		String cleanSyn = cleanIllegalCharacters(synString);
-		Synonym s = oboFactory.createSynonym(cleanSyn, Synonym.RELATED_SYNONYM);
+		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
 		Dbxref d = (Dbxref)oboFactory.createDbxref(dbxprefix, entryID, "", Dbxref.RELATED_SYNONYM, null);           
 		s.addXref(d);
 		return s;
 	}
 
 	/**
-	 * This cleans up Latin-1 (and a few UTF-8) characters - apparently it's what Excel-2003 format uses, at least the mac version.
-	 * This may have to be re-addressed at some point.  Using String.replace() is inefficient in the case of Latin-1, but 
-	 * this really ought to be receiving UTF-8, which the builder for the collection vocabulary uses, so I'll leave it this way. 
-	 * @param syn the (synonym) string to clean of extended characters
-	 * @return the cleaned up (synonym) string
+	 * 
+	 * @param synString
+	 * @param st
+	 * @param dbxprefix
+	 * @param entryID
+	 * @return
 	 */
-	private static String cleanIllegalCharacters(final String syn){
-		StringBuffer synB = new StringBuffer(syn);
-		for(int k=0;k<synB.length();k++){
-			final int c = synB.codePointAt(k);
-			switch (c) {
-			case 252: {
-				synB.replace(k,k+1,"u");
-				break;
-			}
-			case 225: {
-				synB.replace(k,k+1,"a");
-				break;
-			}
-			case 228: {
-				synB.replace(k,k+1,"a");
-				break;
-			}
-			case 232:
-			case 233: {
-				synB.replace(k,k+1,"e");
-				break;
-			}
-			case 237: {
-				synB.replace(k,k+1,"i");
-				break;
-			}
-			case 241: {
-				synB.replace(k,k+1,"n");
-				break;
-			}
-			case 243:
-			case 244:
-			case 246:
-			case 248: {
-				synB.replace(k,k+1,"o");
-				break;
-			}
-			case 8217: {
-				synB.replace(k, k+1, "'");
-				break;
-			}
-			default:{
-				if (c > 127){
-					System.out.println("** Hist " + c);
-				}
-			}
-			}
-		}	
-		return synB.toString();
-	}
-
-	private static String cleanIllegalCharactersAndDelimiters(final String syn){
-		final String cleanString = cleanIllegalCharacters(syn);
-		if ((cleanString.charAt(0) =='"' && cleanString.endsWith("\"")) ||
-				(cleanString.charAt(0) == '\'' && cleanString.endsWith("'"))){
-			return cleanString.substring(1,cleanString.length()-1);
-		}
-		else return cleanString;
+	public Synonym makeSynonymWithTypeAndXref(String synString, SynonymType st, String dbxprefix, String entryID){
+		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
+		Dbxref d = (Dbxref)oboFactory.createDbxref(dbxprefix, entryID, "", Dbxref.RELATED_SYNONYM, null);           
+		s.addXref(d);
+		s.setSynonymType(st);
+		return s;
 	}
 
 	public Collection<OBOClass> getTerms(){
@@ -268,10 +225,6 @@ class OBOUtils {
 		dirtyTermSets = true;
 	}
 
-	private void addRankProperty(IdentifiedObject c, String rank){
-		PropertyValue rankProperty = oboFactory.createPropertyValue(PROPERTYVALUE_TAG,RANK_PROPERTY + " " + rank);
-		c.addPropertyValue(rankProperty);
-	}
 
 
 	public PropertyValue createRankProperty(String id) {
@@ -620,7 +573,6 @@ class OBOUtils {
 	public void obsoleteTerm(Term term) {
 		OBOClass c = term.asOBOClass();
 		c.setObsolete(true);
-		
 	}
 
 	public OBOClass lookupTermByID(String termID) {
@@ -634,7 +586,9 @@ class OBOUtils {
 	}
 
 
-
+	public SynonymType getCommonNameType(){
+		return commonNameType;
+	}
 
 
 

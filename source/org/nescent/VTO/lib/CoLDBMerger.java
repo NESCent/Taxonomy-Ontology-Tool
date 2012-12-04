@@ -33,6 +33,7 @@ public class CoLDBMerger implements Merger {
 	
 	private SynonymSource preserveSynonyms;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
+	private boolean updateObsoletes = false;
 
 	static final Logger logger = Logger.getLogger(CoLDBMerger.class.getName());
 
@@ -74,7 +75,12 @@ public class CoLDBMerger implements Merger {
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
 	}
-	
+		
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
+	}
+
 	/**
 	 * @param sa specifies whether this merges synonyms or cross references
 	 */
@@ -237,6 +243,9 @@ public class CoLDBMerger implements Merger {
 					logger.info("Assigning " + parent + " as root");
 				}
 			}
+		}
+		if (updateObsoletes){
+			target.processObsoletes();
 		}
 		Connection connection = null;
 		try {

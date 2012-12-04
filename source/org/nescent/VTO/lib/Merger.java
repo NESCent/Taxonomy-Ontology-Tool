@@ -34,6 +34,8 @@ public interface Merger {
 	
 	//These next three allow the construction of uri's based on taxonomy from the source (mostly useful for columns)
 	void setURITemplate(String template);
+
+	void setUpdateObsoletes(boolean b);
 	
 
 }

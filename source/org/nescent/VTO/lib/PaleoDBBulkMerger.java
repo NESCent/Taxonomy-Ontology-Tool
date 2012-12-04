@@ -31,6 +31,7 @@ public class PaleoDBBulkMerger implements Merger{
 	
 	private SynonymSource preserveSynonyms;
 	private boolean preserveIDs = false;
+	private boolean updateObsoletes = false;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 	
 	private final Logger logger = Logger.getLogger(PaleoDBBulkMerger.class.getName());
@@ -60,6 +61,11 @@ public class PaleoDBBulkMerger implements Merger{
 		preserveSynonyms = s;
 	}
 
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
+	}
+	
 	@Override
 	public void setSource(File source) {
 		this.source = source;
@@ -193,6 +199,9 @@ public class PaleoDBBulkMerger implements Merger{
 					synCount++;
 				}
 			}
+		}
+		if (updateObsoletes){
+			target.processObsoletes();
 		}
 		logger.info("Taxon store grew from " + startingSize + " to " + endingSize);
 		logger.info(defaultParent + " received " + defaultParentTaxon.getChildren().size() + " children");

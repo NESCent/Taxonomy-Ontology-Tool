@@ -30,7 +30,6 @@ public class Item {
 	private final Map<String,Set<String>> synonyms_xref;  //maps a synonym source (xref) to a synonym  
 	private final Set<String> xrefs; //xrefs and uris for the term
 	private final Set<String> commonNames;
-	private String description = null;
 	private String comment = null;  //Maybe this should be a set (OWL can handle multiple comments, OBO?)
     private boolean is_extinct;  // may not use this
     
@@ -115,8 +114,8 @@ public class Item {
     		return Collections.emptySet();
     }
     
-    public void addXref(String db, String identifier){
-    	xrefs.add(db + ":" + identifier);
+    public void addXref(String xref){
+    	xrefs.add(xref);
     }
     
     public void setComment(String c){
@@ -127,13 +126,6 @@ public class Item {
     	return comment;
     }
     
-    public void setDescription(String d){
-    	description = d;
-    }
-    
-    public String getDescription(){
-    	return description;
-    }
     
     public String toString(){
     	StringBuilder b = new StringBuilder(200);

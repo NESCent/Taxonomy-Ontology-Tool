@@ -46,6 +46,11 @@ public class PBDBPostProcess implements Merger{
 	}
 
 	@Override
+	public void setUpdateObsoletes(boolean v) {
+		throw new RuntimeException("PBDBPostProcess doesn't support updating obsoletes because it does not support attaching");		
+	}
+
+	@Override
 	public void setSource(File source) {
 		this.source = source;
 	}

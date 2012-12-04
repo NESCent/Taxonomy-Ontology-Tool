@@ -222,6 +222,25 @@ public class OWLStore implements TaxonStore {
 		
 	}
 
+	@Override
+	public SynonymI makeCommonName(String commonName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public SynonymI makeCommonNameWithXref(String commonName, String dbxprefix,
+			String entryID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void processObsoletes() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 	
 }

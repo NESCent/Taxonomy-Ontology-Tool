@@ -37,8 +37,37 @@ public class OBOTerm implements Term {
 
 	
 	public void addSynonym(SynonymI s){
+		final Synonym newSyn = s.asOBOSynonym();
+		for (Synonym existingSyn : term.getSynonyms()){
+			if (matchSynonyms(existingSyn,newSyn)){
+				return;
+			}
+		}
 		term.addSynonym(s.asOBOSynonym());
 	}
+	
+	private boolean matchSynonyms(Synonym oldSyn, Synonym newSyn){
+		if (!oldSyn.getText().equals(newSyn.getText()))
+			return false;
+		final Collection<Dbxref> oldXRefs = oldSyn.getXrefs();
+		final Collection<Dbxref> newXRefs = newSyn.getXrefs();
+		if (newXRefs.size()==0)
+			return true;  //If the new syn has no xref, but the names match, it has nothing to add...  
+		if (newXRefs.size() > 1){  //neither syn should have more than one xref, but certainly not the new one
+			throw new RuntimeException("New synonym: '" + newSyn.getText() + "' should have an most one xref; " + newXRefs.size() + " were found");
+		}
+		for (Dbxref newRef : newXRefs){  //only one newRef; if it matches any existing ref, it's a match (saves creating an iterator for the singleton)
+			for (Dbxref d : oldXRefs){
+				if (d.getDatabase().equals(newRef.getDatabase()) &&
+					(d.getDatabaseID().equals(newRef.getDatabaseID()))){
+					return true;
+				}
+			}
+		}	
+		return false;
+	}
+	
+	
 	
 	public Set<SynonymI> getSynonyms(){
 		Set<SynonymI> result = new HashSet<SynonymI>();
@@ -47,7 +76,6 @@ public class OBOTerm implements Term {
 		}
 		return result;
 	}
-
 
 
 	@Override

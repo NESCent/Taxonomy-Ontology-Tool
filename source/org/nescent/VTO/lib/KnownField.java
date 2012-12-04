@@ -13,7 +13,6 @@ public enum KnownField {
 	SUBGENUS("subgenus",true),
 	SPECIES("species",true),
 	SYNONYM("synonym",false),
-	SYNONYM_LIST("synonym-list",false),
 	VERNACULAR("vernacular",false),
 	COMMENT("comment",false),
 	STATUS("status",false),

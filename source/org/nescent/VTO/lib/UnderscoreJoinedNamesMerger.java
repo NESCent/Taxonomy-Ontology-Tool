@@ -61,7 +61,12 @@ public class UnderscoreJoinedNamesMerger implements Merger, ColumnFormat {
 		return false;
 	}
 	
-	
+	@Override
+	public void setUpdateObsoletes(boolean v) {
+		throw new RuntimeException("UnderscoreJoinedNamesMerger doesn't support updating obsoletes because it does not support attaching");		
+	}
+
+
 	@Override
 	public void setSource(File fileSource){
 		source = fileSource;

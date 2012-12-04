@@ -33,7 +33,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class CoLMerger implements Merger {
 
-	final private static String YEARSTR = "2011";
+	final private static String YEARSTR = "2012";
 	
 	final private static String COLURL = "http://www.catalogueoflife.org";
 	final private static String CHECKLISTPAGE = "/annual-checklist/";
@@ -85,6 +85,13 @@ public class CoLMerger implements Merger {
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
 	}
+	
+	@Override
+	public void setUpdateObsoletes(boolean b) {
+		throw new RuntimeException("This merger can't update Obsolstes because it currently doesn't support attach");
+	}
+
+
 
 	/**
 	 * @param sa specifies whether this merges synonyms or cross references
@@ -255,6 +262,7 @@ public class CoLMerger implements Merger {
 			return id;
 		}
 	}
+
 
 
 }

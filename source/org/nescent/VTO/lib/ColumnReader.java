@@ -149,16 +149,6 @@ public class ColumnReader {
 				case SYNONYM: {
 					if (!rawColumn.isEmpty()){
 						if (headers.get(i).getXrefPrefix() != ""){
-							result.addPlainSynonym(rawColumn.trim());
-						}
-						else {
-						}
-					}
-					break;
-				}
-				case SYNONYM_LIST: {
-					if (!rawColumn.isEmpty()){
-						if (headers.get(i).getXrefPrefix() != ""){
 							String syns[] = rawColumn.split(",");
 							for(String syn : syns){
 								String trimmedSyn = syn.trim();
@@ -174,7 +164,11 @@ public class ColumnReader {
 				case VERNACULAR: {
 					if (!rawColumn.isEmpty()){
 						if (headers.get(i).getXrefPrefix() != ""){
-							result.addVernacular(rawColumn.trim());
+							String syns[] = rawColumn.split(",");
+							for(String syn : syns){
+								String trimmedSyn = syn.trim();
+								result.addVernacular(trimmedSyn);
+							}
 						}
 						else {
 						}
@@ -192,8 +186,7 @@ public class ColumnReader {
 				}
 				case URI: {
 					if (!rawColumn.isEmpty()){
-						String [] components = rawColumn.trim().split(":");
-						result.addXref(components[0], components[1]);
+						result.addXref(rawColumn.trim());
 					}
 					break;
 				}

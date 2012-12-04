@@ -67,6 +67,11 @@ public class PaleoDBMerger implements Merger {
 	public void setSource(File source) {
 		this.source = source;
 	}
+	
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		throw new RuntimeException("This merger doesn't support updating obsoletes because it does not support attaching");
+	}
 
 	@Override
 	public void setTarget(TaxonStore target) {
@@ -75,7 +80,7 @@ public class PaleoDBMerger implements Merger {
 
 	@Override
 	public void setPreserveID(boolean v){
-		throw new RuntimeException("This merger can't preserve IDs because TBD");
+		throw new RuntimeException("This merger can't preserve IDs");
 	}
 	
 	@Override

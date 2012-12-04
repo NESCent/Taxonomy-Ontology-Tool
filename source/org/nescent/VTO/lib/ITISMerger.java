@@ -26,7 +26,8 @@ public class ITISMerger implements Merger{
     
 	private SynonymSource preserveSynonyms;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
-	
+	private boolean updateObsoletes = false;
+
 	static final Logger logger = Logger.getLogger(ITISMerger.class.getName());
 	
 	/* metadata methods */
@@ -59,6 +60,11 @@ public class ITISMerger implements Merger{
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
+	}
+	
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
 	}
 	
 	/**
@@ -241,6 +247,10 @@ public class ITISMerger implements Merger{
     	final List <ITISElement> itisList = buildITISList(source);
     	fillTaxonTable(itisList,taxonTable);
     	gatherSynonyms(itisList,taxonTable);
+		if (updateObsoletes){
+			target.processObsoletes();
+		}
+
     	throw new RuntimeException("ITIS Merger does not implement attach yet!");
 		// TODO finish
 		

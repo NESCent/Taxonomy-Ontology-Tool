@@ -27,7 +27,8 @@ public class IOCMerger implements Merger {
 	private TaxonStore target;
 	private SynonymSource preserveSynonyms;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
-
+	private boolean updateObsoletes = false;
+	
 	static final Logger logger = Logger.getLogger(Builder.class.getName());
 
 
@@ -58,6 +59,11 @@ public class IOCMerger implements Merger {
 	@Override
 	public void setPreserveSynonyms(SynonymSource s){
 		preserveSynonyms = s;
+	}
+
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
 	}
 
 	/**
@@ -227,6 +233,9 @@ public class IOCMerger implements Merger {
 						}
 				}		
 			}
+		}
+		if (updateObsoletes){
+			target.processObsoletes();
 		}
 	}
 

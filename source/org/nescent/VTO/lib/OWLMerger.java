@@ -12,6 +12,7 @@ public class OWLMerger implements Merger {
 	private TaxonStore target;
 
 	private SynonymSource preserveSynonyms;
+	private boolean updateObsoletes = false;
 	private String subAction = Builder.SYNSUBACTION;  // default (currently only implemented) behavior is to merge synonyms
 
 	static final Logger logger = Logger.getLogger(OWLMerger.class.getName());
@@ -37,6 +38,10 @@ public class OWLMerger implements Merger {
 		preserveSynonyms = s;
 	}
 
+	@Override
+	public void setUpdateObsoletes(boolean v){
+		updateObsoletes = v;
+	}
 	
 	@Override 
 	public void setSource(File sourceFile){
