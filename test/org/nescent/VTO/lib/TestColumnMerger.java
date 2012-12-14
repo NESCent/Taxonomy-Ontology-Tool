@@ -87,15 +87,6 @@ public class TestColumnMerger {
 		//fail("Not yet implemented");
 	}
 
-	@Test
-	public void testExpandURI(){
-		testMerger.setURITemplate(testURI);
-		Item testItem = new Item();
-		testItem.putName(KnownField.XREF,"33");
-		String result = testMerger.expandURI(testItem);
-		logger.info(result);
-	}
-
 
 	@Test
 	public void testCanAttach() {

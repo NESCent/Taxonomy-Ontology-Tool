@@ -90,7 +90,8 @@ public class Builder {
 	final static String FILTERPREFIXITEMSTR = "filterprefix";
 	
 	final static String NAMESPACESUFFIX = "-namespace";
-	final static String URITEMPLATESTR = "uritemplate";
+	//final static String URITEMPLATESTR = "uritemplate";
+	final static String XREFCOLUMNSTR = "xref";
 	
 	//These are additions to merge for column formats
 	final static String SUBACTIONSTR = "action";
@@ -257,7 +258,6 @@ public class Builder {
 		final String sourceStr = getAttribute(action,"source");
 		final String mergePrefix = getAttribute(action,PREFIXITEMSTR);
 		final String subAction = getAttribute(action,SUBACTIONSTR);
-		final String uriTemplate = getAttribute(action,URITEMPLATESTR);
 
 		if (!"".equals(sourceStr)){
 			m.setSource(getSourceFile(sourceStr));
@@ -271,9 +271,6 @@ public class Builder {
 		}
 		else {
 			m.setSubAction(subAction.toUpperCase());
-		}
-		if (uriTemplate != null){
-			m.setURITemplate(uriTemplate);
 		}
 		if (mergePrefix == null){
 			m.merge(targetPrefixStr);
@@ -323,6 +320,9 @@ public class Builder {
 			if (column.getAttributes().getNamedItem(PREFIXITEMSTR) != null){
 				String synPrefix = column.getAttributes().getNamedItem(PREFIXITEMSTR).getNodeValue();
 				synPrefixes.put(index, synPrefix);
+			}
+			if (column.getAttributes().getNamedItem(XREFCOLUMNSTR) != null){
+				col.setXrefTemplate(column.getAttributes().getNamedItem(XREFCOLUMNSTR).getNodeValue());
 			}
 			return col;
 		}

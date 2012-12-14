@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.nescent.VTO.Builder;
 import org.nescent.VTO.lib.ITISMerger.ITISElement;
+import org.obo.datamodel.Synonym;
 
 public class ColumnMerger implements Merger,ColumnFormat {
 
@@ -124,30 +125,14 @@ public class ColumnMerger implements Merger,ColumnFormat {
 			final Term matchingTerm = target.getTermbyName(genus + " " + species);
 			if (matchingTerm != null){
 				termCount++;
-				String finalURI = expandURI(item);
-				logger.info("result uri = " + finalURI);
-				int colonpos = finalURI.indexOf(':');  //TODO remove this - the split echoes the OBO library interface, but not necessary here
-				String rest = finalURI.substring(colonpos+1);
-				target.addXRefToTerm(matchingTerm, "http", rest);
+				for(String xref : item.getTermXRefs()) {
+					logger.info("xref = " + xref );
+					int colonpos = xref.indexOf(':');  //TODO remove this - the split echoes the OBO library interface, but not necessary here
+					target.addXRefToTerm(matchingTerm, xref.substring(0,colonpos), xref.substring(colonpos+1));
+				}
 			}
 		}
 
-	}
-
-
-	String expandURI(Item item){
-		String rawURI = uriTemplate;
-		while(rawURI.indexOf('*') != -1){
-			final int p = rawURI.indexOf('*');
-			final String rulehead = rawURI.substring(p);
-			if (rulehead.startsWith("*xref")){
-				rawURI = rawURI.substring(0,p) + item.getFieldValue(KnownField.XREF) + rawURI.substring(p+5);
-			}
-			else{
-				throw new RuntimeException("Unknown rule type: " + rulehead);
-			}
-		}
-		return rawURI;
 	}
 
 
@@ -249,7 +234,6 @@ public class ColumnMerger implements Merger,ColumnFormat {
 				if (familyName != null){
 					if (target.getTermbyName(familyName) == null){
 						final Term familyTerm = target.addTerm(familyName, prefix);
-						logger.info("adding family " + familyName + " id is " + familyTerm.getID());
 						target.setRankFromName(familyTerm,KnownField.FAMILY.getCannonicalName());
 						if (it.hasColumn(KnownField.ORDER) && target.getTermbyName(stripDagger(it.getName(KnownField.ORDER))) != null){
 							final String parentName = stripDagger(it.getName(KnownField.ORDER));
@@ -355,7 +339,7 @@ public class ColumnMerger implements Merger,ColumnFormat {
 		for (String xRef : it.getSynonym_xrefs()){
 			String[] components = xRef.split(":");
 			if (components.length == 2){
-				Collection <String> synonymsForXRef = it.getSynonymsForSource(xRef);
+				Collection <String> synonymsForXRef = it.getSynonymsFromSource(xRef);
 				for (String syn : synonymsForXRef){
 					SynonymI newSyn = target.makeSynonymWithXref(syn, components[0], components[1]);	
 					speciesTerm.addSynonym(newSyn);

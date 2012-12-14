@@ -45,11 +45,11 @@ public class ColumnType {
 		name = n;
 	}
 	
-	public String getXrefPrefix(){
+	public String getXrefTemplate(){
 		return xrefPrefix;
 	}
 
-	public void setXrefPrefix(String p){
+	public void setXrefTemplate(String p){
 		xrefPrefix = p;
 	}
 	

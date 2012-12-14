@@ -53,11 +53,6 @@ public class ColumnReader {
 
 	static final String[] IGNORELIST = {};
 
-
-	static final String SYNONYMCOLUMNHEADER1 = "synonym";
-	static final String SYNONYMCOLUMNHEADER2 = "synonyms";
-	static final String SYNONYMCOLUMNHEADER3 = "gaa_name";  //not sure what this is
-	static final String SYNONYMCOLUMNHEADER4 = "itis_names";
 	static final String DESCRIPTIONSTR = "Description";
 	static final String STATUSSTR = "Status";
 
@@ -148,7 +143,7 @@ public class ColumnReader {
 				switch(f){
 				case SYNONYM: {
 					if (!rawColumn.isEmpty()){
-						if (headers.get(i).getXrefPrefix() != ""){
+						if (headers.get(i).getXrefTemplate() == null || headers.get(i).getXrefTemplate().isEmpty()){
 							String syns[] = rawColumn.split(",");
 							for(String syn : syns){
 								String trimmedSyn = syn.trim();
@@ -156,6 +151,16 @@ public class ColumnReader {
 							}
 						}
 						else {
+							String template = headers.get(i).getXrefTemplate();
+							while(template.indexOf("*xref") != -1){
+								final int p = template.indexOf("*xref");
+								template = template.substring(0,p) + rawColumn.trim() + template.substring(p+5);
+							}
+							String syns[] = rawColumn.split(",");
+							for(String syn : syns){
+								String trimmedSyn = syn.trim();
+								result.addSynonymWithXref(trimmedSyn,template);
+							}
 						}
 					}
 
@@ -163,14 +168,10 @@ public class ColumnReader {
 				}
 				case VERNACULAR: {
 					if (!rawColumn.isEmpty()){
-						if (headers.get(i).getXrefPrefix() != ""){
-							String syns[] = rawColumn.split(",");
-							for(String syn : syns){
-								String trimmedSyn = syn.trim();
-								result.addVernacular(trimmedSyn);
-							}
-						}
-						else {
+						String syns[] = rawColumn.split(",");
+						for(String syn : syns){
+							String trimmedSyn = syn.trim();
+							result.addVernacular(trimmedSyn);
 						}
 					}
 					break;
@@ -184,13 +185,18 @@ public class ColumnReader {
 				case STATUS: {
 					break;
 				}
-				case URI: {
-					if (!rawColumn.isEmpty()){
-						result.addXref(rawColumn.trim());
-					}
-					break;
-				}
 				case XREF: {
+					if (!rawColumn.isEmpty()){
+						String template = headers.get(i).getXrefTemplate();
+						if (template == null){
+							template = "*xref";
+						}
+						while(template.indexOf("*xref") != -1){
+							final int p = template.indexOf("*xref");
+							template = template.substring(0,p) + rawColumn.trim() + template.substring(p+5);
+						}
+						result.addXref(template);
+					}
 					break;
 				}
 				case DELIMITEDNAME: {

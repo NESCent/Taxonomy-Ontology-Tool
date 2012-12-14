@@ -225,7 +225,7 @@ public class IOCMerger implements Merger {
 				}
 				Collection<String> synSources = it.getSynonym_xrefs();
 				for (String synSource : synSources){
-					for(String syn : it.getSynonymsForSource(synSource))
+					for(String syn : it.getSynonymsFromSource(synSource))
 						if (true) { //!syn.equals(speciesName)){
 							String[] sourceComps = synSource.split(":",2);
 							SynonymI s = target.makeSynonymWithXref(syn, sourceComps[0], sourceComps[1]);

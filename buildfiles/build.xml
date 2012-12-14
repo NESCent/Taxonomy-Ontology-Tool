@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<!-- ====================================================================== 
+     Copied February 6, 2011 10:44:45 PM                                                        
+     Last update October 29, 2012
+     
+     VTOTool - Configurable tool for building taxonomy ontologies
+ 
+     Copyright (c) 2011-2012 Peter E. Midford
+ 
+     Licensed under the 'MIT' license (http://opensource.org/licenses/mit-license.php)
+ 
+     Permission is hereby granted, free of charge, to any person
+ 	 obtaining a copy of this software and associated documentation
+ 	 files (the "Software"), to deal in the Software without
+ 	 restriction, including without limitation the rights to use,
+ 	 copy, modify, merge, publish, distribute, sublicense, and/or sell
+ 	 copies of the Software, and to permit persons to whom the
+ 	 Software is furnished to do so, subject to the following
+     conditions:
+ 
+     The above copyright notice and this permission notice shall be
+     included in all copies or substantial portions of the Software.
+ 
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+     OTHER DEALINGS IN THE SOFTWARE.
+
+     ====================================================================== -->
+<project name="VTOTool" default="buildAll" basedir="..">
+    <description>
+            This is the main build file for the VTOTool application on all supported platforms.
+    </description>
+	<property name="sourceDir" location="${basedir}/src/source"/>
+	<property name="sourceLib" location="${sourceDir}/lib"/>
+	<property name="unitTestDir" location="${basedir}/src/test"/>
+	<property name="jarsDir" location= "${basedir}/jars"/>
+	<property name="targetDir" location= "${basedir}/targets"/>
+	<property name="buildDir" location= "${basedir}/build"/>
+	<property name="notesDir" location= "${basedir}/Notes"/>
+	<property name="destLinux" location="${targetDir}/Linux"/>
+	<property name="version" value="0.1"/>
+	<path id="project.all.jars">
+		<pathelement location="${jarsDir}/bbop.jar"/>
+		<pathelement location="${jarsDir}/junit-4.8.2.jar"/>
+		<pathelement location="${jarsDir}/log4j-1.2.15.jar"/>
+		<pathelement location="${jarsDir}/obo.jar"/>
+		<pathelement location="${jarsDir}/owlapi-bin.jar"/>
+		<pathelement location="${jarsDir}/mysql-connector-java-5.1.21-bin.jar"/>
+	</path>
+	
+	<!-- ================================= 
+          target: init              
+         ================================= -->
+    <target name="init"  description="--> description">
+    	<mkdir dir="${buildDir}"/>
+    	<mkdir dir="${targetDir}"/>
+    </target>
+
+
+	<!-- =================================
+		  target: compile-main
+		 ================================= -->
+	<target name="compile-main" description="compile main application">
+        <javac srcdir="${sourceDir}"
+         	destdir="${buildDir}"
+         	debug="on"
+         	source="1.5"
+         	target="1.5"
+        	includeantruntime="false">
+         	<classpath refid="project.all.jars"/>
+        </javac>
+		<javac srcDir="${unitTestDir}"
+            destdir="${buildDir}"
+			debug="on"
+		    source="1.5"
+		    target="1.5"
+			includeantruntime="false">
+			<classpath refid="project.all.jars"/>
+		</javac>
+		<jar destfile="${jarsDir}/VTOTool.jar"
+			basedir="${buildDir}">
+			<manifest>
+				<attribute name="Main-CLass"
+				  value="org.phenoscape.VTO.VTOTool"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="buildLinux" description="builds for Linux"
+		depends="compile-main">	
+	</target>
+	
+	
+	<target name="unit-test" description="run unit tests" depends="compile-main">
+		<junit>
+			<classpath>
+				<pathelement location="${jarsDir}/junit.jar"/>
+			</classpath>
+			<test name="org.phenoscape.VTO.TestVTOTool"/>
+		</junit>
+	</target>
+	
+	<!-- ================================= 
+          target: build              
+         ================================= -->
+    <target name="buildAll" 
+    	depends="buildLinux,unit-test" 
+    	description="--> buildsEverything">
+    </target>
+
+
+
+
+	<!-- ================================= 
+          target: clean              
+         ================================= -->
+    <target name="clean" description="--> cleans up">
+    	<delete>
+			<fileset dir="${buildDir}/org">
+			</fileset>
+  		</delete>
+    </target>
+
+
+</project>

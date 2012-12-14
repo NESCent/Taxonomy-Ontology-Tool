@@ -16,7 +16,6 @@ public enum KnownField {
 	VERNACULAR("vernacular",false),
 	COMMENT("comment",false),
 	STATUS("status",false),
-	URI("uri",false),
 	XREF("xref",false),
 	DELIMITEDNAME("delimitedname",false),
 	IGNORE("ignore",false);

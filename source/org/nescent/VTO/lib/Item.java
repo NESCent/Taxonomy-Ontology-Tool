@@ -5,12 +5,10 @@
  */
 package org.nescent.VTO.lib;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -22,13 +20,11 @@ import java.util.Set;
  */
 public class Item {
 	
-	// This list ought to be constructed from TAXRANK  - perhaps need to add 'clade' to TAXRANK appears in ATO and NCBI taxonomy not sure
-	// its position between genus and species is consistent across authorities
 	
 	private final Map<KnownField,String> names;  //maps a rank term to a taxon name
 	private final Set<String> synonyms;  //synonyms w/o xrefs
 	private final Map<String,Set<String>> synonyms_xref;  //maps a synonym source (xref) to a synonym  
-	private final Set<String> xrefs; //xrefs and uris for the term
+	private final Set<String> xrefs; //xrefs 
 	private final Set<String> commonNames;
 	private String comment = null;  //Maybe this should be a set (OWL can handle multiple comments, OBO?)
     private boolean is_extinct;  // may not use this
@@ -63,25 +59,17 @@ public class Item {
     }
     
     
-    public void addSynonymWithXref(String source, String name, String identifier, ItemList container){
-    	String dbSource;
-    	if ("".equals(identifier)){
-    		if (container.hasSynonymSourcecontainsKey(source))
-    			dbSource = container.getSynonymSource(source);
-    		else
-    			dbSource = source;
+    public void addSynonymWithXref(String syn, String xref){
+    	if (synonyms_xref.containsKey(xref)){
+    		synonyms_xref.get(xref).add(syn);
     	}
-    	else
-    		dbSource = source + ":" + identifier;
-    	Set<String> contents;
-    	if (synonyms_xref.containsKey(dbSource))
-    		contents = synonyms_xref.get(dbSource);
     	else{
-    		contents = new HashSet<String>();
-    		synonyms_xref.put(dbSource, contents);
+    		final Set<String> synSet = new HashSet<String>();
+    		synSet.add(syn);
+    		synonyms_xref.put(xref, synSet);
     	}
-    	contents.add(name);
     }
+    
     
     public Collection<String> getSynonym_xrefs(){
     	return synonyms_xref.keySet();
@@ -99,6 +87,11 @@ public class Item {
     	commonNames.add(name);
     }
     
+    public void addVernacularWithXref(String name, String xref){
+    	addSynonymWithXref(name,xref);
+    	commonNames.add(name);
+    }
+    
     public Set<String> getVernacularNames(){
     	return commonNames;
     }
@@ -107,12 +100,23 @@ public class Item {
     	return xrefs;
     }
     
-    public Collection <String> getSynonymsForSource(String source){
+    public Collection <String> getSynonymsFromSource(String source){
     	if (synonyms_xref.containsKey(source))
     		return synonyms_xref.get(source);
     	else
     		return Collections.emptySet();
     }
+    
+    public Collection <String> getVernacularFromSource(String source){
+    	final Set<String> result = new HashSet<String>();
+    	for (String s : getSynonymsFromSource(source)){
+    		if (commonNames.contains(s)){
+    			result.add(s);
+    		}
+    	}
+    	return result;
+    }
+    
     
     public void addXref(String xref){
     	xrefs.add(xref);
