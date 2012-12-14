@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/VTO/Data/exto_out.obo" format="OBO" filterprefix= "VTO" root="Chordata" prefix="VTO"> 
+    <attach source = "file:///Users/pmidford/Projects/VTO/Data/exto.obo" format="OBO" prefix="VTO" parent= "Chordata" root="Chordata">
+    </attach>
+    <trim node="Actinopterygii"/>
+    <attach source="file:///Users/pmidford/Projects/VTO/Data/acto.obo" format="OBO" prefix="ACTO" parent="Euteleostomi" root="Actinopterygii" preserveIds="yes"/>
+    <trim node="Chondrichthyes"/>
+    <attach source = "file:///Users/pmidford/Projects/VTO/Data/chto.obo" format="OBO" prefix="CHTO" parent= "Gnathostomata" root="Chondrichthyes" preserveIds="yes">
+	</attach>
+	<attach source="file:///Users/pmidford/Projects/VTO/Data/ATO.obo" format="OBO" prefix="ATO" parent="Tetrapoda" root="Amphibia" preserveIDs="yes"/> 	
+	<attach source="file:///Users/pmidford/Projects/VTO/Data/PaleoDB_test" format="PBDBbulk" prefix="VTO" preserveIDs="no" parent="Chordata"/>
+	<merge source="file:///Users/pmidford/Projects/VTO/Data/ArchosauriaComplete.txt" format="PBDBpostProcess">
+	</merge>
+</taxonomy>

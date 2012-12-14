@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "/Users/pmidford/Projects/VTOData/ATO_nov.obo" format="OBO" filterprefix= "ATO" root="Amphibia" prefix="ATO"> 
+    <attach source = "/Users/pmidford/Projects/VTOData/ATO.obo" format="OBO" prefix="ATO" root="Amphibia" preserveIds="true"/>
+    <trim node="Amphibia"/>
+	<attach source = "/Users/pmidford/Projects/VTOData/amphib_names.txt" format="TSV" prefix="ATO" parent= "Amphibia" root="ATO">
+    	<columns>
+    		<column name="order" type="order" />
+    		<column name="family" type="family" />
+    		<column name="subfamily" type="subfamily" />
+    		<column name="genus" type="genus" />
+    		<column name="clade" type="subgenus" />
+    		<column name="species" type="species"  />
+    		<column name="common_name" type="vernacular"/>
+    		<column name="gaa_name" type="synonym"  xref="http://www.iucnredlist.org/initiatives/amphibians/"/>
+    		<column name="synonymies" type="synonym" />
+    		<column name="itis_names" type="synonym" xref="http://www.itis.gov/"/>
+    		<column name="aweb_uid" type="ignore" />
+            <column name="uri/guid" type="xref" />
+            <column name="taxon_notes_public" type="comment" />
+    	</columns>
+    </attach>
+    <attach source="/Users/pmidford/Projects/VTOData/ExtinctAmphibianCrownTaxa.txt" format="TSV" prefix="ATO" parent="Amphibia">
+    	<columns>
+    		<column name="order" type="order" />
+    		<column name="family" type="family" />
+    		<column name="subfamily" type="subfamily" />
+    		<column name="genus" type="genus" />
+    		<column name="species" type="species" />
+    	</columns>
+    </attach>
+</taxonomy>
+

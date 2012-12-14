@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "/Users/pmidford/Projects/OBOworkspace/TTOUpdate2/ttonew_d.obo" format="OBO" root="Chordata" prefix="TTO"> 
+ 	<attach source = "/Users/pmidford/Projects/OBOworkspace/TTOUpdate2/ttonew_c.obo" format="OBO" prefix="TTO" parent= "Chordata" root="Chordata" preserveIds="yes">
+	</attach>
+    <merge
+        source="/Users/pmidford/Projects/VTOData/FB_ValidSpecies_Names.txt"
+        format="tsv" 
+        action="addXrefs">
+        <columns>
+            <column name="SpecCode" type="xref" xref="http://www.fishbase.org/Summary/SpeciesSummary.php?id=*xref"/>
+            <column name="Genus" type="genus" />
+            <column name="Species" type="species" />
+            <column name="Author" type="ignore" />
+        </columns>
+    </merge>
+</taxonomy>

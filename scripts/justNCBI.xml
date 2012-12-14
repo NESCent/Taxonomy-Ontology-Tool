@@ -1,0 +1,5 @@
+<taxonomy target = "file:///Users/pmidford/Projects/VTO/Data/VTO_test1.obo" format="OBO" root="Chordata" prefix="VTO"> 
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/NCBI/taxdump" format="NCBI" prefix="NCBITAXON" preserveIds="yes" parent="Chordata" preserveIDs="yes">
+	</attach>  
+</taxonomy>
+	

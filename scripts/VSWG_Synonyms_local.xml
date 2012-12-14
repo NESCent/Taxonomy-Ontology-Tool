@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/OBOworkspace/VTOTool/output/testTaxonomy.obo" format="SYNONYM" filterprefix= "VSWG" root="Vertebrata" prefix="VSWG"> 
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/NCBI/taxdump" format="NCBI" prefix="NCBIXREF">
+	</attach>  
+	<trim node="Actinopterygii"/>
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Euteleostomi" root="Actinopterygii">
+	</attach>
+	<trim node="Chondrichthyes"/>
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Gnathostomata" root="Chondrichthyes">
+	</attach>
+	<trim node="Amphibia"/>
+	<attach source = "file:///Users/pmidford/projects/VTO/Data/ato_Dec2010.obo" format="OBO" prefix="ATO" parent="Tetrapoda" root="Amphibia">
+	</attach>
+       	<trim node="Aves"/>
+ 	<attach source = "file:///Users/pmidford/projects/VTO/Data/ioc-names-2.4.xml" format="IOC" prefix="ICO" parent= "Coelurosauria" root="Aves">
+	</attach>
+	<merge source="file:///Users/pmidford/projects/VTO/Data/ITIS/65137.bin" format="ITIS" prefix="ITIS">
+	</merge>
+	<merge source="" format="COL" prefix="COL">
+	</merge>
+</taxonomy>
+

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///home/nescent/pem15/VTOData/output/vswg_taxonomy.obo" format="OBO" filterprefix= "VSWG" root="Vertebrata" prefix="VSWG"> 
+ 	<attach source = "file:///home/nescent/pem15/VTOData/NCBI/taxdump" format="NCBI" prefix="NCBIXREF">
+	</attach>  
+	<trim node="Actinopterygii"/>
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Euteleostomi" root="Actinopterygii">
+	</attach>
+	<trim node="Chondrichthyes"/>
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Gnathostomata" root="Chondrichthyes">
+	</attach>
+	<trim node="Amphibia"/>
+	<attach source = "file:///Users/pmidford/Projects/VTO/Data/ato_Dec2010.obo" format="OBO" prefix="ATO" parent="Tetrapoda" root="Amphibia">
+	</attach>
+    <trim node="Aves"/>
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/ioc-names-2.4.xml" format="IOC" prefix="ICO" parent= "Coelurosauria" root="Aves">
+	</attach>
+	<merge source="" format="COL" prefix="COL">
+	</merge>
+</taxonomy>
+

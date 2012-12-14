@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "/Users/pmidford/Projects/VTO/Data/VTO_test1.obo" format="OBO" filterprefix= "VTO" root="Chordata" prefix="VTO"> 
+ 	<attach source = "/Users/pmidford/Projects/phenoscape/trunk/vocab/vertebrate_taxonomy.obo" format="OBO" prefix="VTO" parent= "Chordata" root="Chordata">
+	</attach>
+	<trim node="Actinopterygii"/>
+ 	<attach source = "/Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Euteleostomi" root="Actinopterygii">
+	</attach> 
+	<trim node="Chondrichthyes"/>
+ 	<attach source = "/Users/pmidford/Projects/VTO/Data/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Gnathostomata" root="Chondrichthyes">
+	</attach> 
+	<attach source="/Users/pmidford/Projects/VTO/Data/PaleoDB" format="PBDBbulk">
+	</attach>
+</taxonomy>

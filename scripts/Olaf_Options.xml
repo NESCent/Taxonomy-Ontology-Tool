@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/OBOworkspace/VTOTool/output/testTaxonomy.txt" format="XREF" filterprefix= "VSWG" root="Vertebrata" prefix="NCBI"> 
+-  	<attach source = "file:///Users/pmidford/Projects/VTO/Data/NCBI/taxdump" format="NCBI" prefix="NCBITAXON" preserveIds="yes" parent="Chordata">
+	</attach>  
+	<!--<merge source="file:///Users/pmidford/Projects/VTO/Data/ITIS/65137.bin" format="ITIS" prefix="ITIS">
+	</merge> -->
+	<merge source="" format="COLDB" prefix="COL">
+	</merge>
+	<!-- <merge source="file:///Users/pmidford/Projects/VTO/Data/VWG_data/speciesList_accCounter.txt" format="JOINEDNAMETAB" prefix="VSWG">
+	<columns>
+		<delimitedname/>
+	</columns>
+	</merge> -->
+</taxonomy>
+

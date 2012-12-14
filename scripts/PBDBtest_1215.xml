@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/VTO/Data/VTO_test1.obo" format="OBO" root="Chordata" prefix="VTO"> 
+ 	<attach source = "file:///Users/pmidford/Projects/VTO/Data/NCBI/taxdump" format="NCBI" prefix="NCBITAXON" preserveIds="yes" parent="Chordata" preserveIDs="yes">
+	</attach>  
+ 	<!-- <attach source = "file:///Users/pmidford/Projects/VTO/Data/vertebrate_taxonomy.obo" format="OBO" prefix="VTO" root="Chordata" preserveIds="yes">
+	</attach> -->
+	<trim node="Actinopterygii"/>
+	<trim node="Chondrichthyes"/>
+ 	<attach source = "file:///Users/pmidford/Projects/OBO_CVS/obo/ontology/taxonomy/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Euteleostomi" root="Actinopterygii" preserveIds="yes">
+	</attach>
+ 	<attach source = "file:///Users/pmidford/Projects/OBO_CVS/obo/ontology/taxonomy/teleost_taxonomy.obo" format="OBO" prefix="TTO" parent= "Gnathostomata" root="Chondrichthyes" preserveIds="yes">
+	</attach>
+	<trim node="Amphibia"/>
+	<attach source="file:///Users/pmidford/Projects/VTO/Data/ATO.obo" format="OBO" prefix="ATO" parent="Tetrapoda" root="Amphibia" preserveIDs="yes"/> 
+	<attach source="file:///Users/pmidford/Projects/VTO/Data/PaleoDB_1215" format="PBDBbulk" prefix="VTO" preserveIDs="no" parent="Chordata">
+	</attach>
+	<merge source="file:///Users/pmidford/Projects/VTO/Data/ArchosauriaComplete.txt" format="PBDBpostProcess">
+	</merge>
+</taxonomy>

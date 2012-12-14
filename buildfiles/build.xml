@@ -35,9 +35,9 @@
     <description>
             This is the main build file for the VTOTool application on all supported platforms.
     </description>
-	<property name="sourceDir" location="${basedir}/src/source"/>
+	<property name="sourceDir" location="${basedir}/source"/>
 	<property name="sourceLib" location="${sourceDir}/lib"/>
-	<property name="unitTestDir" location="${basedir}/src/test"/>
+	<property name="unitTestDir" location="${basedir}/test"/>
 	<property name="jarsDir" location= "${basedir}/jars"/>
 	<property name="targetDir" location= "${basedir}/targets"/>
 	<property name="buildDir" location= "${basedir}/build"/>
@@ -69,16 +69,16 @@
         <javac srcdir="${sourceDir}"
          	destdir="${buildDir}"
          	debug="on"
-         	source="1.5"
-         	target="1.5"
+         	source="1.6"
+         	target="1.6"
         	includeantruntime="false">
          	<classpath refid="project.all.jars"/>
         </javac>
 		<javac srcDir="${unitTestDir}"
             destdir="${buildDir}"
 			debug="on"
-		    source="1.5"
-		    target="1.5"
+		    source="1.6"
+		    target="1.6"
 			includeantruntime="false">
 			<classpath refid="project.all.jars"/>
 		</javac>
@@ -91,8 +91,9 @@
 		</jar>
 	</target>
 	
-	<target name="buildLinux" description="builds for Linux"
+	<target name="buildUnix" description="builds for OSX, Linux"
 		depends="compile-main">	
+		<copy todir="${buildDir}" file="${basedir}/buildfiles/TaxonomyTool.sh"/>
 	</target>
 	
 	
@@ -109,7 +110,7 @@
           target: build              
          ================================= -->
     <target name="buildAll" 
-    	depends="buildLinux,unit-test" 
+    	depends="buildUnix,unit-test" 
     	description="--> buildsEverything">
     </target>
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/VTO/Data/VTO_test1.obo" format="OBO" root="Chordata" prefix="VTO"> 
+ 	<attach source = "file:///Users/pmidford/Projects/phenoscape/vocab/vertebrate_taxonomy.obo" format="OBO" prefix="VTO" root="Chordata" preserveIds="yes">
+	</attach>  
+</taxonomy>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taxonomy target = "file:///Users/pmidford/Projects/VTOData/exto_out.obo" format="OBO" filterprefix= "VTO" root="Chordata" prefix="EXTO"> 
+    <attach source = "file:///Users/pmidford/Projects/VTOData/exto.obo" format="OBO" prefix="EXTO" parent= "Chordata" root="Chordata">
+    </attach>
+</taxonomy>
+
