@@ -256,7 +256,7 @@ public class NCBIMerger implements Merger {
 	 * 
 	 */
 	@Override
-	public void attach(String attachment, String cladeRoot, String prefix) {
+	public void attach(String attachment, String rootName, String prefix) {
 		final File namesFile = new File(source.getAbsolutePath()+'/'+NAMESFILENAME);
 		final File nodesFile = new File(source.getAbsolutePath()+'/'+NODESFILENAME);
 		final Set <Integer> nodesInScope = new HashSet<Integer>(10000);
@@ -281,10 +281,13 @@ public class NCBIMerger implements Merger {
 				}
 			}
 		}
-        final Integer parentNode = namesInScope.get(parentTerm.getLabel());
+        final Integer rootID = namesInScope.get(rootName);
         logger.info("Building tree");
-        addChildren(parentNode, target,nodeChildren, termToName, nodeRanks, prefix);
-        logger.info("Finished building tree" + parentNode);
+		Term rootTerm = addTermWithPreservingIDcheck(prefix,rootName);
+		target.attachParent(rootTerm, parentTerm);
+        
+        addChildren(rootTerm, rootID, target,nodeChildren, termToName, nodeRanks, prefix);
+        logger.info("Finished building tree; parent = " + parentTerm.getLabel() + "; root = " + rootName);
         for(Integer termid : synonymsInScope.keySet()){
         	String primaryName = termToName.get(termid);
         	if (primaryName == null){
@@ -307,10 +310,23 @@ public class NCBIMerger implements Merger {
         logger.info("Done; count = " + count);		
 	}
 
-	private void addChildren(Integer parent, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks, String prefix) {
-		Set<Integer> children = nodeChildren.get(parent);
+	/**
+	 * 
+	 * @param parent the node in the target ontology
+	 * @param parentID the NCBI id of the parent in the NCBI tables
+	 * @param target holds the target taxonomy (where the tree is being built/extended)
+	 * @param nodeChildren parent-child relations in the NCBI tables
+	 * @param termToName
+	 * @param nodeRanks
+	 * @param prefix
+	 */
+	private void addChildren(Term parentTerm, Integer parentID, TaxonStore target, Map<Integer, Set<Integer>> nodeChildren, Map<Integer, String> termToName, Map<Integer, String> nodeRanks, String prefix) {
+		if (parentTerm == null)
+			throw new RuntimeException("parent is null");		
+		Set<Integer> children = nodeChildren.get(parentID);
 		if (children != null){
-			final String parentName = termToName.get(parent);
+			//logger.info("Parent is " + parentID + " has " + children.size() + " children");
+			final String parentName = termToName.get(parentID);
 			if (parentName == null)
 				throw new RuntimeException("parent name is null");
 			
@@ -319,7 +335,7 @@ public class NCBIMerger implements Merger {
 			for (Integer childID : children){
 				String childName = termToName.get(childID);
 				if (parentName.equals(childName)){
-					String parentRank = nodeRanks.get(parent);
+					String parentRank = nodeRanks.get(parentID);
 					if ("genus".equals(parentRank)){
 						homonymChild = childID;
 					}
@@ -331,11 +347,10 @@ public class NCBIMerger implements Merger {
 				children.remove(homonymChild);
 			}
 			
-			Term parentTerm = target.getTermByXRef(NCBIDBNAME,parent.toString());
 			if (parentTerm == null)
 				parentTerm = target.getTermbyName(parentName);
 			if (parentTerm == null)
-				throw new RuntimeException("parent term is null, name is " + termToName.get(parent));
+				throw new RuntimeException("parent term is null, name is " + termToName.get(parentID));
 			for (Integer childID : children){
 				String childName = termToName.get(childID);
 				Term childTerm = target.getTermbyName(childName);
@@ -354,6 +369,7 @@ public class NCBIMerger implements Merger {
 							target.setRankFromName(childTerm,rankStr);
 							target.attachParent(childTerm, parentTerm);
 							count++;
+							addChildren(childTerm,childID,target,nodeChildren,termToName, nodeRanks, prefix);
 						}
 					}
 					else if ("species".equals(target.getRankString(parentTerm))) {  
@@ -368,6 +384,8 @@ public class NCBIMerger implements Merger {
 						target.setRankFromName(childTerm,rankStr);
 						target.attachParent(childTerm, parentTerm);
 						count++;
+						addChildren(childTerm,childID,target,nodeChildren,termToName, nodeRanks, prefix);
+
 					}
 				}
 				else {  //node with child's name already exists.  For now, we'll add the parent's name as a suffix
@@ -387,11 +405,11 @@ public class NCBIMerger implements Merger {
 						target.attachParent(childTerm, parentTerm);
 			        	count++;						
 					}
+					addChildren(childTerm,childID,target,nodeChildren,termToName, nodeRanks, prefix);
 				}
 
 	        	if (count % 1000 == 0)
 	        		logger.info("Count = " + count + " term = " + childName);
-				addChildren(childID,target,nodeChildren,termToName, nodeRanks, prefix);
 			}
 		}
 	}

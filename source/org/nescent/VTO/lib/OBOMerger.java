@@ -132,7 +132,13 @@ public class OBOMerger implements Merger {
 			copyRootToTarget(sourceRootName,prefix);
 		else{
 			OBOClass sourceRoot = sourceUtils.lookupTermByName(sourceRootName);  //this is the root of the clade - copy this and its children
+			if (sourceRoot == null){
+				throw new RuntimeException("Can not attach unknown root: " + sourceRootName);
+			}
 			Term targetParent = target.getTermbyName(targetParentName);
+			if (targetParent == null){
+				throw new RuntimeException("Can not attach to unknown parent: " + targetParentName);
+			}
 			Term targetRoot = copyTerm(sourceRoot,prefix);
 			Term getRoot = target.getTermbyName(sourceRootName);
 			target.attachParent(targetRoot, targetParent);

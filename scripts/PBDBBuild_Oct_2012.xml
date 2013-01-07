@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<taxonomy target = "/Users/pmidford/Projects/VTOData/vertebrate_taxonomy.obo" format="OBO" root="Chordata" prefix="VTO"> 
+<taxonomy target = "../output/vertebrate_taxonomy.obo" format="OBO" root="Chordata" prefix="VTO"> 
  	<attach source = "/Users/pmidford/Projects/VTOData/NCBI/taxdump" format="NCBI" prefix="NCBITAXON" preserveIds="yes" parent="Chordata">
 	</attach>  
 	<trim node="Actinopterygii"/>

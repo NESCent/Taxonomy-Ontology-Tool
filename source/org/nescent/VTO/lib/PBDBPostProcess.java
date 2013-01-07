@@ -120,54 +120,79 @@ public class PBDBPostProcess implements Merger{
 	}
 	
 	private void processActions(List<Action> alist){
-		int modifyCount = 0;
+		int modifiedCount = 0;
 		int deleteCount = 0;
-		int badModifyCount = 0;
-		int badDeleteCount = 0;
+		int goodModifiedCount = 0;
+		int goodDeleteCount = 0;
 		
 		//run the modifications first - this may prevent orphans from getting created in the first place
 		for(Action a : alist){
-			String taxonName = a.taxa.get(0);
-			Term taxonTerm = target.getTermbyName(taxonName);	
 			if ("modified".equalsIgnoreCase(a.command)){
-				modifyCount++;
-				if (taxonTerm == null)
-					badModifyCount++;
+				modifiedCount++;
+				goodModifiedCount += processModified(a);
 			}
 		}
 		// now run the delete actions - and if an obsoleted node has children, attach them to the nearest ancestor node
 		for(Action a : alist){
-			String taxonName = a.taxa.get(0);
-			Term taxonTerm = target.getTermbyName(taxonName);	
 			if ("delete".equalsIgnoreCase(a.command)){
 				deleteCount++;
-				if (taxonTerm == null)
-					badDeleteCount++;
-				else {
-					Set <Term> children = taxonTerm.getChildren();
-					List <Term> ancestors = taxonTerm.getAncestors();
-					final Term termParent = ancestors.get(0);  //save this for disconnection
-					for (Term anc : ancestors){
-						if (!anc.isObsolete()){
-							for (Term child : children){
-								child.removeParent(taxonTerm);
-								target.attachParent(child, anc);
-							}
-							break;
-						}
-					}
-					taxonTerm.removeParent(termParent);
-					taxonTerm.removeProperties();
-					target.obsoleteTerm(taxonTerm);
-				}
+				goodDeleteCount += processDelete(a);
 			}
 		}
-		logger.info("Processed " + modifyCount + " modify actions, of which " + badModifyCount + " had unresolvable key taxa");
-		logger.info("Processed " + deleteCount + " delete actions, of which " + badDeleteCount + " had unresolvable key taxa");
+		logger.info("Processed " + modifiedCount + " modify actions, of which " + (modifiedCount - goodModifiedCount) + " had unresolvable key taxa");
+		logger.info("Processed " + deleteCount + " delete actions, of which " + (deleteCount-goodDeleteCount) + " had unresolvable key taxa");
 		
 	}
 	
+	
+	int processModified(Action a){
+		String taxonName = a.taxa.get(0);
+		Term taxonTerm = target.getTermbyName(taxonName);	
+		if (taxonTerm == null)
+			return 0;
+		else {
+			System.out.println("Target taxon for modify is " + a.taxa.get(0));
+			for(String pName : a.taxa){
+				if (!taxonName.equals(pName)){
+					Term pTaxon = target.getTermbyName(pName);
+					if (pTaxon == null){
+						System.err.println("Unknown parent taxon" + pName);
+					}
+					else {
+						System.out.print(pName + " ");
+					}
+				}
+			}
+			System.out.println();
+			//taxonTerm.removeParent(oldParent);
+			return 1;
+		}		
+	}
 
+	int processDelete(Action a){
+		String taxonName = a.taxa.get(0);
+		Term taxonTerm = target.getTermbyName(taxonName);	
+		if (taxonTerm == null)
+			return 0;
+		else {
+			Set <Term> children = taxonTerm.getChildren();
+			List <Term> ancestors = taxonTerm.getAncestors();
+			final Term termParent = ancestors.get(0);  //save this for disconnection
+			for (Term anc : ancestors){
+				if (!anc.isObsolete()){
+					for (Term child : children){
+						child.removeParent(taxonTerm);
+						target.attachParent(child, anc);
+					}
+					break;
+				}
+			}
+			taxonTerm.removeParent(termParent);
+			taxonTerm.removeProperties();
+			target.obsoleteTerm(taxonTerm);
+			return 0;
+		}
+	}
 
 	
 	static class Action{

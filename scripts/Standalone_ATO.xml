@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<taxonomy target = "/Users/pmidford/Projects/VTOData/ATO_nov.obo" format="OBO" filterprefix= "ATO" root="Amphibia" prefix="ATO"> 
+<taxonomy target = "../output/ATO_nov.obo" format="OBO" filterprefix= "ATO" root="Amphibia" prefix="ATO"> 
     <attach source = "/Users/pmidford/Projects/VTOData/ATO.obo" format="OBO" prefix="ATO" root="Amphibia" preserveIds="true"/>
     <trim node="Amphibia"/>
 	<attach source = "/Users/pmidford/Projects/VTOData/amphib_names.txt" format="TSV" prefix="ATO" parent= "Amphibia" root="ATO">
