@@ -102,10 +102,31 @@ public class OBOMerger implements Merger {
 				//matchingTerm.addSynonym(s);
 				// add synonyms from term
 				for (Synonym syn : term.getSynonyms()){
-					for (Dbxref ref : syn.getXrefs()){  //need to avoid common names....
-						SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
-						matchingTerm.addSynonym(newSyn);
-						synCount++;
+					if (syn.getSynonymType().equals(sourceUtils.getCommonNameType())) {
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeCommonName(syn.getText());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+					}
+					else {  //not a common name
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeSynonym(syn.getText());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
 					}
 				}
 			}
@@ -196,18 +217,29 @@ public class OBOMerger implements Merger {
 				Term childTerm = copyTerm(childClass,prefix);
 				if (sourceUtils.getRankString(childClass) != null)
 					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
+				
 				for (Synonym syn : childClass.getSynonyms()){
-					String synText = syn.getText();
-					Collection <Dbxref> xrefs = syn.getXrefs();
-					if (xrefs != null && !xrefs.isEmpty()){
-						for (Dbxref xref : xrefs){
-							SynonymI newSyn = target.makeSynonymWithXref(synText, xref.getDatabase(), xref.getDatabaseID());	
+					if (syn.getSynonymType().equals(sourceUtils.getCommonNameType())) {
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							childTerm.addSynonym(newSyn);
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeCommonName(syn.getText());
 							childTerm.addSynonym(newSyn);
 						}
 					}
-					else {  // no xrefs
-						SynonymI newSyn = target.makeSynonym(synText);
-						childTerm.addSynonym(newSyn);
+					else {  //not a common name
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							childTerm.addSynonym(newSyn);
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeSynonym(syn.getText());
+							childTerm.addSynonym(newSyn);
+						}
 					}
 				}
 				target.attachParent(childTerm, targetParent);
