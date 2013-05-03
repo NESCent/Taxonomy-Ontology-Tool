@@ -102,7 +102,7 @@ public class OBOMerger implements Merger {
 				//matchingTerm.addSynonym(s);
 				// add synonyms from term
 				for (Synonym syn : term.getSynonyms()){
-					if (syn.getSynonymType().equals(sourceUtils.getCommonNameType())) {
+					if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
 						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
 							final Dbxref ref = syn.getXrefs().iterator().next();
 							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
@@ -219,7 +219,7 @@ public class OBOMerger implements Merger {
 					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
 				
 				for (Synonym syn : childClass.getSynonyms()){
-					if (syn.getSynonymType().equals(sourceUtils.getCommonNameType())) {
+					if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
 						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
 							final Dbxref ref = syn.getXrefs().iterator().next();
 							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
