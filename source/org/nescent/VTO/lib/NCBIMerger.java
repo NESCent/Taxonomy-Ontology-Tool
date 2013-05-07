@@ -201,6 +201,7 @@ public class NCBIMerger implements Merger {
                 }
                 raw = br.readLine();
             }
+            br.close();
         }
         catch (Exception e) {
             logger.error(e);
@@ -242,7 +243,8 @@ public class NCBIMerger implements Merger {
                 	}
                 }
                 raw = br.readLine();
-            }			
+            }
+            br.close();
 		}
 		catch (Exception e){
 			logger.error(e);
@@ -347,10 +349,6 @@ public class NCBIMerger implements Merger {
 				children.remove(homonymChild);
 			}
 			
-			if (parentTerm == null)
-				parentTerm = target.getTermbyName(parentName);
-			if (parentTerm == null)
-				throw new RuntimeException("parent term is null, name is " + termToName.get(parentID));
 			for (Integer childID : children){
 				String childName = termToName.get(childID);
 				Term childTerm = target.getTermbyName(childName);
