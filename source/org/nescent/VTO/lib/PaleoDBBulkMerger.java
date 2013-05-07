@@ -146,10 +146,8 @@ public class PaleoDBBulkMerger implements Merger{
 		
 
 		final int startingSize = target.getTerms().size();
-		logger.info("Checkpoint 0; target contains " + startingSize);
 		final Set <String>newTerms = new HashSet<String>();
 		for(String tName : taxonTree.keySet()){
-//			if (!termDictionary.containsKey(tName)){
 			if (!target.hasTermbyName(tName)){
 				final PBDBItem item = validTaxa.get(tName);
 				final Term newTerm = addTermWithPreservingIDcheck(prefix,tName,item.getId());
@@ -159,13 +157,11 @@ public class PaleoDBBulkMerger implements Merger{
 				processRank(item.getRankName(),newTerm,target);
 				newTerms.add(tName);
 				//termDictionary.put(tName, newTerm);
-				System.out.println("Adding taxon: " + tName + " term: " + newTerm);
 			}
 			else{
-				System.out.println("Skipping term: " + tName);
 			}
 		}
-		logger.info("Checkpoint 1; target contains " + target.getTerms().size());
+
 		for (String tName : taxonTree.keySet()){
 //			Term child = termDictionary.get(tName);
 //			Term parent = termDictionary.get(taxonTree.get(tName));

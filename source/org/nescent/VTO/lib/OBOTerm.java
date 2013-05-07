@@ -49,6 +49,23 @@ public class OBOTerm implements Term {
 	private boolean matchSynonyms(Synonym oldSyn, Synonym newSyn){
 		if (!oldSyn.getText().equals(newSyn.getText()))
 			return false;
+		if (oldSyn.getSynonymType() == null && newSyn.getSynonymType() == null){
+			return checkSynXrefs(oldSyn, newSyn);
+		}
+		if (oldSyn.getSynonymType() == null || newSyn.getSynonymType() == null){
+			return false;
+		}		
+		else{
+			if (oldSyn.getSynonymType().equals(newSyn.getSynonymType())){
+				return checkSynXrefs(oldSyn, newSyn);
+			}
+			else{
+				return false;
+			}
+		}
+	}
+
+	private boolean checkSynXrefs(Synonym oldSyn, Synonym newSyn){
 		final Collection<Dbxref> oldXRefs = oldSyn.getXrefs();
 		final Collection<Dbxref> newXRefs = newSyn.getXrefs();
 		if (newXRefs.size()==0)
