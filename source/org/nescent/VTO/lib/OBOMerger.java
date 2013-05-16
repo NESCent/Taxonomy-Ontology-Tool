@@ -102,10 +102,31 @@ public class OBOMerger implements Merger {
 				//matchingTerm.addSynonym(s);
 				// add synonyms from term
 				for (Synonym syn : term.getSynonyms()){
-					for (Dbxref ref : syn.getXrefs()){  //need to avoid common names....
-						SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
-						matchingTerm.addSynonym(newSyn);
-						synCount++;
+					if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeCommonName(syn.getText());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+					}
+					else {  //not a common name
+						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+							final Dbxref ref = syn.getXrefs().iterator().next();
+							SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
+						else{ //no xrefs
+							SynonymI newSyn = target.makeSynonym(syn.getText());
+							matchingTerm.addSynonym(newSyn);
+							synCount++;
+						}
 					}
 				}
 			}
@@ -140,7 +161,6 @@ public class OBOMerger implements Merger {
 				throw new RuntimeException("Can not attach to unknown parent: " + targetParentName);
 			}
 			Term targetRoot = copyTerm(sourceRoot,prefix);
-			Term getRoot = target.getTermbyName(sourceRootName);
 			target.attachParent(targetRoot, targetParent);
 			addChildren(sourceRoot,targetRoot,target,prefix);
 		}
@@ -174,42 +194,17 @@ public class OBOMerger implements Merger {
 	}
 
 
-	private void checkTarget(String s){
-		for (Term t : target.getTerms()){
-			if (s.equals(t.getLabel())){
-				logger.info("Found " + s + " on through search on load check");
-			}
-		}
-
-	}
 
 	// Note: parentClass is from the obo tree being attached, parentTerm is the copy in the target tree
 	// so parentTerm.asOBOClass != parentClass
 	private void addChildren(OBOClass sourceParent, Term targetParent, TaxonStore target, String prefix){
-		//logger.info("adding children of " + sourceParent.getName() + " target Term is " + targetParent.getLabel());
 		final Collection<Link> childLinks = sourceParent.getChildren();
 		for(Link l : childLinks){
 			OBOProperty lType = l.getType();
 			if (OBOUtils.ISA_PROPERTY.equals(lType.getID())){
 				OBOClass childClass = (OBOClass)l.getChild();
-				//logger.info("Child class is " + childClass.getName() + " (" + childClass.getID() + ")");
 				Term childTerm = copyTerm(childClass,prefix);
-				if (sourceUtils.getRankString(childClass) != null)
-					target.setRankFromName(childTerm, sourceUtils.getRankString(childClass));
-				for (Synonym syn : childClass.getSynonyms()){
-					String synText = syn.getText();
-					Collection <Dbxref> xrefs = syn.getXrefs();
-					if (xrefs != null && !xrefs.isEmpty()){
-						for (Dbxref xref : xrefs){
-							SynonymI newSyn = target.makeSynonymWithXref(synText, xref.getDatabase(), xref.getDatabaseID());	
-							childTerm.addSynonym(newSyn);
-						}
-					}
-					else {  // no xrefs
-						SynonymI newSyn = target.makeSynonym(synText);
-						childTerm.addSynonym(newSyn);
-					}
-				}
+				
 				target.attachParent(childTerm, targetParent);
 				addChildren(childClass,childTerm,target,prefix);			
 			}
@@ -222,7 +217,7 @@ public class OBOMerger implements Merger {
 			targetTerm = target.addTermbyID(sourceClass.getID(),sourceClass.getName());
 		}
 		else{
-			String[] idFields = sourceClass.getID().split(":");
+			final String[] idFields = sourceClass.getID().split(":");
 			if (idFields.length == 2){
 				targetTerm = target.addTerm(sourceClass.getName(),prefix);				
 				target.addXRefToTerm(targetTerm,idFields[0],idFields[1]);  // could be an alternate ID, no, not best practice according to Allan
@@ -237,23 +232,32 @@ public class OBOMerger implements Merger {
 				target.addXRefToTerm(targetTerm, d.getDatabase(), d.getDatabaseID());
 			}
 		}
-		if (sourceClass.getSynonyms() != null){
-			for (Synonym s : sourceClass.getSynonyms()){
-				SynonymI newSyn = null; 
-				if (s.getXrefs() != null && !s.getXrefs().isEmpty()){
-					Iterator<Dbxref> xIter = s.getXrefs().iterator();
-					if (xIter.hasNext()){
-						Dbxref d = xIter.next();
-						newSyn = target.makeSynonymWithXref(s.getText(), d.getDatabase(), d.getDatabaseID());
-					}
-				}
-				else {
-					newSyn = target.makeSynonym(s.getText());
-				}
-				if (newSyn != null)
+		for (Synonym syn : sourceClass.getSynonyms()){
+			if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
+				if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+					final Dbxref ref = syn.getXrefs().iterator().next();
+					SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
 					targetTerm.addSynonym(newSyn);
+				}
+				else{ //no xrefs
+					SynonymI newSyn = target.makeCommonName(syn.getText());
+					targetTerm.addSynonym(newSyn);
+				}
+			}
+			else {  //not a common name
+				if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
+					final Dbxref ref = syn.getXrefs().iterator().next();
+					SynonymI newSyn = target.makeSynonymWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+					targetTerm.addSynonym(newSyn);
+				}
+				else{ //no xrefs
+					SynonymI newSyn = target.makeSynonym(syn.getText());
+					targetTerm.addSynonym(newSyn);
+				}
 			}
 		}
+		if (sourceUtils.getRankString(sourceClass) != null)
+			target.setRankFromName(targetTerm, sourceUtils.getRankString(sourceClass));
 		if (sourceUtils.isExtinct(sourceClass))
 			sourceUtils.setExtinct(targetTerm.asOBOClass());
 		return targetTerm;
