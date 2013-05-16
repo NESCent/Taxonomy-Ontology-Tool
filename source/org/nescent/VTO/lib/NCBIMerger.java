@@ -416,7 +416,7 @@ public class NCBIMerger implements Merger {
 
 	private Term addTermWithPreservingIDcheck(String prefix, String attachment){
 		Term parentTerm;
-		if (preserveID){
+		if (preserveID && namesInScope.containsKey(attachment)) {
 			final String newid = prefix + ":" + namesInScope.get(attachment).toString();
 			parentTerm=target.addTermbyID(newid, attachment);
 		}
