@@ -124,6 +124,20 @@ public class OWLStore implements TaxonStore {
 		// TODO Auto-generated method stub
 	}
 
+	
+	public SynonymI makeTypedSynonym(String synString, String typeString){
+		//throw new RuntimeException("Not Implemented");
+		return null;
+		// TODO Auto-generated method stub
+	}
+	
+	public SynonymI makeTypedSynonymWithXref(String synString, String typeString, String dbxprefix, String entryID){
+		//throw new RuntimeException("Not Implemented");
+		return null;
+		// TODO Auto-generated method stub		
+	}
+
+	
 	@Override
 	public boolean isEmpty() {
 		return u.isEmpty();

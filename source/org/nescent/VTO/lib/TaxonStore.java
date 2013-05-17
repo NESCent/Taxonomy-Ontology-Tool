@@ -74,10 +74,16 @@ public interface TaxonStore {
 	
 	public SynonymI makeSynonymWithXref(String syn, String prefix, String xref);
 	
+	@Deprecated
 	public SynonymI makeCommonName(String commonName);
 
+	@Deprecated
 	public SynonymI makeCommonNameWithXref(String commonName, String dbxprefix, String entryID);
 	
+	public SynonymI makeTypedSynonym(String synString, String typeString);
+	
+	public SynonymI makeTypedSynonymWithXref(String synString, String typeString, String dbxprefix, String entryID);
+
 	public boolean isEmpty();
 
 	public Term addTermbyID(String ID, String name);
