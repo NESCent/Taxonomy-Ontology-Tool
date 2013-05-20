@@ -102,15 +102,16 @@ public class OBOMerger implements Merger {
 				//matchingTerm.addSynonym(s);
 				// add synonyms from term
 				for (Synonym syn : term.getSynonyms()){
-					if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
+					if (sourceUtils.isKnownSynonymType(syn.getSynonymType())) {
+						final String stypeName = syn.getSynonymType().getName();
 						if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
 							final Dbxref ref = syn.getXrefs().iterator().next();
-							SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+							SynonymI newSyn = target.makeTypedSynonymWithXref(syn.getText(), stypeName, ref.getDatabase(), ref.getDatabaseID());
 							matchingTerm.addSynonym(newSyn);
 							synCount++;
 						}
 						else{ //no xrefs
-							SynonymI newSyn = target.makeCommonName(syn.getText());
+							SynonymI newSyn = target.makeTypedSynonym(syn.getText(), stypeName);
 							matchingTerm.addSynonym(newSyn);
 							synCount++;
 						}
@@ -233,14 +234,15 @@ public class OBOMerger implements Merger {
 			}
 		}
 		for (Synonym syn : sourceClass.getSynonyms()){
-			if (sourceUtils.getCommonNameType().equals(syn.getSynonymType())) {
+			if (sourceUtils.isKnownSynonymType(syn.getSynonymType())) {
+				final String stypeName = syn.getSynonymType().getName();
 				if (!syn.getXrefs().isEmpty()){  //assumes one xref per synonym (probably safe, but noted)
 					final Dbxref ref = syn.getXrefs().iterator().next();
-					SynonymI newSyn = target.makeCommonNameWithXref(syn.getText(), ref.getDatabase(), ref.getDatabaseID());
+					SynonymI newSyn = target.makeTypedSynonymWithXref(syn.getText(), stypeName, ref.getDatabase(), ref.getDatabaseID());
 					targetTerm.addSynonym(newSyn);
 				}
 				else{ //no xrefs
-					SynonymI newSyn = target.makeCommonName(syn.getText());
+					SynonymI newSyn = target.makeTypedSynonym(syn.getText(),stypeName);
 					targetTerm.addSynonym(newSyn);
 				}
 			}
