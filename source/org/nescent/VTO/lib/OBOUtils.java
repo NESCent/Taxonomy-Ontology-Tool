@@ -43,7 +43,7 @@ class OBOUtils {
 	static final public String ISA_PROPERTY = "OBO_REL:is_a"; 
 	static final public String RANK_PROPERTY = "has_rank";
 	static final public String EXTINCT_PROPERTY = "is_extinct";
-	
+
 	static final public String TRUE_VALUE = "\"true\" xsd:boolean";   //this should probably be some sort of XST:boolean expression
 
 
@@ -172,7 +172,7 @@ class OBOUtils {
 		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
 		return s;
 	}
-	
+
 	public Synonym makeSynonymWithType(String synString,SynonymType st){
 		Synonym s = oboFactory.createSynonym(synString, Synonym.RELATED_SYNONYM);
 		s.setSynonymType(st);
@@ -210,7 +210,7 @@ class OBOUtils {
 	public Dbxref createDbxref(String db, String id, String desc, int synonymtype){
 		return theSession.getObjectFactory().createDbxref(db, id, desc, synonymtype,null);
 	}
-	
+
 
 	public OBORestriction attachParent(OBOClass child, OBOClass parent){
 		final OBORestriction res = theSession.getObjectFactory().createOBORestriction(child,getISAproperty(),parent,false);
@@ -236,13 +236,13 @@ class OBOUtils {
 
 	public void setExtinct(IdentifiedObject c){
 		final PropertyValue extinctProperty = 
-			      oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
-			    		                         EXTINCT_PROPERTY + 
-			    		                         " " + 
-			    		                         TRUE_VALUE); 
+				oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
+						EXTINCT_PROPERTY + 
+						" " + 
+						TRUE_VALUE); 
 		c.addPropertyValue(extinctProperty);
 	}
-	
+
 	public boolean isExtinct(IdentifiedObject c){
 		for (PropertyValue v : c.getPropertyValues()){
 			String[] pair = v.getValue().split(" ");
@@ -251,22 +251,22 @@ class OBOUtils {
 		}
 		return false;
 	}
-	
+
 	public void resetExtinct(OBOClass c) {
 		final PropertyValue extinctProperty = 
-		      oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
-		    		                         EXTINCT_PROPERTY + 
-		    		                         " " + 
-		    		                         TRUE_VALUE); 
+				oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
+						EXTINCT_PROPERTY + 
+						" " + 
+						TRUE_VALUE); 
 		c.removePropertyValue(extinctProperty);
-		
+
 	}
 
 	public void setNameSpace(String namespace, String filepath){
 		Namespace n = oboFactory.createNamespace(namespace, filepath);
 		theSession.setDefaultNamespace(n);
 	}
-	
+
 	public void setOntologyTag(String ontologyStr){
 	}
 
@@ -277,14 +277,15 @@ class OBOUtils {
 	public OBOProperty getHasRank(){
 		return hasRankProperty; 
 	}
-	
-	
+
+
 
 	public static Map<String,OBOClass> getAllTermNamesHash(Collection <OBOClass> terms){
 		final HashMap<String,OBOClass> result = new HashMap<String,OBOClass>(terms.size());
 		for (OBOClass item : terms){
-			if (item.getName() == null)
+			if (item.getName() == null) {
 				logger.error("Term " + item.getID() + " has null for name");
+			}
 			else {
 				if (result.get(item.getName()) != null){
 					//logger.error("Hash collision in building names hash; Name = " + item.getName() + " old ID = " + ((OBOClass)result.get(item.getName())).getID() + " new ID = " + item.getID());
@@ -313,24 +314,24 @@ class OBOUtils {
 		}
 		OBOClass result;
 		result = termNames.get(termName);
-		if (result == null){
-			for (IdentifiedObject io : theSession.getLinkDatabase().getObjects()){
-				if (io.getName().equals(termName)){
+		if (result == null) {
+			for (IdentifiedObject io : theSession.getLinkDatabase().getObjects()) {
+				if (termName.equals(io.getName())){
 					logger.info("Term names (" + termName +") failed; Found matching object in sessions link database: " + io);
 					logger.info("Matching object is " + io.getType() + " and obsolete: " + ((ObsoletableObject) io).isObsolete());
 					termNames.put(termName, ((OBOClass)io));
 					logger.info("check put " + termNames.get(termName));
 					return ((OBOClass)io);
 				}
-					
+
 			}
-		return termNames.get(termName);
+			return termNames.get(termName);
 		}
 		else {
 			return result;
 		}
 	}
-	
+
 	public OBOClass lookupTermByXRef(String dbName, String dbID) {
 		if (dirtyTermSets){
 			terms = TermUtil.getTerms(theSession);
@@ -354,7 +355,7 @@ class OBOUtils {
 		}
 		return null;
 	}
-	
+
 
 	public Map<String,String> getSynonyms(OBOClass term){
 		Map<String,String> result = new HashMap<String,String>();
@@ -442,7 +443,7 @@ class OBOUtils {
 		return null;
 	}
 
-	
+
 	public void removeRank(OBOClass cl){
 		PropertyValue rankPropertyValue = null;
 		for (PropertyValue pv : cl.getPropertyValues()){
