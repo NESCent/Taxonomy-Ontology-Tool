@@ -268,17 +268,43 @@ public class OBOStore implements TaxonStore {
 		return new OBOSynonym(s);
 	}
 	
+	public SynonymI makeTypedSynonym(final String synString, final String typeString){
+		SynonymType stype = u.lookupSynonymType(typeString);
+		if (stype == null){  //fail, unknown type - just make a regular synonym 
+			return makeSynonym(synString);
+		}
+		else {
+			final Synonym s = u.makeSynonymWithType(synString, stype);
+			return new OBOSynonym(s);
+		}
+    }	
+
+	public SynonymI makeTypedSynonymWithXref(final String synString, final String typeString, String dbxprefix, String entryID){
+		SynonymType stype = u.lookupSynonymType(typeString);
+		if (stype == null){  //fail, unknown type - just make a regular synonym 
+			return makeSynonym(synString);
+		}
+		else {
+			trimmedNameCheck(synString);
+			final Synonym s = u.makeSynonymWithTypeAndXref(synString, stype, dbxprefix, entryID);
+			return new OBOSynonym(s);
+		}
+    }	
+
+	
 	private void trimmedNameCheck(String synString){
 		if (trimmedNames.containsKey(synString)){
 			trimmedTaxonNameAsSynonym.add(synString);
 		}
 	}
 
+	@Deprecated
 	public SynonymI makeCommonName(final String commonName){
 		final Synonym cn = u.makeSynonymWithType(commonName,u.getCommonNameType());
 		return new OBOSynonym(cn);
 	}
 
+	@Deprecated
 	public SynonymI makeCommonNameWithXref(final String commonName, String dbxprefix, String entryID ){
 		final Synonym cn = u.makeSynonymWithTypeAndXref(commonName,u.getCommonNameType(), dbxprefix, entryID);
 		return new OBOSynonym(cn);

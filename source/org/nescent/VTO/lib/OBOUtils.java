@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.bbop.dataadapter.DataAdapterException;
@@ -51,6 +53,9 @@ class OBOUtils {
 	final private OBOProperty isaProperty;
 	private OBOProperty hasRankProperty;
 	final private SynonymType commonNameType;
+	final private SynonymType misspelledType;
+	final private SynonymType nameUsageType;
+	final private Set<SynonymType> knownSynonymTypes;
 	static final Logger logger = Logger.getLogger(OBOUtils.class.getName());
 	private ObjectFactory oboFactory = null; 
 
@@ -78,7 +83,15 @@ class OBOUtils {
 		hasRankProperty = (OBOProperty)theSession.getObjectFactory().createObject(RANK_PROPERTY, OBOClass.OBO_PROPERTY, false);
 		hasRankProperty.setName("has taxonomic rank");
 		commonNameType = theSession.getObjectFactory().createSynonymType("COMMONNAME", "common name", Synonym.RELATED_SYNONYM);
+		misspelledType = theSession.getObjectFactory().createSynonymType("MISSPELLING", "misspelling", Synonym.EXACT_SYNONYM);
+		nameUsageType = theSession.getObjectFactory().createSynonymType("TAXONNAMEUSAGE", "name with (author year)", Synonym.NARROW_SYNONYM);
+		knownSynonymTypes = new HashSet<SynonymType>(3);
+		knownSynonymTypes.add(commonNameType);
+		knownSynonymTypes.add(misspelledType);
+		knownSynonymTypes.add(nameUsageType);
 		theSession.addSynonymType(commonNameType);
+		theSession.addSynonymType(misspelledType);
+		theSession.addSynonymType(nameUsageType);
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
 		termIDs = getAllTermIDsHash(terms);
@@ -114,7 +127,15 @@ class OBOUtils {
 			//theSession.addObject(hasRankProperty);
 		}
 		commonNameType = theSession.getObjectFactory().createSynonymType("COMMONNAME", "common name", Synonym.RELATED_SYNONYM);
+		misspelledType = theSession.getObjectFactory().createSynonymType("MISSPELLING", "misspelling", Synonym.EXACT_SYNONYM);
+		nameUsageType = theSession.getObjectFactory().createSynonymType("TAXONNAMEUSAGE", "name with (author year)", Synonym.NARROW_SYNONYM);
 		theSession.addSynonymType(commonNameType);
+		theSession.addSynonymType(misspelledType);
+		theSession.addSynonymType(nameUsageType);
+		knownSynonymTypes = new HashSet<SynonymType>(3);
+		knownSynonymTypes.add(commonNameType);
+		knownSynonymTypes.add(misspelledType);
+		knownSynonymTypes.add(nameUsageType);
 		terms = TermUtil.getTerms(theSession);
 		termNames = getAllTermNamesHash(terms);
 		termIDs = getAllTermIDsHash(terms);
@@ -235,6 +256,9 @@ class OBOUtils {
 	}
 
 	public void setExtinct(IdentifiedObject c){
+		if (c == null){
+			throw new RuntimeException("Null obo class passed to setExtinct");
+		}
 		final PropertyValue extinctProperty = 
 				oboFactory.createPropertyValue(PROPERTYVALUE_TAG,
 						EXTINCT_PROPERTY + 
@@ -590,7 +614,18 @@ class OBOUtils {
 	public SynonymType getCommonNameType(){
 		return commonNameType;
 	}
+	
+	public boolean isKnownSynonymType(SynonymType t){
+		return knownSynonymTypes.contains(t);
+	}
 
-
+	public SynonymType lookupSynonymType(String name){
+		for (SynonymType st : knownSynonymTypes){
+			if (st.getName().equals(name)){
+				return st;
+			}
+		}
+		return null;
+	}
 
 }
